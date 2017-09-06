@@ -1,0 +1,34 @@
+{
+  "name": "fluorite-sql2way",
+  "version": "1.0.0",
+  "description": "the sample code for sqlite and sqlserver.",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node_modules\\.bin\\mocha",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xingyanhuan/fluorite-sql2way.git"
+  },
+  "author": "xingyanhuan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xingyanhuan/fluorite-sql2way/issues"
+  },
+  "homepage": "https://github.com/xingyanhuan/fluorite-sql2way#readme",
+  "dependencies": {
+    "date-utils": "^1.2.21",
+    "mssql": "^4.0.4",
+    "sqlite3": "^3.1.9"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^3.5.0",
+    "promise-test-helper": "^0.2.1",
+    "sinon": "^3.2.1"
+  }
+}

@@ -112,8 +112,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
  
-# Directories of npm 
+# Working folder and file
 coverage
+*.sqlite3
 
 # Local bat file
 *.bat

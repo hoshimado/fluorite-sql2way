@@ -41,11 +41,11 @@ describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
     var closeConnection = api_sql.closeConnection;
     var addBatteryLog2Database = api_sql.addBatteryLog2Database;
     
-    describe("::しーくえすん調査", function(){
+    describe("::シークエンス調査", function(){
 		it("とりあえずテスト", function(){
             var outJsonData = {};
             var inputDataObj = {};
-            var sqlConfig = { "database" : "./db/mydb.sqlite3" };
+            var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
 
             var queryFromGet = { "device_key" : "ほげふがぴよ" };
             var dataFromPost = null;
@@ -53,6 +53,7 @@ describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
             this.timeout(5000);
 
             promise = createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig );
+/*
             promise = promise.then(function( result ){
                 return isOwnerValid( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny" );
             }).then(function( result ){
@@ -63,11 +64,12 @@ describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
                 // expect( maxCount, "記録エントリーの最大個数を返却すること" ).to.be.exist;
                 return addBatteryLog2Database( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 90 );
             });
-
+*/
             return shouldFulfilled(
                 promise
 			).then(function( result ){
-				console.log( result );
+                console.log( result );
+                closeConnection();
 			});
 		});
 	});

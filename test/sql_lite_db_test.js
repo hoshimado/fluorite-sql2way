@@ -39,7 +39,8 @@ describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
     var createPromiseForSqlConnection = api_sql.createPromiseForSqlConnection;
     var isOwnerValid = api_sql.isOwnerValid;
     var closeConnection = api_sql.closeConnection;
-    var addBatteryLog2Database = api_sql.addBatteryLog2Database;
+    var addActivityLog2Database = api_sql.addActivityLog2Database;
+    var getListOfActivityLogWhereDeviceKey = api_sql.getListOfActivityLogWhereDeviceKey;
     
     describe("::シークエンス調査", function(){
 		it("とりあえずテスト", function(){
@@ -53,23 +54,24 @@ describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
             this.timeout(5000);
 
             promise = createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig );
+
+            promise = promise.then( function(result){
+                return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
+            });
 /*
             promise = promise.then(function( result ){
                 return isOwnerValid( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny" );
-            }).then(function( result ){
-                closeConnection();
-                return Promise.resolve( result );
             }).then(function( maxCount ){
-				// console.log( maxCount );
+				console.log( "[maxCount]" + maxCount );
                 // expect( maxCount, "記録エントリーの最大個数を返却すること" ).to.be.exist;
-                return addBatteryLog2Database( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 90 );
+                return addActivityLog2Database( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 90 );
             });
 */
             return shouldFulfilled(
                 promise
 			).then(function( result ){
                 console.log( result );
-                closeConnection();
+                closeConnection( sqlConfig.database );
 			});
 		});
 	});

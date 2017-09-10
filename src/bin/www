@@ -1,16 +1,10 @@
 #!/usr/bin/env node
-/**
- * [server.js] based from /bin/www 
- * encoding=utf-8
- */
-
-
 
 /**
  * Module dependencies.
  */
 
-var app = require('./src/app.js');
+var app = require('../app');
 var debug = require('debug')('myapp:server');
 var http = require('http');
 

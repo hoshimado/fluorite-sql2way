@@ -6,7 +6,7 @@
 
 
 require('date-utils'); // Data() クラスのtoString()を拡張してくれる。
-const debug = require("./debugger.js");
+// const debug = require("./debugger.js");
 var lib = require("./factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
     "sqlite3" : new lib.Factory4Require("sqlite3"),  // https://www.npmjs.com/package/mssql

@@ -35,7 +35,6 @@ var TEST_CONFIG_SQL = { // テスト用
 // exports.closeConnection = closeConnection;
 
 describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
-    var api_v1_sqlite = api_sql.api_v1_sqlite_read;
     var createPromiseForSqlConnection = api_sql.createPromiseForSqlConnection;
     var isOwnerValid = api_sql.isOwnerValid;
     var closeConnection = api_sql.closeConnection;

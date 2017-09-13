@@ -7,7 +7,7 @@ var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
-var api_v1_activitylog_show = require('./roues/show'); // ★追加 for RESTful API★
+var api_v1_activitylog_show = require('./routes/activitylog'); // ★追加 for RESTful API★
 
 
 var app = express();
@@ -26,7 +26,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/users', users);
-app.use('/v1/activitylog/show', api_v1_activitylog_show ); // ★追加 for RESTful API★
+app.use('/api/v1/activitylog', api_v1_activitylog_show ); // ★追加 for RESTful API★
 
 
 // catch 404 and forward to error handler

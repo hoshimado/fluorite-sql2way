@@ -13,7 +13,7 @@ var shouldRejected  = require("promise-test-helper").shouldRejected;
 require('date-utils');
 var ApiCommon_StubAndHooker = require("./support_stubhooker.js").ApiCommon_StubAndHooker;
 
-const api_sql = require("../src/ztrial/sql_lite_db.js");
+const sql_parts = require("../src/api/sql_lite_db.js");
 
 var TEST_CONFIG_SQL = { // テスト用
 	user : "fake_user",
@@ -34,15 +34,113 @@ var TEST_CONFIG_SQL = { // テスト用
 // var isOwnerValid = function( databaseName, deviceKey ){
 // exports.closeConnection = closeConnection;
 
-describe( "sql_lite_db_test.js::SQLiteトライアル", function(){
-    var createPromiseForSqlConnection = api_sql.createPromiseForSqlConnection;
-    var isOwnerValid = api_sql.isOwnerValid;
-    var closeConnection = api_sql.closeConnection;
-    var addActivityLog2Database = api_sql.addActivityLog2Database;
-    var getListOfActivityLogWhereDeviceKey = api_sql.getListOfActivityLogWhereDeviceKey;
+describe( "sql_lite_db_test.js", function(){
+    var createPromiseForSqlConnection = sql_parts.createPromiseForSqlConnection;
+    var isOwnerValid = sql_parts.isOwnerValid;
+    var closeConnection = sql_parts.closeConnection;
+    var addActivityLog2Database = sql_parts.addActivityLog2Database;
+    var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
+
+    /**
+     * @type 各テストからはアクセス（ReadOnly）しない定数扱いの共通変数。
+     */
+    var ORIGINAL = {};
+    before( function(){
+        // ORIGINAL[ "mssql" ] = sql_parts.factoryImpl.mssql.getInstance();
+
+        // mssal はフックしない。バックアップして戻すだけ。
+    });
+    after( function(){
+        // sql_parts.factoryImpl.mssql.setStub( ORIGINAL.mssql );
+    });
     
-    describe("::シークエンス調査", function(){
-		it("とりあえずテスト", function(){
+
+    describe( "::createPromiseForSqlConnection()",function(){
+        it("正常系");
+/*
+        it("正常系",function(){
+            var outJsonData = {};
+            var inputDataObj = {};
+            var sqlConfig = {};
+            var stubs = createAndHookStubs4Mssql( sql_parts );
+
+            stubs.connect.onCall(0).returns( Promise.resolve() );
+            return shouldFulfilled(
+                sql_parts.createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig )
+            ).then(function( result ){
+                assert( stubs.connect.calledOnce );
+                expect( stubs.connect.getCall(0).args[0] ).to.equal( sqlConfig );
+                expect( outJsonData.result ).to.be.exist;
+                expect( result ).to.equal( inputDataObj );
+            });
+        });
+        it("異常系：SQL接続がエラー", function(){
+            var outJsonData = {};
+            var inputDataObj = {};
+            var sqlConfig = {};
+            var EXPECTED_ERROR= {};
+            var stubs = createAndHookStubs4Mssql( sql_parts );
+            
+            stubs.connect.onCall(0).returns( Promise.reject( EXPECTED_ERROR ) );
+            return shouldRejected(
+                sql_parts.createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig )
+            ).catch(function(){
+                assert( stubs.connect.calledOnce );
+                expect( stubs.connect.getCall(0).args[0] ).to.equal( sqlConfig );
+                expect( outJsonData.result ).to.not.be.exist;
+            });
+        });
+//*/
+    });
+    describe( "::isOwnerValid()", function(){
+        var isOwnerValid = sql_parts.isOwnerValid;
+        it("正常系");
+/*
+        it(" finds VALID hash.", function(){
+            var stubs = createAndHookStubs4Mssql( sql_parts );
+            var expected_recordset = [
+                { "owners_hash" : "ほげ", 
+                  "max_entrys"  : 127
+                }
+            ];
+            var stub_query = stubs.Request_query;
+
+            stub_query.onCall(0).returns( Promise.resolve( expected_recordset ) );
+
+            return shouldFulfilled(
+                isOwnerValid( TEST_DATABASE_NAME, expected_recordset[0].owners_hash )
+            ).then( function( maxCount ){
+                var query_str = stub_query.getCall(0).args[0];
+                var expected_str = "SELECT owners_hash, max_entrys FROM [";
+                expected_str += TEST_DATABASE_NAME + "].dbo.owners_permission WHERE [owners_hash]='";
+                expected_str += expected_recordset[0].owners_hash + "'";
+
+                assert( stub_query.calledOnce );
+                expect( query_str ).to.be.equal( 
+                    expected_str
+                );
+                expect( maxCount, "記録エントリーの最大個数を返却すること" ).to.be.exist;
+            });
+        });
+        it(" dont finds VALID hash: WHERE command returns 0 array.", function(){
+            var stubs = createAndHookStubs4Mssql( sql_parts );
+            var stub_query = stubs.Request_query;
+            var expected_recordset = [];
+
+            stub_query.onCall(0).returns( Promise.resolve( expected_recordset ) );
+
+            return shouldRejected(
+                isOwnerValid( TEST_DATABASE_NAME, "fuga" )
+            ).catch( function( err ){
+                assert( err, "エラー引数が渡されること" );
+            });
+        });
+//*/
+    });
+
+
+    describe("::SQLiteトライアル", function(){
+		it("シークエンス調査", function(){
             var outJsonData = {};
             var inputDataObj = {};
             var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス

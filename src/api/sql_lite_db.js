@@ -20,6 +20,72 @@ exports.factoryImpl = factoryImpl;
 
 
 /**
+ * 渡されたMACアドレス（じゃなくても良いけど）から、ハッシュ値を求める。
+ * 一応、ハッシュパターンは選択できるようにしておく。
+ * 
+ * @param{String} plainText 変換元になる文字列。
+ * @param{String} ハッシュ値の計算方法。cryptoモジュール準拠。とりあえず「md5」設定しておけ。
+ */
+var getHashHexStr = function( plainText, algorithm ){
+	var crypto = factoryImpl.crypto.getInstance();
+	var hashsum = crypto.createHash(algorithm);
+	hashsum.update(plainText);
+
+	// cryptoモジュール（node.js標準）の詳細は以下のURL参照
+	// http://qiita.com/_daisuke/items/990513e89ca169e9c4ad
+	// http://kaworu.jpn.org/javascript/node.js%E3%81%A7%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E3%82%92%E8%A8%88%E7%AE%97%E3%81%99%E3%82%8B
+	// http://nodejs.jp/nodejs.org_ja/docs/v0.4/api/crypto.html
+
+	return hashsum.digest("hex");
+};
+exports.getHashHexStr = getHashHexStr;
+
+
+
+
+
+
+/**
+ * HTTP::GETデータから、「SHOW操作」に必要なデータ郡を取得。
+ * API呼び出しのフォーマットのチェックを兼ねる。フォーマット不正なら { "invalid" : "理由" } を返却。
+ * 入力データは、getData = { device_key } が期待値。
+ * 
+ * @returns オブジェクト{ device_key: "" }。フォーマット違反なら{ "invalid" : "理由" }
+ */
+var getShowObjectFromGetData = function( getData ){
+	var valid_data = {}
+	var date_start = (function( pastDay ){
+		var now_date = new Date();
+		var base_sec = now_date.getTime() - pastDay * 86400000; //日数 * 1日のミリ秒数;
+		now_date.setTime( base_sec );
+		return now_date;
+	}( 7 )); // 1週間前までを取得、を基本とする。
+	var date_end = new Date(); // 現時点までを取得。
+
+	if( getData[ "device_key" ] ){
+		valid_data[ "device_key" ] = getData["device_key"];
+		valid_data[ "date_start" ] = getData.date_start ? getData.date_start : date_start.toFormat("YYYY-MM-DD"); // data-utilsモジュールでの拡張を利用。
+		valid_data[ "date_end"   ] = getData.date_end ? getData.date_end : date_end.toFormat("YYYY-MM-DD");
+		// 終端は、Query時に「その日の23:59」を指定しているので、「今日」でOK。
+
+		if( !valid_data.date_start.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
+			valid_data[ "invalid" ] = "format of date is wrong.";
+		}
+		if( !valid_data.date_end.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
+			valid_data[ "invalid" ] = "format of date is wrong.";
+		}
+	}else{
+		valid_data[ "invalid" ] = "parameter is INVAILD.";
+	}
+
+	return valid_data;
+};
+exports.getShowObjectFromGetData = getShowObjectFromGetData;
+
+
+
+
+/**
  * ※SQL接続生成＋Json応答（OK/NG）、なのでsqliteを直接ではなく、この関数を定義する。
  * 
  * 接続成功時は、resolve( inputDataObj )を返却する。
@@ -36,8 +102,8 @@ var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConf
 		return Promise.resolve( inputDataObj )
 	}else{
 		return new Promise(function(resolve,reject){
-			var sqlite = sqlite3 = factoryImpl.sqlite3.getInstance().verbose();
-			var db_connect = new sqlite.Database( sqlConfig.database, (err) =>{
+			var sqlite = factoryImpl.sqlite3.getInstance().verbose();
+			var db_connect = new sqlite.Database( databaseName, (err) =>{
 				if( !err ){
 					db[ databaseName ] = db_connect;
 					outJsonData["result"] = "sql connection is OK!";
@@ -66,6 +132,7 @@ var closeConnection = function( databaseName ){
     return new Promise(function(resolve,reject){
 		db.close((err)=>{
 			if(!err){
+				dbs[ databaseName ] = null;
 				resolve();
 			}else{
 				reject(err)
@@ -171,6 +238,9 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 			"isReady" : false
 		});
 	}
+
+// テストの都合で、一旦Null置き。
+period = null;
 
 	var query_str = "SELECT created_at, type FROM activitylogs";
 	query_str += " WHERE [owners_hash]='" + deviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。

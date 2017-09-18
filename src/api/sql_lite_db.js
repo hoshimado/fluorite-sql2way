@@ -9,6 +9,7 @@ require('date-utils'); // Data() クラスのtoString()を拡張してくれる�
 // const debug = require("./debugger.js");
 var lib = require("./factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
+	"fs" : new lib.Factory4Require("fs"),
     "sqlite3" : new lib.Factory4Require("sqlite3"),  // https://www.npmjs.com/package/mssql
     "db" : new lib.Factory( {} ) // データベースごとにハッシュマップで持つ。
 };
@@ -85,6 +86,7 @@ exports.getShowObjectFromGetData = getShowObjectFromGetData;
 
 
 
+
 /**
  * ※SQL接続生成＋Json応答（OK/NG）、なのでsqliteを直接ではなく、この関数を定義する。
  * 
@@ -95,9 +97,9 @@ exports.getShowObjectFromGetData = getShowObjectFromGetData;
  * @param{Object} sqlConfig     SQL接続情報。inputDataObjが有効（invalidメンバ無し）なら、resolve(inputDataObj)する。
  */
 var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConfig ){
-	var db = factoryImpl.db.getInstance();
+	var dbs = factoryImpl.db.getInstance();
 	var databaseName = sqlConfig.database;
-	if( db[ databaseName ] ){
+	if( dbs[ databaseName ] ){
         outJsonData["result"] = "sql connection is OK already!";
 		return Promise.resolve( inputDataObj )
 	}else{
@@ -105,16 +107,15 @@ var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConf
 			var sqlite = factoryImpl.sqlite3.getInstance().verbose();
 			var db_connect = new sqlite.Database( databaseName, (err) =>{
 				if( !err ){
-					db[ databaseName ] = db_connect;
+					dbs[ databaseName ] = db_connect;
 					outJsonData["result"] = "sql connection is OK!";
-
-					resolve( inputDataObj );
+					resolve(inputDataObj);
 				}else{
 					outJsonData[ "errer_on_connection" ] = err;
 					reject(err);
 				}
 			});
-		});
+		})
 	}
 };
 exports.createPromiseForSqlConnection = createPromiseForSqlConnection;
@@ -141,8 +142,56 @@ var closeConnection = function( databaseName ){
     });
 };
 exports.closeConnection = closeConnection;
-    
-    
+
+
+
+var setupTable1st = function( databaseName ){
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ]; // 異常系は省略
+	var createActivtyLogTable = new Promise(function(resolve,reject){
+		var query_str = "CREATE TABLE activitylogs([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [created_at] [datetime] NOT NULL, [type] [int] NULL, [owners_hash] [char](64) NULL )";
+
+		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
+			if(!err){
+				resolve();
+			}else{
+				reject(err);
+			}
+		});
+	});	
+	var createPermissionTable = new Promise(function(resolve,reject){
+		var query_str = "CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL)";
+
+		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
+			if(!err){
+				resolve();
+			}else{
+				reject(err);
+			}
+		});
+	});	
+	return new Promise(function(resolve,reject){
+		Promise.all( [createPermissionTable, createActivtyLogTable] ).then(()=>{
+			return new Promise(function(res, rej){
+				var query_str = "select * from sqlite_master;";
+				
+				db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
+					if(!err){
+						res(rows);
+					}else{
+						rej(err);
+					}
+				});
+			});
+		}).then(( rows )=>{
+			resolve( rows )
+		}).catch((err)=>{
+			reject(err);
+		});
+	});
+};
+exports.setupTable1st = setupTable1st;
+
 
 
 /**

@@ -144,14 +144,19 @@ describe( "sql_lite_db_test.js", function(){
             var outJsonData = {};
             var inputDataObj = {};
             var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
-
+//            sqlConfig = { "database" : "./db/test.splite3" }
+             
             var queryFromGet = { "device_key" : "ほげふがぴよ" };
             var dataFromPost = null;
             var promise;
             this.timeout(5000);
 
             promise = createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig );
-
+/*
+            promise = promise.then( function(result){
+                return sql_parts.setupTable1st( sqlConfig.database );
+            });
+*/
             promise = promise.then( function(result){
                 return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
             });

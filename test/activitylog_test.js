@@ -56,7 +56,7 @@ describe( "api_sql_tiny.js", function(){
         this.writeJsonAsString = sinon.stub();
     };
 
-    var setupAbnormalFormatTest = function( stubs ){
+    var setupAnomalyFormatTest = function( stubs ){ // ※「Abnormal」では無い。
         var EXPECTED_INPUT_DATA = { "owner_hash" : "があっても、", "invalid" : "が在ったら「不正データ」と判断されたを意味する。" };
 
         // 【ToDo】↓ここはspyで良いのかもしれないが、、、上手く実装できなかったのでstubで。stubで悪いわけではない。
@@ -78,7 +78,7 @@ describe( "api_sql_tiny.js", function(){
             "EXPECTED_INPUT_DATA" : EXPECTED_INPUT_DATA
         };
     };
-    var verifyAbnormalFormatTest = function( result, stubs, param ){
+    var verifyAnomalyFormatTest = function( result, stubs, param ){ // ※「Abnormal」では無い。
         var stubCreateConnection = stubs.sql_parts.createPromiseForSqlConnection;
         var stubList = stubs.sql_parts.getListOfActivityLogWhereDeviceKey;
 

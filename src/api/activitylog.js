@@ -46,15 +46,19 @@ exports.API_PARAM = API_PARAM;
 
 
 
-var API_V1_BASE = function(){
-	this._outJsonData = {};
+/**
+ * 基本となるSQLのシークエンス。クラス（というか、プロトタイプ）。
+ */
+var API_V1_BASE = function( outJsonBuffer ){
+	this._outJsonData = outJsonBuffer ? outJsonBuffer : {};
 };
 API_V1_BASE.prototype.isOwnerValid = function( inputData ){
 	// 接続元の認証Y/Nを検証。
-	var outJsonData = this._outJsonData;
+	var instance = this;
+	var outJsonData = instance._outJsonData;
 	var paramClass = new API_PARAM( inputData );
 
-	return new Promise(function(resolve,reject){
+	return new Promise(function(resolve,reject){ // アロー演算子で統一してもいいんだけどね⇒this問題の回避は。
 		var config = factoryImpl.CONFIG_SQL.getInstance();
 		var isOwnerValid = factoryImpl.sql_parts.getInstance( "isOwnerValid" );
 		var is_onwer_valid_promise = isOwnerValid( 
@@ -75,7 +79,6 @@ API_V1_BASE.prototype.isOwnerValid = function( inputData ){
 };
 API_V1_BASE.prototype.isAccessRateValied = function(){};
 API_V1_BASE.prototype.requestSql = function( paramClass ){
-	var outJsonData = this._outJsonData;
 	// paramClass =>
 	// API_PARAM.prototype.getDeviceKey = function(){ return isDefined( this, "device_key"); };
 	// API_PARAM.prototype.getTypeValue = function(){ return isDefined( this, "type_value"); };
@@ -83,10 +86,41 @@ API_V1_BASE.prototype.requestSql = function( paramClass ){
 	// API_PARAM.prototype.getEndDate   = function(){ return isDefined( this, "date_end"); };
 	// API_PARAM.prototype.getMaxCount = function(){ return isDefined( this, "max_count"); };
 };
-API_V1_BASE.prototype.closeNormal = function(){};
-API_V1_BASE.prototype.closeAnomaly = function(){};
-API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromGetData( queryFromGet );済み。
-	var outJsonData = this._outJsonData;
+API_V1_BASE.prototype.closeNormal = function(){
+	var instance = this;
+	var outJsonData = instance._outJsonData;
+
+	return new Promise((resolve,reject)=>{
+		var config = factoryImpl.CONFIG_SQL.getInstance();
+		var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
+		closeConnection( config.database ).then(()=>{
+			resolve({
+				"jsonData" : outJsonData,
+				"status" : 200 // OK 【FixMe】直前までの無いように応じて変更する。
+			});
+		});
+	});
+};
+API_V1_BASE.prototype.closeAnomaly = function( err ){
+	var instance = this;
+	var outJsonData = instance._outJsonData;
+
+	return new Promise((resolve,reject)=>{
+		var config = factoryImpl.CONFIG_SQL.getInstance();
+		var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
+		var http_status = (err && err.http_status) ? err.http_status : 500;
+
+		closeConnection( config.database ).then(()=>{
+			resolve({
+			"jsonData" : outJsonData,
+			"status" : http_status
+			}); // 異常系処理を終えたので、戻すのは「正常」。
+		});
+	});
+};
+API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromGetData( queryFromGet );済みを渡す。
+	var instance = this;
+	var outJsonData = instance._outJsonData;
 	var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
 
 	if( inputData.invalid && inputData.invalid.length > 0 ){
@@ -97,51 +131,23 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 		});
 	}
 
-  return createPromiseForSqlConnection( 
+	return createPromiseForSqlConnection( 
 		outJsonData, 
 		inputData, 
 		factoryImpl.CONFIG_SQL.getInstance()
-	).then(function( inputData ){
-		return this.isOwnerValid( inputData );
-  }).then(function( paramClass ){
-		// this.isAccessRateValied()
+	).then( ( inputData )=>{
+		return instance.isOwnerValid( inputData );
+  	}).then(function( paramClass ){
 		return Promise.resolve( paramClass );
-  }).then(function( paramClass ){
-		return this.requestSql( paramClass );
+  	}).then( ( paramClass )=>{
+		return instance.requestSql( paramClass );
+	}).then(function(){
+		// ここまですべて正常終了
+		return instance.closeNormal();
+	}).catch(function(err){
+        // どこかでエラーした⇒エラー応答のjson返す。
+		return instance.closeAnomaly( err );
 	});
-};
-var activitylog_show = function( queryFromGet, dataFromPost ){
-	var API_SHOW = function(){
-		var self = this;
-		// API_V1_BASE.call( this, constaractParam ); // 継承元のコンスタラクタを明示的に呼び出す。
-	};
-	API_SHOW.prototype = Object.create( API_V1_BASE.prototype );
-	API_SHOW.prototype.requestSql = function( paramClass ){
-		// 対象のログデータをSQLへ要求
-		var param = new API_PARAM( inputData );
-		var config = factoryImpl.CONFIG_SQL.getInstance();
-    var getListOfActivityLogWhereDeviceKey = factoryImpl.sql_parts.getInstance().getListOfActivityLogWhereDeviceKey;
-
-		return new Promise(function(resolve,reject){
-			getListOfActivityLogWhereDeviceKey(
-				config.database, 
-				param.getDeviceKey(), 
-				{ 
-					"start" : param.getStartDate(), 
-					"end"   : param.getEndDate()
-				}
-			).then(function(recordset){
-        // ログ取得処理が成功
-				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
-				outJsonData["table"] = recordset;
-				resolve();
-			}).catch(function(err){
-				// 取得処理で失敗。
-				outJsonData[ "error_on_insert" ];
-				reject( err ); // ⇒次のcatch()が呼ばれる。
-			});
-		});
-	};
 };
 
 
@@ -150,94 +156,27 @@ var activitylog_show = function( queryFromGet, dataFromPost ){
  * バッテリーログをSQLから、指定されたデバイス（のハッシュ値）のものを取得する。
  */
 exports.api_v1_activitylog_show = function( queryFromGet, dataFromPost ){
-  // 接続要求のデータフォーマットを検証＆SQL接続を生成
-  var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
-  var getShowObjectFromGetData = factoryImpl.sql_parts.getInstance().getShowObjectFromGetData;
-	var outJsonData = {};
-	var inputData = getShowObjectFromGetData( queryFromGet );
-
-
-	// メモ2017.3.6
-	// コード共通化はクラス継承で実現すればよい。【後で】
-	if( inputData.invalid && inputData.invalid.length > 0 ){
-		outJsonData[ "error_on_format" ] = "GET or POST format is INVAILD.";
-		return Promise.resolve({
-			"jsonData" : outJsonData,
-			"status" : 400 // Bad Request
-		});
-	}
-  return createPromiseForSqlConnection( 
-		outJsonData, 
-		inputData, 
-		factoryImpl.CONFIG_SQL.getInstance()
-	).then(function( inputData ){
-		// 接続元の認証Y/Nを検証。
-		var param = new API_PARAM( inputData );
-
-    return new Promise(function(resolve,reject){
-			var config = factoryImpl.CONFIG_SQL.getInstance();
-			var isOwnerValid = factoryImpl.sql_parts.getInstance( "isOwnerValid" );
-      var is_onwer_valid_promise = isOwnerValid( 
-				config.database, 
-				param.getDeviceKey() 
-			);
-      is_onwer_valid_promise.then(function( maxCount ){
-				resolve({ 
-					"device_key" : param.getDeviceKey(), 
-					"date_start" : param.getStartDate(),
-					"date_end" : param.getEndDate(),
-					"max_count" : maxCount 
-				}); // ⇒次のthen()が呼ばれる。
-			}).catch(function(err){
-				if( err ){
-					outJsonData[ "errer_on_validation" ] = err;
-				}
-				reject({
-					"http_status" : 401 // Unauthorized
-				}); // ⇒次のcatch()が呼ばれる。
-			});
-		});
-  })
-  /*
-  .then(function( permittedInfomation ){
-		// 接続元の接続レート（頻度）の許可／不許可を検証
-		var param = new API_PARAM( permittedInfomation );
-		var isDeviceAccessRateValied = factoryImpl.sql_parts.getInstance("isDeviceAccessRateValied");
-		var config = factoryImpl.CONFIG_SQL.getInstance();
-		var limit = factoryImpl.RATE_LIMIT.getInstance();
-
-		return new Promise(function(resolve,reject){
-			isDeviceAccessRateValied( 
-				config.database, 
-				param,
-				limit.TIMES_PER_HOUR
-			).then(function(result){
-				resolve(result);
-			}).catch(function(err){
-				// アクセス上限エラー。
-				reject({
-					"http_status" : 503 // Service Unavailable 過負荷
-				}); // ⇒次のcatch()が呼ばれる。
-			});
-		});
-  })
-  */
-  .then(function( inputData ){
+	var API_SHOW = function(){
+		this._outJsonData = {};
+		API_V1_BASE.call( this, this._outJsonData ); // 継承元のコンスタラクタを明示的に呼び出す。
+	};
+	API_SHOW.prototype = Object.create( API_V1_BASE.prototype );
+	API_SHOW.prototype.requestSql = function( paramClass ){
 		// 対象のログデータをSQLへ要求
-		var param = new API_PARAM( inputData );
+		var outJsonData = this._outJsonData;
 		var config = factoryImpl.CONFIG_SQL.getInstance();
-    var getListOfActivityLogWhereDeviceKey = factoryImpl.sql_parts.getInstance().getListOfActivityLogWhereDeviceKey;
+	    var getListOfActivityLogWhereDeviceKey = factoryImpl.sql_parts.getInstance().getListOfActivityLogWhereDeviceKey;
 
 		return new Promise(function(resolve,reject){
 			getListOfActivityLogWhereDeviceKey(
 				config.database, 
-				param.getDeviceKey(), 
+				paramClass.getDeviceKey(), 
 				{ 
-					"start" : param.getStartDate(), 
-					"end"   : param.getEndDate()
+					"start" : paramClass.getStartDate(), 
+					"end"   : paramClass.getEndDate()
 				}
 			).then(function(recordset){
-        // ログ取得処理が成功
+		        // ログ取得処理が成功
 				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
 				outJsonData["table"] = recordset;
 				resolve();
@@ -247,34 +186,55 @@ exports.api_v1_activitylog_show = function( queryFromGet, dataFromPost ){
 				reject( err ); // ⇒次のcatch()が呼ばれる。
 			});
 		});
-	}).then(function(){
-    // ここまですべて正常終了
-    return new Promise((resolve,reject)=>{
-      var config = factoryImpl.CONFIG_SQL.getInstance();
-      var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
-      closeConnection( config.database ).then(()=>{
-        resolve({
-          "jsonData" : outJsonData,
-          "status" : 200 // OK 【FixMe】直前までの無いように応じて変更する。
-        });
-      });
-    });
-	}).catch(function(err){
-        // どこかでエラーした⇒エラー応答のjson返す。
-    return new Promise((resolve,reject)=>{
-      var config = factoryImpl.CONFIG_SQL.getInstance();
-      var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
-      var http_status = (err && err.http_status) ? err.http_status : 500;
-
-      closeConnection( config.database ).then(()=>{
-        resolve({
-          "jsonData" : outJsonData,
-          "status" : http_status
-        }); // 異常系処理を終えたので、戻すのは「正常」。
-      });
-    });
-  });
+	};
+	var subInstance = new API_SHOW();
+	var getShowObjectFromGetData = factoryImpl.sql_parts.getInstance().getShowObjectFromGetData;
+	var inputData = getShowObjectFromGetData( queryFromGet );
+	return subInstance.run( inputData );
 };
+
+
+/**
+ * バッテリーログをSQLへ記録するAPI
+ */
+exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
+	var API_ADD = function(){
+		this._outJsonData = {};
+		API_V1_BASE.call( this, this._outJsonData ); // 継承元のコンスタラクタを明示的に呼び出す。
+	};
+	API_ADD.prototype = Object.create( API_V1_BASE.prototype );
+	API_ADD.prototype.requestSql = function( paramClass ){
+		// 対象のログデータをSQLへ要求
+		var outJsonData = this._outJsonData;
+		var config = factoryImpl.CONFIG_SQL.getInstance();
+	    var addActivityLog2Database = factoryImpl.sql_parts.getInstance().addActivityLog2Database;
+
+		return new Promise(function(resolve,reject){
+			addActivityLog2Database(
+				config.database, 
+				param.getDeviceKey(), 
+				param.getBatteryValue() 
+			).then(function(resultInsert){
+				// 「インサート」処理が成功
+				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
+				var param = new API_PARAM(resultInsert);
+				outJsonData[ "result" ] = "Success to insert " + param.getBatteryValue() + " as batterylog on Database!";
+				outJsonData[ "device_key"] = param.getDeviceKey();
+				resolve();
+			}).catch(function(err){
+				// 「インサート」処理で失敗。
+				outJsonData[ "error_on_insert" ];
+				reject( err ); // ⇒次のcatch()が呼ばれる。
+			});
+		});
+	};
+	var subInstance = new API_ADD();
+	var getShowObjectFromGetData = factoryImpl.sql_parts.getInstance().getInsertObjectFromPostData;
+	var inputData = getInsertObjectFromPostData( dataFromPost );
+	return subInstance.run( inputData );
+};
+
+
 
 
 

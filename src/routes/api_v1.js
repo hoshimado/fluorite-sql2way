@@ -38,26 +38,38 @@ console.log( "[/show]" );
 	
 	return api_v1_activitylog_show(req.query, null ).then((result)=>{
 console.log( result );
-		if(result.status == 200){
-			res.header('Content-Type', 'application/json; charset=utf-8');
-			res.send( result.jsonData );
-		}else{
-			res.header('Content-Type', 'application/json; charset=utf-8');
-			res.send( result.jsonData );
-		}
+
+		res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
+			"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。
+			"Pragma" : "no-cacha", 
+			"Cache-Control" : "no-cache",
+			"Content-Type" : "application/json; charset=utf-8"
+		});
+		res.status(result.status).send( result.jsonData );
+		res.end();
+/*
+    //res.jsonp([body])
+	if( this.itsCallBackName ){
+		// http://tsujimotter.info/2013/01/03/jsonp/
+		data = this.itsCallBackName + "(" + data + ")";
+		this.writeHead( httpStatus, { 
+			"Pragma" : "no-cacha", 
+			"Cache-Control" : "no-cache",
+			"Content-Type" : "application/javascript; charset=utf-8"
+		});
+	}
+*/
 	}).catch((err)=>{
-		res.header('Content-Type', 'application/json; charset=utf-8');
-		res.send( err );
+		res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
+			"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。
+			"Pragma" : "no-cacha", 
+			"Cache-Control" : "no-cache",
+			"Content-Type" : "application/json; charset=utf-8"
+		});
+		res.status(500).send( err );
+		res.end();
 	});
 });
 
 module.exports = router;
 
-
-
-
-
-
-
-
-  

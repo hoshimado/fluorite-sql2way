@@ -1,2 +1,2 @@
-# fluorite-sql2way
-sample of sqlite and sqlserver
+# fluorite-sql2way::skeleton-express-restful
+sample of restful with express for azure.

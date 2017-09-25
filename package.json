@@ -31,7 +31,7 @@
 
     "date-utils": "^1.2.21",
     "mssql": "^4.0.4",
-    "sqlite3": "^3.1.9"
+    "sqlite3": "3.1.9"
   },
   "devDependencies": {
     "chai": "^4.1.2",

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- client_app.html -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+    <!--
+        http://kagasu.hatenablog.com/entry/2017/07/23/170037
+     -->
+     <script src="./javascripts/vue_client.js"></script>
+  </head>
+
+  <body>
+    <div id="app">
+      <ul>
+        <li v-for="character in characters">
+          {{character.name}}
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>
+

@@ -12,6 +12,8 @@ var factoryImpl = { // require()を使う代わりに、new Factory() する。
 var _SQL_CONNECTION_CONFIG = require("./sql_config.js");
 factoryImpl[ "CONFIG_SQL" ] = new lib.Factory(_SQL_CONNECTION_CONFIG.CONFIG_SQL);
 
+//exports.CREATE_KEY
+
 
 // UTデバッグ用のHookポイント。運用では外部公開しないメソッドはこっちにまとめる。
 exports.factoryImpl = factoryImpl;

@@ -157,6 +157,25 @@ describe( "sql_lite_db_test.js", function(){
                 return sql_parts.setupTable1st( sqlConfig.database );
             });
 */
+/*
+[ { type: 'table',
+    name: 'activitylogs',
+    tbl_name: 'activitylogs',
+    rootpage: 2,
+    sql: 'CREATE TABLE activitylogs([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [created_at] [datetime] NOT NULL, [type] [int] NULL, [owners_hash] [char](64) NULL )' },
+  { type: 'table',
+    name: 'sqlite_sequence',
+    tbl_name: 'sqlite_sequence',
+    rootpage: 3,
+    sql: 'CREATE TABLE sqlite_sequence(name,seq)' },
+  { type: 'table',
+    name: 'owners_permission',
+    tbl_name: 'owners_permission',
+    rootpage: 4,
+    sql: 'CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL)' } ]
+*/
+
+
             promise = promise.then( function(result){
                 return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
             });

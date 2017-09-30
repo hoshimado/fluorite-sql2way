@@ -10,6 +10,7 @@ require('date-utils'); // Data() クラスのtoString()を拡張してくれる�
 var lib = require("./factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
 	"fs" : new lib.Factory4Require("fs"),
+	"crypto" : new lib.Factory4Require("crypto"),
     "sqlite3" : new lib.Factory4Require("sqlite3"),  // https://www.npmjs.com/package/mssql
     "db" : new lib.Factory( {} ) // データベースごとにハッシュマップで持つ。
 };
@@ -42,6 +43,9 @@ var getHashHexStr = function( plainText, algorithm ){
 exports.getHashHexStr = getHashHexStr;
 
 
+var _wrapDeviceKey = function( deviceKey ){
+	return getHashHexStr( deviceKey, "md5" );
+};
 
 
 
@@ -161,7 +165,7 @@ var setupTable1st = function( databaseName ){
 		});
 	});	
 	var createPermissionTable = new Promise(function(resolve,reject){
-		var query_str = "CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL)";
+		var query_str = "CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL, UNIQUE ([owners_hash]) )";
 
 		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
 			if(!err){
@@ -194,14 +198,15 @@ var setupTable1st = function( databaseName ){
 exports.setupTable1st = setupTable1st;
 
 
+
 /**
- * SQLへのアクセスが許可されたアクセス元か？
+ * ユーザーを、テーブルに登録する。
  * 
  * @param{String} databaseName データベース名
  * @param{String} deviceKey アクセスデバイスごとの一意の識別子（※ハッシュにしようか？）
  * @param{Number} maxEntrys ユーザー事（デバイス事）の可能な最大登録数。
  * @param{String} password ユーザーごとのパスワード（無しも可とする？）
- * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は引数無し。reject()はエラー内容が引数に入る。
+ * @returns{Promise} 登録結果。Promise経由で非同期に返る。resolve()は登録内容。reject()はエラー内容が引数に入る。
  */
 var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 	var dbs = factoryImpl.db.getInstance();
@@ -213,7 +218,8 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 	}
 
 	return new Promise(function(resolve,reject){
-		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password]) VALUES('" + deviceKey + "', " + maxEntrys + ", '" + passwordStr + "')";
+		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])";
+		query_str += "VALUES('" + _wrapDeviceKey(deviceKey) + "', " + maxEntrys + ", '" + passwordStr + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
@@ -223,6 +229,45 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 				};
 				return resolve( insertedData );
 			}else{
+				// ToDo.
+				// 重複キーだと、以下のerrが返る。
+				// このまま返す、、、のは将来的に修正したいね。
+				// { [Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: owners_permission.owners_hash] errno: 19, code: 'SQLITE_CONSTRAINT' }
+				reject({
+					"cant_to_insert" : err
+				});
+			}
+		});
+	});
+};
+exports.addNewUser = addNewUser;
+
+
+
+/**
+ * 登録済みのユーザー数を取得する。
+ * 
+ * @param{String} databaseName データベース名
+ * @returns{Promise} 検証結果。Promise経由で非同期に返る。
+ */
+var getNumberOfUsers = function(databaseName ){
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function(resolve,reject){
+		var query_str = "SELECT count(*) FROM owners_permission";
+
+		db.all(query_str, [], (err, rows) => {
+			var item;
+			if(!err){
+				item = rows[0];
+				return resolve( item["count(*)"] );
+			}else{
 				reject({
 					"isEnableValidationProcedure" : false
 				});
@@ -230,7 +275,11 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 		});
 	});
 };
-exports.addNewUser = addNewUser;
+exports.getNumberOfUsers = getNumberOfUsers;
+
+
+
+
 
 
 /**
@@ -252,7 +301,7 @@ var isOwnerValid = function( databaseName, deviceKey ){
 	return new Promise(function(resolve,reject){
 		var query_str = "SELECT owners_hash, max_entrys";
 		query_str += " FROM owners_permission";
-		query_str += " WHERE [owners_hash]='" + deviceKey + "'";
+		query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'";
 
 		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
 			if(!err){
@@ -289,7 +338,8 @@ var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
 	return new Promise(function(resolve,reject){
 		var now_date = new Date();
 		var date_str = now_date.toFormat("YYYY-MM-DD HH24:MI:SS.000"); // data-utilsモジュールでの拡張を利用。
-		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash ) VALUES('" + date_str + "', " + typeOfAction + ", '" + deviceKey + "')";
+		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash )";
+		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + _wrapDeviceKe(deviceKey) + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
@@ -331,7 +381,7 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 period = null;
 
 	var query_str = "SELECT created_at, type FROM activitylogs";
-	query_str += " WHERE [owners_hash]='" + deviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
+	query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
 	// http://sql55.com/column/string-comparison.php
 	// > SQL Server では文字列を比較する際、比較対象の 2 つの文字列の長さが違った場合、
 	// > 短い方の文字列の後ろにスペースを足して、長さの長い方にあわせてから比較します。

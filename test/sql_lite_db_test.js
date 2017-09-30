@@ -41,6 +41,7 @@ describe( "sql_lite_db_test.js", function(){
     var addActivityLog2Database = sql_parts.addActivityLog2Database;
     var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
     var addNewUser = sql_parts.addNewUser;
+    var getNumberOfUsers = sql_parts.getNumberOfUsers;
 
     /**
      * @type 各テストからはアクセス（ReadOnly）しない定数扱いの共通変数。
@@ -195,15 +196,18 @@ pe] [int] NULL, [owners_hash] [char](64) NULL )' },
 L, [password] [char](16) NULL, [max_entrys] [int] NOT NULL)' } ]
 */
 
+            promise = promise.then( function(result){
+                return getNumberOfUsers( sqlConfig.database );
+            });
 /*
-        promise = promise.then( function(result){
-            return addNewUser( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 1024, "password" );
-        });
-*/
+            promise = promise.then( function(result){
+                return addNewUser( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 1024, "password" );
+            });
+
             promise = promise.then( function(result){
                 return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
             });
-/*
+
             promise = promise.then(function( result ){
                 return isOwnerValid( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny" );
             }).then(function( maxCount ){

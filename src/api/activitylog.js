@@ -11,8 +11,8 @@ var factoryImpl = { // require()を使う代わりに、new Factory() する。
 };
 var _SQL_CONNECTION_CONFIG = require("./sql_config.js");
 factoryImpl[ "CONFIG_SQL" ] = new lib.Factory(_SQL_CONNECTION_CONFIG.CONFIG_SQL);
-factoryImpl[ "SETUP_KEY" ]  = new lib.Factory(_SQL_CONNECTION_CONFIG.CREATE_KEY);
-
+factoryImpl[ "SETUP_KEY" ]  = new lib.Factory( _SQL_CONNECTION_CONFIG.SETUP_KEY );
+factoryImpl[ "MAX_USERS"] = new lib.Factory( _SQL_CONNECTION_CONFIG.MAX_USERS );
 
 
 // UTデバッグ用のHookポイント。運用では外部公開しないメソッドはこっちにまとめる。
@@ -192,7 +192,7 @@ exports.api_vi_activitylog_setup = function( queryFromGet, dataFromPost ){
 exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 	var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
 	var outJsonData = {};
-	var config = factoryImpl.CONFIG_SQL.getInstance()
+	var config = factoryImpl.CONFIG_SQL.getInstance();
 	
 	// ◆ToDo:ここは関数化する。
 	if( !(dataFromPost.username) ){ // ◆ToDo:パラメータ検証は要実装◆
@@ -206,14 +206,30 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 		"password"   : "テストパス"
 	};
 
+
 	return createPromiseForSqlConnection(
 		outJsonData,
 		inputData,
 		config
 	).then( (inputData )=>{
+		return new Promise((resolve,reject)=>{
+			var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
+
+			var promise = getNumberOfUsers( config.database );
+			promise.then((nowNumberOfUsers)=>{
+				if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
+					resolve(inputData);
+				}else{
+					reject("the number of users is over.");
+				}
+			}).catch((err)=>{
+				reject(err);
+			});
+		});
+	}).then( (inputData )=>{
 		var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
-		// ◆ToDo：その前に、「登録ユーザー数」の上限判定入れないと！
-		// ◆ToDo:↓上限数は環境変数側で持たせる。◆
+
+		// ◆ToDo:↓ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
 		return addNewUser( config.database, inputData.device_key, 128, inputData.password );
 	}).then( (insertedData)=>{
 		outJsonData [ "signuped" ] = insertedData;

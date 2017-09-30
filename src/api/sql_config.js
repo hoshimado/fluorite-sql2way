@@ -18,4 +18,6 @@ var CONFIG_SQL = {
 exports.CONFIG_SQL = CONFIG_SQL;
 
 
-exports.CREATE_KEY = process.env.CREATE_KEY;
+exports.SETUP_KEY = process.env.CREATE_KEY;
+exports.MAX_USERS = process.env.MAX_USERS;
+

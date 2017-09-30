@@ -169,13 +169,57 @@ exports.api_vi_activitylog_setup = function( queryFromGet, dataFromPost ){
 		{}, // ここは受け渡すだけなので、ダミー。
 		config
 	).then( (inputData )=>{ // ここで渡されるinputDataは空{}。
-	var setupTable1st = factoryImpl.sql_parts.getInstance().setupTable1st;
+		var setupTable1st = factoryImpl.sql_parts.getInstance().setupTable1st;
 		return setupTable1st( config.database );
 	}).then( (successResultOfTable)=>{
 		outJsonData [ "tables" ] = successResultOfTable;
 		return Promise.resolve(200);
 	}).catch((err)=>{
-		outJsonData [ "setuperr" ] = err;
+		outJsonData [ "setup_err" ] = err;
+		return Promise.resolve(500);
+	}).then(( httpStatus )=>{
+		var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
+		return new Promise((resolve,reject)=>{
+			closeConnection( config.database ).then(()=>{
+				resolve({
+					"jsonData" : outJsonData,
+					"status" : httpStatus
+				});
+			});		
+		})
+	});
+}
+exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
+	var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
+	var outJsonData = {};
+	var config = factoryImpl.CONFIG_SQL.getInstance()
+	
+	// ◆ToDo:ここは関数化する。
+	if( !(dataFromPost.username) ){ // ◆ToDo:パラメータ検証は要実装◆
+		return Promise.resolve({
+			"jsonData" : outJsonData, // 何も入れないまま。
+			"status" : 403 // Forbidden
+		});
+	}
+	var inputData = {
+		"device_key" : dataFromPost.username,
+		"password"   : "テストパス"
+	};
+
+	return createPromiseForSqlConnection(
+		outJsonData,
+		inputData,
+		config
+	).then( (inputData )=>{
+		var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
+		// ◆ToDo：その前に、「登録ユーザー数」の上限判定入れないと！
+		// ◆ToDo:↓上限数は環境変数側で持たせる。◆
+		return addNewUser( config.database, inputData.device_key, 128, inputData.password );
+	}).then( (insertedData)=>{
+		outJsonData [ "signuped" ] = insertedData;
+		return Promise.resolve(200);
+	}).catch((err)=>{
+		outJsonData [ "failed" ] = err;
 		return Promise.resolve(500);
 	}).then(( httpStatus )=>{
 		var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;

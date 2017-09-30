@@ -66,9 +66,19 @@ var responseAnomaly = function( res, err ){
 
 router.post("/setup1st", function(req, res, next){
 	var api_vi_activitylog_setup = factoryImpl.sql_lite_db.getInstance().api_vi_activitylog_setup;
-	var dataPost = req.body; // app.jsで「app.use(bodyParser.json());」してるので、使える。
+	var dataPost = req.body; // app.jsで「app.use(bodyParser.json());」してるので、bodyプロパティが使える。
 
 	return api_vi_activitylog_setup( null, dataPost ).then((result)=>{
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
+	});;
+});
+
+router.post("/signup", function(req, res, next){
+	var api_vi_activitylog_signup = factoryImpl.sql_lite_db.getInstance().api_vi_activitylog_signup;
+	var dataPost = req.body;
+	return api_vi_activitylog_signup( null, dataPost ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );

@@ -210,6 +210,67 @@ describe( "activitylog.js", function(){
         });
     });
 
+    /*
+    describe("::api_vi_activitylog_setup()",function(){
+        var original = {
+            "key" : "",
+            "database" : ""
+        };
+        beforeEach(function(){ // 内部関数をフックする。
+            original.key = activitylog.factoryImpl[ "SETUP_KEY" ].getInstance();
+            activitylog.factoryImpl[ "SETUP_KEY" ].setStub( "fugafuga" );
+            activitylog.factoryImpl[ "CONFIG_SQL" ].setStub( {"database" : "./db/mydb.sqlite3"} );
+        });
+        afterEach(function(){
+            activitylog.factoryImpl[ "SETUP_KEY" ].setStub( original.key );
+        });
+
+        it("直テスト", function(){
+            var queryFromGet = null;
+            var dataFromPost = { "create_key" : "fugafuga" };
+            var api_vi_activitylog_setup = activitylog.api_vi_activitylog_setup;
+
+            return shouldFulfilled(
+                api_vi_activitylog_setup( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                console.log( result );
+            });
+
+        });
+    });
+    */
+
+
+    describe("::api_vi_activitylog_signup()",function(){
+        var original = {
+            "database" : ""
+        };
+        /**
+         * @type beforeEachで初期化される。
+         */
+        beforeEach(function(){ // 内部関数をフックする。
+            original.key = activitylog.factoryImpl[ "SETUP_KEY" ].getInstance();
+            activitylog.factoryImpl[ "CONFIG_SQL" ].setStub( {"database" : "./db/mydb.sqlite3"} );
+        });
+        afterEach(function(){
+            activitylog.factoryImpl[ "SETUP_KEY" ].setStub( original.key );
+        });
+
+        it("直テスト", function(){
+            var queryFromGet = null;
+            var dataFromPost = { "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny" };
+            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+
+            return shouldFulfilled(
+                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                console.log( result );
+            });
+
+        });
+    });
+
+
 
     describe("::api_v1_activitylog_show()", function(){
         var stubs;

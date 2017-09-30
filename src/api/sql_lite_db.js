@@ -194,6 +194,44 @@ var setupTable1st = function( databaseName ){
 exports.setupTable1st = setupTable1st;
 
 
+/**
+ * SQLへのアクセスが許可されたアクセス元か？
+ * 
+ * @param{String} databaseName データベース名
+ * @param{String} deviceKey アクセスデバイスごとの一意の識別子（※ハッシュにしようか？）
+ * @param{Number} maxEntrys ユーザー事（デバイス事）の可能な最大登録数。
+ * @param{String} password ユーザーごとのパスワード（無しも可とする？）
+ * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は引数無し。reject()はエラー内容が引数に入る。
+ */
+var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function(resolve,reject){
+		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password]) VALUES('" + deviceKey + "', " + maxEntrys + ", '" + passwordStr + "')";
+
+		db.all(query_str, [], (err, rows) => {
+			if(!err){
+				var insertedData = {
+					"device_key" : deviceKey,
+					"password"   : passwordStr
+				};
+				return resolve( insertedData );
+			}else{
+				reject({
+					"isEnableValidationProcedure" : false
+				});
+			}
+		});
+	});
+};
+exports.addNewUser = addNewUser;
+
 
 /**
  * SQLへのアクセスが許可されたアクセス元か？

@@ -89,6 +89,27 @@ exports.getShowObjectFromGetData = getShowObjectFromGetData;
 
 
 
+var getInsertObjectFromPostData = function( postData ){
+	var valid_data = {}
+	
+		if( postData["type_value"] && isFinite(postData[ "type_value" ]) ){
+			// 数字変換（int）出来る事、も必須。ただし、文字列のままで格納。
+			valid_data[ "type_value" ] = postData[ "type_value" ];
+		}else{
+			valid_data[ "invalid" ] = "type_value is NOT Number.";
+		}
+	
+		if( postData["device_key"] ){
+			valid_data[ "device_key" ] = postData["device_key"];
+		}else{
+			valid_data[ "invalid" ] = "there is NOT type_value.";
+		}
+	
+		return valid_data;
+};
+exports.getInsertObjectFromPostData = getInsertObjectFromPostData;
+
+
 
 
 /**
@@ -338,16 +359,16 @@ var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
 	return new Promise(function(resolve,reject){
 		var now_date = new Date();
 		var date_str = now_date.toFormat("YYYY-MM-DD HH24:MI:SS.000"); // data-utilsモジュールでの拡張を利用。
-		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash )";
-		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + _wrapDeviceKe(deviceKey) + "')";
+		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash ) ";
+		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + _wrapDeviceKey(deviceKey) + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
 				var insertedData = {
-					"type" : typeOfAction,
+					"type_value" : typeOfAction,
 					"device_key" : deviceKey
 				};
-				return resolve( insertedData );
+				resolve( insertedData );
 			}else{
 				reject({
 					"isEnableValidationProcedure" : false
@@ -376,9 +397,6 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 			"isReady" : false
 		});
 	}
-
-// テストの都合で、一旦Null置き。
-period = null;
 
 	var query_str = "SELECT created_at, type FROM activitylogs";
 	query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。

@@ -13,13 +13,17 @@ var target = require("../src/public/javascripts/vue_client.js");
 
 describe("TEST for vue_client.js", function(){
     this.timeout( 5000 );
-    var stub_vue, stub_axios;
+    var stub_vue, stub_static_vue, stub_axios;
 	var original;
 	beforeEach(()=>{ // フック前の関数を保持する。
 		original = { 
         };
 
         stub_vue = sinon.stub();
+        stub_static_vue = {
+            "component" : sinon.stub()
+        };
+        stub_axios = sinon.stub();
         // axiosInstance.get(url).then();
 	});
 	afterEach(()=>{ // フックした（かもしれない）関数を、元に戻す。
@@ -28,11 +32,13 @@ describe("TEST for vue_client.js", function(){
 
     describe("VueはnewしなけりゃMocha簡単だよね？::",function(){
         it('setupVue()', function(){
-            var setupVue = target.setupVue( stub_vue, stub_axios );
+            var setupVue = target.setupVue( stub_vue, stub_static_vue, stub_axios );
 
             expect( stub_vue.getCall(0).args[0] ).to.be.exist;
 console.log( stub_vue.getCall(0).args[0] );
-        });
+console.log( stub_static_vue.component.getCall(0).args[0] );
+console.log( stub_static_vue.component.getCall(0).args[1] );
+});
 /*
         it('sub.run()', function(){
             var promise = target.subInstance.run();

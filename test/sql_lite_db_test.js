@@ -174,7 +174,7 @@ describe( "sql_lite_db_test.js", function(){
     name: 'owners_permission',
     tbl_name: 'owners_permission',
     rootpage: 4,
-    sql: 'CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL)' } ]
+    sql: 'CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL, UNIQUE ([owners_hash]))' } ]
 */
 /*
 [ { type: 'table',
@@ -193,7 +193,7 @@ pe] [int] NULL, [owners_hash] [char](64) NULL )' },
     tbl_name: 'owners_permission',
     rootpage: 4,
     sql: 'CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NUL
-L, [password] [char](16) NULL, [max_entrys] [int] NOT NULL)' } ]
+L, [password] [char](16) NULL, [max_entrys] [int] NOT NULL, UNIQUE ([owners_hash]))' } ]
 */
 
             promise = promise.then( function(result){

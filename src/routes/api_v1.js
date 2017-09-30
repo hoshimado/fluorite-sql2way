@@ -89,14 +89,27 @@ router.post("/signup", function(req, res, next){
 router.get('/show', function(req, res, next) {
 	var api_v1_activitylog_show = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_show;
 
-console.log( "[/show]" );
-	
 	return api_v1_activitylog_show(req.query, null ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
 	});
 });
+
+router.post("/add", function(req, res, next){
+	var api_v1_activitylog_add = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_add;
+	var dataPost = req.body;
+	
+	return api_v1_activitylog_add( null, dataPost ).then((result)=>{
+
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
+	});
+});
+
+
+
 
 module.exports = router;
 

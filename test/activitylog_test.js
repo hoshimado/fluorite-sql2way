@@ -454,6 +454,39 @@ describe( "activitylog.js", function(){
         });
 */
     });
+
+    describe("::api_vi_activitylog_add()",function(){
+        var original = {
+            "database" : ""
+        };
+        /**
+         * @type beforeEachで初期化される。
+         */
+        beforeEach(function(){ // 内部関数をフックする。
+            original.key = activitylog.factoryImpl[ "SETUP_KEY" ].getInstance();
+            activitylog.factoryImpl[ "CONFIG_SQL" ].setStub( {"database" : "./db/mydb.sqlite3"} );
+        });
+        afterEach(function(){
+            activitylog.factoryImpl[ "CONFIG_SQL" ].setStub( {"database" : ""} );
+        });
+
+        it("直テスト", function(){
+            var queryFromGet = null;
+            var dataFromPost = { 
+                "device_key" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
+                "type_value" : 4
+            };
+            var api_v1_activitylog_add = activitylog.api_v1_activitylog_add;
+
+            return shouldFulfilled(
+                api_v1_activitylog_add( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                console.log( result );
+            });
+
+        });
+    });
+
 });
 /*
     参照先Webページメモ

@@ -312,13 +312,14 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
 		return new Promise(function(resolve,reject){
 			addActivityLog2Database(
 				config.database, 
-				param.getDeviceKey(), 
-				param.getBatteryValue() 
+				paramClass.getDeviceKey(), 
+				paramClass.getTypeValue() 
 			).then(function(resultInsert){
+console.log(resultInsert);
 				// 「インサート」処理が成功
 				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
 				var param = new API_PARAM(resultInsert);
-				outJsonData[ "result" ] = "Success to insert " + param.getBatteryValue() + " as batterylog on Database!";
+				outJsonData[ "result" ] = "Success to insert " + param.getTypeValue() + " as activitylog on Database!";
 				outJsonData[ "device_key"] = param.getDeviceKey();
 				resolve();
 			}).catch(function(err){
@@ -329,7 +330,7 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
 		});
 	};
 	var subInstance = new API_ADD();
-	var getShowObjectFromGetData = factoryImpl.sql_parts.getInstance().getInsertObjectFromPostData;
+	var getInsertObjectFromPostData = factoryImpl.sql_parts.getInstance().getInsertObjectFromPostData;
 	var inputData = getInsertObjectFromPostData( dataFromPost );
 	return subInstance.run( inputData );
 };

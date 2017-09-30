@@ -26,27 +26,19 @@ router.get('/', function(req, res, next) {
 });
 
 
-
-/* サンプルAPI② 
-  * http://localhost:3000/samples/hello にGETメソッドのリクエストを投げると、
-  * JSON形式で文字列を返す。
-  */
-router.get('/show', function(req, res, next) {
-	var api_v1_activitylog_show = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_show;
-
-console.log( "[/show]" );
+// ◆Unitテストに未対応。
+var responseNormal = function( res, result ){
+	console.log( result );
 	
-	return api_v1_activitylog_show(req.query, null ).then((result)=>{
-console.log( result );
-
-		res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
-			"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。
-			"Pragma" : "no-cacha", 
-			"Cache-Control" : "no-cache",
-			"Content-Type" : "application/json; charset=utf-8"
-		});
-		res.status(result.status).send( result.jsonData );
-		res.end();
+	res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
+		"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。
+		"Pragma" : "no-cacha", 
+		"Cache-Control" : "no-cache",
+		"Content-Type" : "application/json; charset=utf-8"
+	});
+	res.status(result.status).send( result.jsonData );
+	res.end();
+};
 /*
     //res.jsonp([body])
 	if( this.itsCallBackName ){
@@ -59,15 +51,40 @@ console.log( result );
 		});
 	}
 */
+var responseAnomaly = function( res, err ){
+	res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
+		"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。
+		"Pragma" : "no-cacha", 
+		"Cache-Control" : "no-cache",
+		"Content-Type" : "application/json; charset=utf-8"
+	});
+	res.status(500).send( err );
+	res.end();
+};
+
+
+
+router.post("/setup1st", function(req, res, next){
+	var api_vi_activitylog_setup = factoryImpl.sql_lite_db.getInstance().api_vi_activitylog_setup;
+	var dataPost = req.body; // app.jsで「app.use(bodyParser.json());」してるので、使える。
+
+	return api_vi_activitylog_setup( null, dataPost ).then((result)=>{
+		responseNormal( res, result );
 	}).catch((err)=>{
-		res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
-			"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。
-			"Pragma" : "no-cacha", 
-			"Cache-Control" : "no-cache",
-			"Content-Type" : "application/json; charset=utf-8"
-		});
-		res.status(500).send( err );
-		res.end();
+		responseAnomaly( res, err );
+	});;
+});
+
+
+router.get('/show', function(req, res, next) {
+	var api_v1_activitylog_show = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_show;
+
+console.log( "[/show]" );
+	
+	return api_v1_activitylog_show(req.query, null ).then((result)=>{
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
 	});
 });
 

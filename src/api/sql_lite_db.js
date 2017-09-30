@@ -99,6 +99,7 @@ exports.getShowObjectFromGetData = getShowObjectFromGetData;
 var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConfig ){
 	var dbs = factoryImpl.db.getInstance();
 	var databaseName = sqlConfig.database;
+
 	if( dbs[ databaseName ] ){
         outJsonData["result"] = "sql connection is OK already!";
 		return Promise.resolve( inputDataObj )

@@ -11,8 +11,8 @@ var factoryImpl = { // require()を使う代わりに、new Factory() する。
 };
 var _SQL_CONNECTION_CONFIG = require("./sql_config.js");
 factoryImpl[ "CONFIG_SQL" ] = new lib.Factory(_SQL_CONNECTION_CONFIG.CONFIG_SQL);
+factoryImpl[ "SETUP_KEY" ]  = new lib.Factory(_SQL_CONNECTION_CONFIG.CREATE_KEY);
 
-//exports.CREATE_KEY
 
 
 // UTデバッグ用のHookポイント。運用では外部公開しないメソッドはこっちにまとめる。
@@ -151,6 +151,44 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 		return instance.closeAnomaly( err );
 	});
 };
+
+
+exports.api_vi_activitylog_setup = function( queryFromGet, dataFromPost ){
+	var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
+	var outJsonData = {};
+	var config = factoryImpl.CONFIG_SQL.getInstance()
+	
+	if( dataFromPost.create_key != factoryImpl.SETUP_KEY.getInstance() ){
+		return Promise.resolve({
+			"jsonData" : outJsonData, // 何も入れないまま。
+			"status" : 403 // Forbidden
+		});
+	}
+	return createPromiseForSqlConnection(
+		outJsonData,
+		{}, // ここは受け渡すだけなので、ダミー。
+		config
+	).then( (inputData )=>{ // ここで渡されるinputDataは空{}。
+	var setupTable1st = factoryImpl.sql_parts.getInstance().setupTable1st;
+		return setupTable1st( config.database );
+	}).then( (successResultOfTable)=>{
+		outJsonData [ "tables" ] = successResultOfTable;
+		return Promise.resolve(200);
+	}).catch((err)=>{
+		outJsonData [ "setuperr" ] = err;
+		return Promise.resolve(500);
+	}).then(( httpStatus )=>{
+		var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
+		return new Promise((resolve,reject)=>{
+			closeConnection( config.database ).then(()=>{
+				resolve({
+					"jsonData" : outJsonData,
+					"status" : httpStatus
+				});
+			});		
+		})
+	});
+}
 
 
 

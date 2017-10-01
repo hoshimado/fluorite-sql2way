@@ -16,6 +16,7 @@
       <table>
         <thead>
           <tr>
+            <!--
             <th v-for="key in columns"
               @click="sortBy(key)"
               :class="{ active: sortKey == key }">
@@ -23,7 +24,11 @@
               <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
               </span>
             </th>
-          </tr>
+            -->
+            <th v-for="key in columns">
+              {{ key | capitalize }}
+            </th>
+        </tr>
         </thead>
         <tbody>
           <tr v-for="entry in filteredData">
@@ -36,25 +41,24 @@
     </script>
   </head>
   <body>
-    <div id="axios_sample">
-      <ul>
-        <li v-for="character in characters">
-          {{character.name}}
-        </li>
-      </ul>
+    <!-- grid-view element -->
+    <div id="app_grid">
+      <!-- 
+      <form id="search">
+        Search <input name="query" v-model="searchQuery">
+      </form>
+      <vue-my-element-grid
+        :data="gridData"
+        :columns="gridColumns"
+        :filter-key="searchQuery">
+      </vue-my-element-grid>
+      -->
+      <vue-my-element-grid
+        :data="gridData"
+        :columns="gridColumns">
+      </vue-my-element-grid>
     </div>
   </body>
-  <!-- demo root element -->
-  <div id="app_grid">
-    <form id="search">
-      Search <input name="query" v-model="searchQuery">
-    </form>
-    <demo-grid
-      :data="gridData"
-      :columns="gridColumns"
-      :filter-key="searchQuery">
-    </demo-grid>
-  </div>
 </html>
 
 

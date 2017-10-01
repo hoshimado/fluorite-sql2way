@@ -6,13 +6,14 @@
 
 var setupVue = function( createVueInstance, staticVue, axiosInstance ){
     // register the grid component
-    staticVue.component('demo-grid', {
+    staticVue.component('vue-my-element-grid', {
         template: '#grid-template',
         props: {
+            // filterKey: String,
             data: Array,
-            columns: Array,
-            filterKey: String
+            columns: Array
         },
+        /* // コンスタラクタで初期化するprops、と見なせばよい。
         data: function () {
             var sortOrders = {}
             this.columns.forEach(function (key) {
@@ -23,28 +24,35 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
                 sortOrders: sortOrders
             }
         },
+        */
         computed: {
+            /*
             filteredData: function () {
                 var sortKey = this.sortKey
                 var filterKey = this.filterKey && this.filterKey.toLowerCase()
                 var order = this.sortOrders[sortKey] || 1
                 var data = this.data
                 if (filterKey) {
-                data = data.filter(function (row) {
-                    return Object.keys(row).some(function (key) {
-                    return String(row[key]).toLowerCase().indexOf(filterKey) > -1
+                    data = data.filter(function (row) {
+                        return Object.keys(row).some(function (key) {
+                        return String(row[key]).toLowerCase().indexOf(filterKey) > -1
+                        })
                     })
-                })
                 }
                 if (sortKey) {
-                data = data.slice().sort(function (a, b) {
-                    a = a[sortKey]
-                    b = b[sortKey]
-                    return (a === b ? 0 : a > b ? 1 : -1) * order
-                })
+                    data = data.slice().sort(function (a, b) {
+                        a = a[sortKey]
+                        b = b[sortKey]
+                        return (a === b ? 0 : a > b ? 1 : -1) * order
+                    })
                 }
                 return data
             }
+            */
+            filteredData : function() {
+                return this.data;
+            }
+        /*
         },
         filters: {
             capitalize: function (str) {
@@ -56,6 +64,7 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
                 this.sortKey = key
                 this.sortOrders[key] = this.sortOrders[key] * -1
             }
+        */
         }
     });
   
@@ -69,7 +78,7 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
         },
         methods : {
             getGridData() {
-                /*
+                ///*
                 var promise = new Promise((resolve,reject)=>{
                     setTimeout(function() {
                         resolve({
@@ -86,7 +95,8 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
                 promise.then((response)=>{
                     this.gridData = response.data;
                 });
-                */
+                // */
+                /*
                 var url = "./api/v1/activitylog/show?device_key=nyan1nyan2nyan3nayn4nayn5nyan6ny";
                 axiosInstance.get(url).then(x => {
                     var TENTANATIVE = {
@@ -107,6 +117,7 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
                     }
                     this.gridData = grid_data;
                 });
+                // */
             }
         },
         mounted() {

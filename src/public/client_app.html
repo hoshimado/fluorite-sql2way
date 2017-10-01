@@ -56,6 +56,15 @@
         :columns="gridColumns">
       </vue-my-element-grid>
     </div>
+
+    <br><br><br>
+    <div>
+      <form id="app_axios">
+        Axios! <input name="query" v-model="axiosQuery">
+        <input value="GET!" type="button" @click="getUsers">
+        <input value="PUT!" type="button" @click="putUsers">
+      </form>
+    </div>
   </body>
 </html>
 

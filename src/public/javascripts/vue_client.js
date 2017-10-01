@@ -124,6 +124,47 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
             this.getGridData();
         }
     })
+
+    var app_axios = createVueInstance({
+        el: '#app_axios',
+        data: {
+            axiosQuery: 'SomethingToSend',
+        },
+        methods : {
+            getUsers() {
+                var query = this.axiosQuery;
+                var queryGet = {
+                    "hoge" : query
+                };
+                var url = "./api/v1/activitylog/test";
+                axiosInstance.get(
+                        url,
+                    {
+                        "crossdomain" : true,
+                        "params" : queryGet
+                    }
+                ).then(x => {
+                    var response = x.data;
+                    console.log( response );
+                });
+            },
+            putUsers() {
+                var query = this.axiosQuery;
+                var postData = {
+                    "hoge" : query
+                };
+                var url = "./api/v1/activitylog/test";
+                axiosInstance.post(
+                    url,
+                    postData
+                ).then(x => {
+                    var response = x.data;
+                    console.log( response );
+                });
+                // あれ？クロスドメインの許可は？？？
+            }
+        }
+    });
 };
 
 

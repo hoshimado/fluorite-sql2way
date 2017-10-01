@@ -16,14 +16,28 @@ var factoryImpl = { // require()を使う代わりに、new Factory() する。
 
 
 /* サンプルAPI① 
- * http://localhost:3000/samples にGETメソッドのリクエストを投げると、
+ * http://localhost:3000/api/v1/activitylog/test にGETメソッドのリクエストを投げると、
  * JSON形式で文字列を返す。
  */
-router.get('/', function(req, res, next) {
-  var param = {"値":"これはサンプルAPIです"};
-  res.header('Content-Type', 'application/json; charset=utf-8')
-  res.send(param);
+router.get('/test', function(req, res, next) {
+  var param = {
+	  "getedQuery" : req.query,
+	  "値":"これはGETのサンプルAPIです"
+	};
+	res.header('Content-Type', 'application/json; charset=utf-8')
+	res.send(param);
 });
+
+router.post("/test", function(req, res, next){
+	var dataPost = req.body; // app.jsで「app.use(bodyParser.json());」してるので、bodyプロパティが使える。
+	var param = {
+		"postedData" : dataPost,
+		"値":"これはPOSTのサンプルAPIです"
+	};
+	res.header('Content-Type', 'application/json; charset=utf-8')
+	res.send(param);
+});
+
 
 
 // ◆Unitテストに未対応。

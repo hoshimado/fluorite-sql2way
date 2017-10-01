@@ -19,9 +19,9 @@ describe("TEST for vue_simple.js", function(){
 	afterEach(()=>{ // フックした（かもしれない）関数を、元に戻す。
 	});
 
-    describe("VueはnewしなけりゃMocha簡単だよね？::",function(){
-        it('setupVue()', function(){
-            var setupVue = target.setupVue( stub_vue );
+    describe("vueApp()",function(){
+        it('::construct', function(){
+            var vueApp = target.vueApp( stub_vue );
             var called_options = stub_vue.getCall(0).args[0];
 
             expect( called_options ).to.be.exist;
@@ -32,7 +32,7 @@ describe("TEST for vue_simple.js", function(){
 
         });
         it("::reverseMessage()", function(){
-            var setupVue = target.setupVue( stub_vue );
+            var vueApp = target.vueApp( stub_vue );
             var called_options = stub_vue.getCall(0).args[0];
 
             expect( called_options.methods.reverseMessage ).to.be.exist;

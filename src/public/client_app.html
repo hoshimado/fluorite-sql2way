@@ -6,6 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
 
+    <script src="./javascripts/factory4require_compatible_browser.js"></script>
     <script src="./javascripts/vue_client.js"></script>
 
     <link rel="stylesheet" type="text/css" href="./stylesheets/client_app.css">
@@ -39,6 +40,16 @@
     </script>
   </head>
   <body>
+    <div id="id_ctrl_panel">
+      <!-- このブロックは丸ごとjQueryで表示／非表示を管理する。 -->
+      <div id="app_setup">
+        ユーザーID（メールアドレス）<br>
+        <input name="username" v-model="userName">
+        <!-- ◆バリデーションする。公式メールアドレスの例がある◆ -->
+        <input value="登録" type="button" v-on:click="createAccount">
+      </div>
+    </div>
+    <hr>
     <!-- grid-view element -->
     <div id="app_grid">
       <!-- 
@@ -61,8 +72,8 @@
     <div>
       <form id="app_axios">
         Axios! <input name="query" v-model="axiosQuery">
-        <input value="GET!" type="button" @click="getUsers">
-        <input value="PUT!" type="button" @click="putUsers">
+        <input value="GET!" type="button" v-on:click="getUsers">
+        <input value="PUT!" type="button" v-on:click="putUsers">
       </form>
     </div>
   </body>

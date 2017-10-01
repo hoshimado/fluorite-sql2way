@@ -4,7 +4,7 @@
  */
 
 
-var setupVue = function( createVueInstance ){
+var _vueApp = function( createVueInstance ){
     var app = createVueInstance({
         el: '#app',
         data: {
@@ -24,10 +24,10 @@ if( typeof window !== 'undefined' ){
         return new Vue(options);
     };
     window.onload = function(){
-        setupVue( CREATE_VUE_INSTANCE );
+        _vueApp( CREATE_VUE_INSTANCE );
     };
 }else{
-    exports.setupVue = setupVue;
+    exports.vueApp = _vueApp;
 }
 
 

@@ -30,25 +30,41 @@ describe("TEST for vue_client.js", function(){
         // target.set.data_manager = original.data_manager;
 	});
 
-    describe("VueはnewしなけりゃMocha簡単だよね？::",function(){
-        it('setupVue()', function(){
-            var setupVue = target.setupVue( stub_vue, stub_static_vue, stub_axios );
+    describe("::setVueComponentGrid()",function(){
+        it('construct', function(){
+            var setVueComponentGrid = target.setVueComponentGrid( stub_static_vue );
 
-            expect( stub_vue.getCall(0).args[0] ).to.be.exist;
-console.log( stub_vue.getCall(0).args[0] );
 console.log( stub_static_vue.component.getCall(0).args[0] );
 console.log( stub_static_vue.component.getCall(0).args[1] );
-});
-/*
-        it('sub.run()', function(){
-            var promise = target.subInstance.run();
+        });
+    });
+    describe("::vueAppGrid()",function(){
+        it('construct', function(){
+            var vueAppGrid = target.vueAppGrid( stub_vue );
+
+            expect( stub_vue.getCall(0).args[0] ).to.be.exist;
+            // ToDo: 2回以上呼ばれる場合、区別せずにチェックする方法なかったっけ？
+console.log( stub_vue.getCall(0).args[0] );
+        });
+
+    });
+    describe("::promiseCreateAccount()",function(){
+        it('正常系', function(){
+            var stub_axios = {
+                "get" : sinon.stub(),
+                "post" : sinon.stub()
+            };
+            var mailAddress = "hogehoge";
+            var promiseCreateAccount = target.promiseCreateAccount;
+            target.factoryImpl.axios.setStub( stub_axios );
+            
+            var promise = promiseCreateAccount( mailAddress );
             return shouldFulfilled(
                 promise
             ).then(function(result){
-                console.log(result);
+                expect(result).to.equal( stub_axios );
             });
         });
-*/
     });
 });
 

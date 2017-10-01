@@ -4,7 +4,8 @@
  */
 
 
-var setupVue = function( createVueInstance, staticVue, axiosInstance ){
+
+var _setVueComponentGrid = function( staticVue ){
     // register the grid component
     staticVue.component('vue-my-element-grid', {
         template: '#grid-template',
@@ -67,8 +68,8 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
         */
         }
     });
-  
-    // bootstrap the demo
+};  
+var _vueAppGrid = function( createVueInstance ){
     var app_grid = createVueInstance({
         el: '#app_grid',
         data: {
@@ -123,12 +124,29 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
         mounted() {
             this.getGridData();
         }
-    })
+    });
+    return app_grid;
+};
+var _vueAppSetup = function( createVueInstance ){
+    var app_setup = createVueInstance({
+        el: "#app_setup",
+        data: {
+            userName: "sample@mail.address"
+        },
+        methods : {
+            createAccount(){
+                var promise = _promiseCreateAccount( this.userName );
+            }
+        }
+    });
+    return app_setup;
+};
 
+var _vueAppAxios = function( createAccount, axiosInstance ){
     var app_axios = createVueInstance({
         el: '#app_axios',
         data: {
-            axiosQuery: 'SomethingToSend',
+            axiosQuery: 'SomethingToSend'
         },
         methods : {
             getUsers() {
@@ -165,18 +183,46 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
             }
         }
     });
+    return app_axios;
 };
 
 
-if( typeof window !== 'undefined' ){
+// ToDo: axiosへのインスタンスをフックしておかないと、テストできない！
+var _promiseCreateAccount = function( mailAddress ){
+    // ToDo:これから実装
+    return Promise.resolve( factoryImpl.axios.getInstance() );
+};
+
+
+// ----------------------------------------------------------------------
+var Factory; // 複数ファイルでの重複宣言、ブラウザ環境では「後から読み込んだ方で上書きされる」でOKのはず。。。
+var Factory4Require;
+if( !this.window ){ // Node.js環境のとき、以下を実行する。
+	Factory = require("./factory4require_compatible_browser.js").Factory;
+	Factory4Require = require("./factory4require_compatible_browser.js").Factory4Require;
+}
+var factoryImpl = {
+    "axios" : (this.window) ? axios : new Factory({}) // ダミー
+};
+
+// typeof window !== 'undefined'
+if( this.window ){
     var CREATE_VUE_INSTANCE = function(options){
         return new Vue(options);
     };
     window.onload = function(){
-        setupVue( CREATE_VUE_INSTANCE, Vue, axios );
+        _setVueComponentGrid( Vue );
+        _vueAppGrid( CREATE_VUE_INSTANCE );
+        _vueAppSetup( CREATE_VUE_INSTANCE );
+        _vueAppAxios( CREATE_VUE_INSTANCE, axios )
     };
 }else{
-    exports.setupVue = setupVue;
+    exports.setVueComponentGrid = _setVueComponentGrid;
+    exports.vueAppGrid = _vueAppGrid;
+    exports.vueAppSetup = _vueAppSetup;
+    
+    exports.promiseCreateAccount = _promiseCreateAccount;
+    exports.factoryImpl = factoryImpl;
 }
 
 

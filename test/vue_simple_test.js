@@ -30,6 +30,11 @@ describe("TEST for vue_simple.js", function(){
                 "message" : "Hello Vue!"
             });
 
+        });
+        it("::reverseMessage()", function(){
+            var setupVue = target.setupVue( stub_vue );
+            var called_options = stub_vue.getCall(0).args[0];
+
             expect( called_options.methods.reverseMessage ).to.be.exist;
             var reverseMessage = called_options.methods.reverseMessage;
             var stub_instance = {"message" : "Hello!"};

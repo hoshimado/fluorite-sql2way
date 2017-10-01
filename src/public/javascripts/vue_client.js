@@ -124,24 +124,6 @@ var setupVue = function( createVueInstance, staticVue, axiosInstance ){
             this.getGridData();
         }
     })
-
-
-    var app = createVueInstance({
-        el: '#axios_sample',
-        data: {
-          characters: []
-        },
-        methods: {
-          getCharacters() {
-            var url = 'https://gist.githubusercontent.com/anonymous/c41ae1698aca3595b95d1496ebf42d83/raw/2addeb281bcb4aae2be9c8204c0ec623c4cb446c/characters.json';
-            axiosInstance.get(url).then(x => { this.characters = x.data; });
-          }
-        },
-        mounted() {
-          this.getCharacters();
-        }
-    });
-
 };
 
 

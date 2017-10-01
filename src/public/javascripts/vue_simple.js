@@ -12,7 +12,7 @@ var setupVue = function( createVueInstance ){
         },
         methods : {
             reverseMessage : function(){
-                // this.message = this.message.split('').reverse().join('')
+                this.message = this.message.split('').reverse().join('')
             }
         }
     })

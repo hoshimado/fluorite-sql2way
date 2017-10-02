@@ -56,7 +56,7 @@ console.log( stub_vue.getCall(0).args[0] );
             };
             var mailAddress = "hogehoge";
             var promiseCreateAccount = target.promiseCreateAccount;
-            target.factoryImpl.axios.setStub( stub_axios );
+            target.client_lib.axios = stub_axios;
             
             var promise = promiseCreateAccount( mailAddress );
             return shouldFulfilled(

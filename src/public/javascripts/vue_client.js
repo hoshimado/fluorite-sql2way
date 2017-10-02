@@ -190,23 +190,18 @@ var _vueAppAxios = function( createAccount, axiosInstance ){
 // ToDo: axiosへのインスタンスをフックしておかないと、テストできない！
 var _promiseCreateAccount = function( mailAddress ){
     // ToDo:これから実装
-    return Promise.resolve( factoryImpl.axios.getInstance() );
+    return Promise.resolve( client_lib.axios );
 };
 
 
 // ----------------------------------------------------------------------
-var Factory; // 複数ファイルでの重複宣言、ブラウザ環境では「後から読み込んだ方で上書きされる」でOKのはず。。。
-var Factory4Require;
-if( !this.window ){ // Node.js環境のとき、以下を実行する。
-	Factory = require("./factory4require_compatible_browser.js").Factory;
-	Factory4Require = require("./factory4require_compatible_browser.js").Factory4Require;
-}
-var factoryImpl = {
-    "axios" : (this.window) ? axios : new Factory({}) // ダミー
+client_lib = {
+    "axios" : (this.window) ? axios : {} // ダミー
 };
 
 // typeof window !== 'undefined'
 if( this.window ){
+    // ブラウザ環境での動作
     var CREATE_VUE_INSTANCE = function(options){
         return new Vue(options);
     };
@@ -217,12 +212,13 @@ if( this.window ){
         _vueAppAxios( CREATE_VUE_INSTANCE, axios )
     };
 }else{
+    // ここに来るのは、テスト時だけ。on Node.js
     exports.setVueComponentGrid = _setVueComponentGrid;
     exports.vueAppGrid = _vueAppGrid;
     exports.vueAppSetup = _vueAppSetup;
     
     exports.promiseCreateAccount = _promiseCreateAccount;
-    exports.factoryImpl = factoryImpl;
+    exports.client_lib = client_lib;
 }
 
 

@@ -38,7 +38,7 @@ describe( "sql_lite_db_test.js", function(){
             var stub_sqlite3 = { 
                 "verbose" : sinon.mock() 
             };
-            var stub_instance = "hoge";
+            var stub_instance = { "sqlite3" : "fake"}; // newで返すオブジェクトのモック。
             var argv1 = "";
 
             // sqlite3モジュールに対するI/Oをモックに差し替える。
@@ -58,7 +58,7 @@ describe( "sql_lite_db_test.js", function(){
                 sql_parts.createPromiseForSqlConnection( sqlConfig )
             ).then(function(){
                 var dbs = sql_parts.factoryImpl.db.getInstance();
-console.log(dbs);
+
                 expect( argv1 ).to.equal( sqlConfig.database );
                 expect( dbs[ argv1 ] ).to.equal( stub_instance );
             });

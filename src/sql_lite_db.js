@@ -23,11 +23,9 @@ var _wrapDeviceKey = function( deviceKey ){
 
 
 /**
- * ※SQL接続生成＋Json応答（OK/NG）、なのでsqliteを直接ではなく、この関数を定義する。
+ * ※SQL接続を生成。
  * 
- * 接続成功時は、resolve( inputDataObj )を返却する。
- * 
- * @param{Object} sqlConfig	 SQL接続情報。
+ * @param{Object} sqlConfig     SQL接続情報。
  */
 var createPromiseForSqlConnection = function( sqlConfig ){
 	var dbs = factoryImpl.db.getInstance();

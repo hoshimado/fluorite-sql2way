@@ -112,31 +112,24 @@ exports.getInsertObjectFromPostData = getInsertObjectFromPostData;
 
 
 /**
- * ※SQL接続生成＋Json応答（OK/NG）、なのでsqliteを直接ではなく、この関数を定義する。
+ * ※SQL接続を生成。
  * 
- * 接続成功時は、resolve( inputDataObj )を返却する。
- * 
- * @param{Object} outJsonData   httpで返却するJSONオブジェクト。生成済みで渡す。中で追加される。
- * @param{Boolean} inputDataObj 受け取ったデータ。POST/GETから変換済み。
- * @param{Object} sqlConfig     SQL接続情報。inputDataObjが有効（invalidメンバ無し）なら、resolve(inputDataObj)する。
+ * @param{Object} sqlConfig     SQL接続情報。
  */
-var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConfig ){
+var createPromiseForSqlConnection = function( sqlConfig ){
 	var dbs = factoryImpl.db.getInstance();
 	var databaseName = sqlConfig.database;
 
 	if( dbs[ databaseName ] ){
-        outJsonData["result"] = "sql connection is OK already!";
-		return Promise.resolve( inputDataObj )
+		return Promise.resolve()
 	}else{
 		return new Promise(function(resolve,reject){
 			var sqlite = factoryImpl.sqlite3.getInstance().verbose();
 			var db_connect = new sqlite.Database( databaseName, (err) =>{
 				if( !err ){
 					dbs[ databaseName ] = db_connect;
-					outJsonData["result"] = "sql connection is OK!";
-					resolve(inputDataObj);
+					resolve();
 				}else{
-					outJsonData[ "errer_on_connection" ] = err;
 					reject(err);
 				}
 			});

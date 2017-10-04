@@ -103,6 +103,9 @@ API_V1_BASE.prototype.closeNormal = function(){
 		});
 	});
 };
+/**
+ * @param{Object} err プロパティ{"http_status" : HTTPエラーコード}があれば、ソレをHTTP応答のステータスとする。
+ */
 API_V1_BASE.prototype.closeAnomaly = function( err ){
 	var instance = this;
 	var outJsonData = instance._outJsonData;
@@ -123,7 +126,6 @@ API_V1_BASE.prototype.closeAnomaly = function( err ){
 API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromGetData( queryFromGet );済みを渡す。
 	var instance = this;
 	var outJsonData = instance._outJsonData;
-	var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
 
 	if( inputData.invalid && inputData.invalid.length > 0 ){
 		outJsonData[ "error_on_format" ] = "GET or POST format is INVAILD.";
@@ -133,12 +135,21 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 		});
 	}
 
-	return createPromiseForSqlConnection( 
-		outJsonData, 
-		inputData, 
-		factoryImpl.CONFIG_SQL.getInstance()
-	).then( ( inputData )=>{
-		return instance.isOwnerValid( inputData );
+	return new Promise(function(resolve,reject){
+		var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
+		createPromiseForSqlConnection(
+			factoryImpl.CONFIG_SQL.getInstance()
+		).then(function(){
+			outJsonData["result"] = "sql connection is OK!";
+			resolve()
+		}).catch(function(err){
+			outJsonData[ "errer_on_connection" ] = err;
+			reject({
+				"http_status" : 401 // Unauthorized
+			}); // ⇒次のcatch()が呼ばれる。)			
+		});
+	}).then(function(){
+		return instance.isOwnerValid( inputData ); // ここは、冒頭の引数そのまま渡す。
   	}).then(function( paramClass ){
 		return Promise.resolve( paramClass );
   	}).then( ( paramClass )=>{
@@ -165,10 +176,8 @@ exports.api_vi_activitylog_setup = function( queryFromGet, dataFromPost ){
 		});
 	}
 	return createPromiseForSqlConnection(
-		outJsonData,
-		{}, // ここは受け渡すだけなので、ダミー。
 		config
-	).then( (inputData )=>{ // ここで渡されるinputDataは空{}。
+	).then( ()=>{
 		var setupTable1st = factoryImpl.sql_parts.getInstance().setupTable1st;
 		return setupTable1st( config.database );
 	}).then( (successResultOfTable)=>{
@@ -208,10 +217,8 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 
 
 	return createPromiseForSqlConnection(
-		outJsonData,
-		inputData,
 		config
-	).then( (inputData )=>{
+	).then( ()=>{
 		return new Promise((resolve,reject)=>{
 			var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
 

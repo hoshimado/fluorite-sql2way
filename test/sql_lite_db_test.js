@@ -30,7 +30,7 @@ var TEST_CONFIG_SQL = { // テスト用
 
 
 
-// var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConfig ){
+// var createPromiseForSqlConnection = function( sqlConfig ){
 // var isOwnerValid = function( databaseName, deviceKey ){
 // exports.closeConnection = closeConnection;
 
@@ -68,7 +68,7 @@ describe( "sql_lite_db_test.js", function(){
 
             stubs.connect.onCall(0).returns( Promise.resolve() );
             return shouldFulfilled(
-                sql_parts.createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig )
+                sql_parts.createPromiseForSqlConnection( sqlConfig )
             ).then(function( result ){
                 assert( stubs.connect.calledOnce );
                 expect( stubs.connect.getCall(0).args[0] ).to.equal( sqlConfig );
@@ -85,7 +85,7 @@ describe( "sql_lite_db_test.js", function(){
             
             stubs.connect.onCall(0).returns( Promise.reject( EXPECTED_ERROR ) );
             return shouldRejected(
-                sql_parts.createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig )
+                sql_parts.createPromiseForSqlConnection( sqlConfig )
             ).catch(function(){
                 assert( stubs.connect.calledOnce );
                 expect( stubs.connect.getCall(0).args[0] ).to.equal( sqlConfig );
@@ -143,8 +143,6 @@ describe( "sql_lite_db_test.js", function(){
 
     describe("::SQLiteトライアル", function(){
 		it("シークエンス調査", function(){
-            var outJsonData = {};
-            var inputDataObj = {};
             var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
 //            sqlConfig = { "database" : "./db/test.splite3" }
              
@@ -153,7 +151,7 @@ describe( "sql_lite_db_test.js", function(){
             var promise;
             this.timeout(5000);
 
-            promise = createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig );
+            promise = createPromiseForSqlConnection( sqlConfig );
 /*
             promise = promise.then( function(result){
                 return sql_parts.setupTable1st( sqlConfig.database );

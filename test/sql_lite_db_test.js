@@ -14,45 +14,22 @@ require('date-utils');
 
 const sql_parts = require("../src/sql_lite_db.js");
 
-var TEST_CONFIG_SQL = { // テスト用
-	user : "fake_user",
-	password : "fake_password",
-	server : "fake_server_url", // You can use 'localhost\\instance' to connect to named instance
-	database : "./db/mydb.splite3",  //"fake_db_name",
-	stream : false,  // if true, query.promise() is NOT work! // You can enable streaming globally
-
-	// Use this if you're on Windows Azure
-	options : {
-		encrypt : true 
-	} // It works well on LOCAL SQL Server if this option is set.
-};
-
-
-
-// var createPromiseForSqlConnection = function( outJsonData, inputDataObj, sqlConfig ){
-// var isOwnerValid = function( databaseName, deviceKey ){
-// exports.closeConnection = closeConnection;
 
 describe( "sql_lite_db_test.js", function(){
     var createPromiseForSqlConnection = sql_parts.createPromiseForSqlConnection;
-    var isOwnerValid = sql_parts.isOwnerValid;
     var closeConnection = sql_parts.closeConnection;
     var addActivityLog2Database = sql_parts.addActivityLog2Database;
     var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
-    var addNewUser = sql_parts.addNewUser;
-    var getNumberOfUsers = sql_parts.getNumberOfUsers;
 
     /**
      * @type 各テストからはアクセス（ReadOnly）しない定数扱いの共通変数。
      */
     var ORIGINAL = {};
     before( function(){
-        // ORIGINAL[ "mssql" ] = sql_parts.factoryImpl.mssql.getInstance();
-
-        // mssal はフックしない。バックアップして戻すだけ。
+        // 今回は不要
     });
     after( function(){
-        // sql_parts.factoryImpl.mssql.setStub( ORIGINAL.mssql );
+        // 今回は不要
     });
     
 
@@ -93,66 +70,17 @@ describe( "sql_lite_db_test.js", function(){
         });
 //*/
     });
-    describe( "::isOwnerValid()", function(){
-        var isOwnerValid = sql_parts.isOwnerValid;
-        it("正常系");
-/*
-        it(" finds VALID hash.", function(){
-            var stubs = createAndHookStubs4Mssql( sql_parts );
-            var expected_recordset = [
-                { "owners_hash" : "ほげ", 
-                  "max_entrys"  : 127
-                }
-            ];
-            var stub_query = stubs.Request_query;
-
-            stub_query.onCall(0).returns( Promise.resolve( expected_recordset ) );
-
-            return shouldFulfilled(
-                isOwnerValid( TEST_DATABASE_NAME, expected_recordset[0].owners_hash )
-            ).then( function( maxCount ){
-                var query_str = stub_query.getCall(0).args[0];
-                var expected_str = "SELECT owners_hash, max_entrys FROM [";
-                expected_str += TEST_DATABASE_NAME + "].dbo.owners_permission WHERE [owners_hash]='";
-                expected_str += expected_recordset[0].owners_hash + "'";
-
-                assert( stub_query.calledOnce );
-                expect( query_str ).to.be.equal( 
-                    expected_str
-                );
-                expect( maxCount, "記録エントリーの最大個数を返却すること" ).to.be.exist;
-            });
-        });
-        it(" dont finds VALID hash: WHERE command returns 0 array.", function(){
-            var stubs = createAndHookStubs4Mssql( sql_parts );
-            var stub_query = stubs.Request_query;
-            var expected_recordset = [];
-
-            stub_query.onCall(0).returns( Promise.resolve( expected_recordset ) );
-
-            return shouldRejected(
-                isOwnerValid( TEST_DATABASE_NAME, "fuga" )
-            ).catch( function( err ){
-                assert( err, "エラー引数が渡されること" );
-            });
-        });
-//*/
-    });
-
 
     describe("::SQLiteトライアル", function(){
 		it("シークエンス調査", function(){
-            var outJsonData = {};
-            var inputDataObj = {};
             var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
-//            sqlConfig = { "database" : "./db/test.splite3" }
              
             var queryFromGet = { "device_key" : "ほげふがぴよ" };
             var dataFromPost = null;
             var promise;
             this.timeout(5000);
 
-            promise = createPromiseForSqlConnection( outJsonData, inputDataObj, sqlConfig );
+            promise = createPromiseForSqlConnection( sqlConfig );
 /*
             promise = promise.then( function(result){
                 return sql_parts.setupTable1st( sqlConfig.database );

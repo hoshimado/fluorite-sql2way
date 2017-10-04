@@ -9,7 +9,6 @@ require('date-utils'); // Data() クラスのtoString()を拡張してくれる�
 // const debug = require("./debugger.js");
 var lib = require("./factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
-	"fs" : new lib.Factory4Require("fs"),
 	"crypto" : new lib.Factory4Require("crypto"),
     "sqlite3" : new lib.Factory4Require("sqlite3"),  // https://www.npmjs.com/package/mssql
     "db" : new lib.Factory( {} ) // データベースごとにハッシュマップで持つ。
@@ -346,7 +345,14 @@ exports.isOwnerValid = isOwnerValid;
 
 
 
-
+/**
+ * デバイスキーを識別子として、ユーザーアクションをデータベースに記録する。
+ * 記録する時刻は「これが呼ばれた時刻」とする。
+ * @param{String} databaseName データベース名
+ * @param{String} deviceKey デバイスの識別キー
+ * @param{Number} typeOfAction 記録するアクション（定数値）
+ * @returns{Promise} 実行結果を返すPromiseオブジェクト。成功時は、記録されたデバイス名とアクション値が返却される。
+ */
 var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
 	var dbs = factoryImpl.db.getInstance();
 	var db = dbs[ databaseName ];

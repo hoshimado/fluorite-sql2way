@@ -25,7 +25,7 @@ describe( "sql_lite_db_test.js", function(){
      * @type 各テストからはアクセス（ReadOnly）しない定数扱いの共通変数。
      */
     var ORIGINAL = {};
-    var sqlConfig = { "database" : "dummy.sqlite3" };
+    var sqlConfig = { "database" : "だみ～.sqlite3" };
     var stubInstance, databaseArgs1;
     before( function(){
         var stubSqlite3 = { 
@@ -46,12 +46,12 @@ describe( "sql_lite_db_test.js", function(){
             }
         });
         ORIGINAL[ "sqlite3" ] = sql_parts.factoryImpl.sqlite3.getInstance();
+        ORIGINAL[ "dbs" ] = sql_parts.factoryImpl.db.getInstance();
         sql_parts.factoryImpl.sqlite3.setStub( stubSqlite3 );
-
-
     });
     after( function(){
         sql_parts.factoryImpl.sqlite3.setStub( ORIGINAL.sqlite3 );
+        sql_parts.factoryImpl.db.setStub( ORIGINAL.dbs );
     });
 
     describe( "::createPromiseForSqlConnection()",function(){
@@ -66,51 +66,61 @@ describe( "sql_lite_db_test.js", function(){
                 expect( dbs[ sqlConfig.database ] ).to.equal( stubInstance );
             });
         });
-        it("異常系：SQL接続がエラー");
     });
     describe( "::getListOfActivityLogWhereDeviceKey()",function(){
-        it("正常系");
-/*
-var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
-	var dbs = factoryImpl.db.getInstance();
-	var db = dbs[ databaseName ];
-	if( !db ){
-		return Promise.reject({
-			"isReady" : false
-		});
-	}
+        it("正常系。期間指定なし。",function(){
+            var period = null; //無しの場合
+            var deviceKey = "にゃーん。";
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_instance = sinon.stub();
+            var expected_rows = [
+                { "created_at": '2017-10-22 23:59:00.000', "type": 900 }
+            ];
 
-	var query_str = "SELECT created_at, type FROM activitylogs";
-	query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'";
-	if( period && period.start ){
-		query_str += " AND [created_at] > '";
-		query_str += period.start;
-		query_str += "'";
-	}
-	if( period && period.end ){
-		query_str += " AND [created_at] <= '";
-		query_str += period.end;
-		query_str += " 23:59'";
-	}
-
-	return new Promise(function(resolve,reject){
-		db.all(query_str, [], (err, rows) => {
-			if(!err){
-				return resolve( rows );
-			}else{
-				return reject( err );
-			}
-		});
-	});
-};
-*/
-});
-    describe( "::addActivityLog2Database()",function(){
-        it("正常系");
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, null, expected_rows);
+            return shouldFulfilled(
+                sql_parts.getListOfActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
+            ).then(function(result){
+                assert( stub_instance.calledOnce );
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "SELECT created_at, type FROM activitylogs " 
+                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.deep.equal( expected_rows );
+            });
+        });
     });
+    describe( "::closeConnection()",function(){
+        it("正常系。期間指定なし。",function(){
+            var period = null; //無しの場合
+            var deviceKey = "にゃーん。";
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_instance = sinon.stub();
 
+            dbs[ sqlConfig.database ] = {
+                "close" : stub_instance
+            };
+            stub_instance.callsArgWith(0, null);
+            return shouldFulfilled(
+                sql_parts.closeConnection( sqlConfig.database )
+            ).then(function(result){
+                assert( stub_instance.calledOnce );
+                expect( dbs[ sqlConfig.database ] ).to.not.be.exist;
+            });
+            
+        });
+    });
+    //describe( "::addActivityLog2Database()",function(){
+    //    it("正常系");
+    //});
     //clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。
     // clock.restore(); // 時間停止解除。
-
 });
+
+
 

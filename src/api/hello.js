@@ -6,7 +6,8 @@
 
  
 /**
- * バッテリーログをSQLから、指定されたデバイス（のハッシュ値）のものを取得する。
+ * GETメソッドで呼び出されて、Queryに入っている「name」の値を取り出して
+ * 「Hello world」に追加で返すだけのAPI。
  */
 exports.world = function( queryFromGet, dataFromPost ){
     var name = queryFromGet.name;

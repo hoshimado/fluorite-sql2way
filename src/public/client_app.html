@@ -3,6 +3,8 @@
   <head>
     <!-- client_app.html -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
 
@@ -65,6 +67,9 @@
         :data="gridData"
         :columns="gridColumns">
       </vue-my-element-grid>
+    </div>
+    <div>
+      <canvas id="id_chart" style="width: 100%"></canvas>
     </div>
 
     <br><br><br>

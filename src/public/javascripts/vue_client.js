@@ -69,7 +69,7 @@ var _setVueComponentGrid = function( staticVue ){
         }
     });
 };  
-var _vueAppGrid = function( createVueInstance ){
+var _vueAppGrid = function( createVueInstance, chartInstance ){
     var app_grid = createVueInstance({
         el: '#app_grid',
         data: {
@@ -95,7 +95,33 @@ var _vueAppGrid = function( createVueInstance ){
                 });
                 promise.then((response)=>{
                     this.gridData = response.data;
+                }).then(()=>{
+                    chartInstance.show( 
+                        "line", 
+                        ["9/27", "9/29", "9/28", "9/29", "9/30"], 
+                        [{
+                            "label" : "睡眠時間",
+                            data : [ 7, 5, 6, 3, 4],
+                            backgroundColor: "rgba(153,255,51,0.4)"
+                        }] 
+                    );
+                    return new Promise((resolve,reject)=>{
+                        setTimeout(function() {
+                            resolve();
+                        }, 2000);
+                    });
+                }).then(()=>{
+                    chartInstance.show( 
+                        "line", 
+                        ["9/27", "9/29", "9/28", "9/29", "9/30"], 
+                        [{
+                            "label" : "睡眠時間",
+                            data : [ 5, 6, 3, 4, 0],
+                            backgroundColor: "rgba(153,255,51,0.4)"
+                        }] 
+                    )
                 });
+             
                 // */
                 /*
                 var url = "./api/v1/activitylog/show?device_key=nyan1nyan2nyan3nayn4nayn5nyan6ny";
@@ -121,7 +147,7 @@ var _vueAppGrid = function( createVueInstance ){
                 // */
             }
         },
-        mounted() {
+        "mounted" : function() {
             this.getGridData();
         }
     });
@@ -142,7 +168,7 @@ var _vueAppSetup = function( createVueInstance ){
     return app_setup;
 };
 
-var _vueAppAxios = function( createAccount, axiosInstance ){
+var _vueAppAxios = function( createVueInstance, axiosInstance ){
     var app_axios = createVueInstance({
         el: '#app_axios',
         data: {
@@ -181,7 +207,7 @@ var _vueAppAxios = function( createAccount, axiosInstance ){
                 });
                 // あれ？クロスドメインの許可は？？？
             }
-        }
+        },
     });
     return app_axios;
 };
@@ -193,11 +219,33 @@ var _promiseCreateAccount = function( mailAddress ){
     return Promise.resolve( client_lib.axios );
 };
 
+var _CHART = function( browserThis, targetCanvasId ){
+    var canvasNode = browserThis.document.getElementById( targetCanvasId );
+    this._ctx = canvasNode.getContext("2d");
+    this._myChart = null;
+}; 
+_CHART.prototype.show = function( chartType, labels, datasets ){
+    if( !this._myChart ){
+        this._myChart = new Chart(this._ctx, {
+            "type" : chartType,
+            "responsive" : true,
+            "data" : {
+                "labels" : labels,
+                "datasets" : datasets
+            }
+        });
+    }else{
+        this._myChart.type = chartType;
+        this._myChart.data.labels = labels;
+        this._myChart.data.datasets = datasets;
+        this._myChart.update();
+    }
+};
+
+
 
 // ----------------------------------------------------------------------
-client_lib = {
-    "axios" : (this.window) ? axios : {} // ダミー
-};
+var client_lib = {};
 
 // typeof window !== 'undefined'
 if( this.window ){
@@ -205,11 +253,17 @@ if( this.window ){
     var CREATE_VUE_INSTANCE = function(options){
         return new Vue(options);
     };
+    var browserThis = this;
     window.onload = function(){
+        client_lib = {
+            "axios" : (browserThis.window) ? axios : {}, // ダミー
+            "chartInstance" : (browserThis.window) ? new _CHART(browserThis, "id_chart") : {} // ダミー
+        };
+
         _setVueComponentGrid( Vue );
-        _vueAppGrid( CREATE_VUE_INSTANCE );
+        _vueAppGrid( CREATE_VUE_INSTANCE, client_lib.chartInstance );
         _vueAppSetup( CREATE_VUE_INSTANCE );
-        _vueAppAxios( CREATE_VUE_INSTANCE, axios )
+        _vueAppAxios( CREATE_VUE_INSTANCE, client_lib.axios )
     };
 }else{
     // ここに来るのは、テスト時だけ。on Node.js

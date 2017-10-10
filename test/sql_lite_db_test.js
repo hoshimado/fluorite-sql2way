@@ -58,8 +58,9 @@ describe( "sql_lite_db_test.js", function(){
 
         // sqlite3モジュールに対するI/Oをモックに差し替える。
         stubSqlite3.verbose.onCall(0).returns({
-            "Database" : function( databaseName, callback ){ // 「newされる」ので、returnしておけば差替えれる。
+            "Database" : function( databaseName, callback ){
                 // newされた時のコンスタラクタ処理に相当。
+                // returnすることで差替えることが出来る。
                 setTimeout(function() {
                     callback(); // 非同期で呼ばれる、、、を疑似的に行う。
                 }, 100);

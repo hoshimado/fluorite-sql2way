@@ -19,11 +19,13 @@ var _vueApp = function( createVueInstance ){
 };
 
 
-if( typeof window !== 'undefined' ){
+if( this.window ){
     var CREATE_VUE_INSTANCE = function(options){
         return new Vue(options);
     };
     window.onload = function(){
+        // html側のDOM読み込みが終わってから、
+        // Vue.jsを適用する。
         _vueApp( CREATE_VUE_INSTANCE );
     };
 }else{

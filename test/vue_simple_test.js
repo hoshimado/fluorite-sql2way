@@ -13,10 +13,12 @@ var target = require("../src/public/javascripts/vue_simple.js");
 
 describe("TEST for vue_simple.js", function(){
     var stub_vue;
-	beforeEach(()=>{ // フック前の関数を保持する。
+	beforeEach(()=>{
+        // 各テスト毎に実行する前処理。
         stub_vue = sinon.stub();
 	});
-	afterEach(()=>{ // フックした（かもしれない）関数を、元に戻す。
+	afterEach(()=>{
+        // 各テスト毎に実行する後処理。
 	});
 
     describe("vueApp()",function(){

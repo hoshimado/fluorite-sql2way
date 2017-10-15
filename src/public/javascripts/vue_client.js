@@ -69,7 +69,7 @@ var _setVueComponentGrid = function( staticVue ){
         }
     });
 };  
-var _vueAppGrid = function( createVueInstance, chartInstance ){
+var _vueAppGrid = function( createVueInstance, client_lib ){
     var app_grid = createVueInstance({
         el: '#app_grid',
         data: {
@@ -79,24 +79,13 @@ var _vueAppGrid = function( createVueInstance, chartInstance ){
         },
         methods : {
             getGridData() {
-                ///*
-                var promise = new Promise((resolve,reject)=>{
-                    setTimeout(function() {
-                        resolve({
-                            "data" : 
-                            [
-                                { time: "2017-09-29 07:20",  activity: '起きた' },
-                                { time: "2017-09-30 01:55",  activity: '寝る' },
-                                { time: "2017-09-30 05:55",  activity: '起きた'},
-                                { time: "2017-09-30 18:00",  activity: '眠い' }
-                            ]
-                        });
-                    }, 500);
-                });
-                promise.then((response)=>{
-                    this.gridData = response.data;
+                var promise = client_lib.getActivityDataInAccordanceWithCookie();
+                promise.then((resultArray)=>{
+                    var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
+                    this.gridData = grid_activity_data;
                 }).then(()=>{
-                    chartInstance.show( 
+                    // チャートのテスト
+                    client_lib.chartInstance.show( 
                         "line", 
                         ["9/27", "9/29", "9/28", "9/29", "9/30"], 
                         [{
@@ -111,7 +100,7 @@ var _vueAppGrid = function( createVueInstance, chartInstance ){
                         }, 2000);
                     });
                 }).then(()=>{
-                    chartInstance.show( 
+                    client_lib.chartInstance.show( 
                         "line", 
                         ["9/27", "9/29", "9/28", "9/29", "9/30"], 
                         [{
@@ -124,6 +113,7 @@ var _vueAppGrid = function( createVueInstance, chartInstance ){
              
                 // */
                 /*
+                // ACTIVITY.GOTO_BED / GET_UP
                 var url = "./api/v1/activitylog/show?device_key=nyan1nyan2nyan3nayn4nayn5nyan6ny";
                 axiosInstance.get(url).then(x => {
                     var TENTANATIVE = {
@@ -244,6 +234,56 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
 
 
 
+var _convertActivityList2GridData = function( typeArray ){
+    var MESSAGE_LIST = {
+        "101" : "寝る",
+        "102" : "起きた"
+    };
+    var array = typeArray; // [{ "time", "type" }]
+    var n = array.length;
+    var grid_activity_data = [], item;
+    while( 0<n-- ){
+        item = array[n];
+        grid_activity_data.push({
+            "time" : item.created_at.substr(0, 16),
+            "activity" : MESSAGE_LIST[ item.type ]
+        });
+    }
+    return grid_activity_data;
+}
+// var ACTIVITY = {
+//    "GOTO_BED" : 101,
+//    "GET_UP" : 102
+// }; [define_activity.js]
+
+
+var _getActivityDataInAccordanceWithCookie = function(){
+    return new Promise(function(resolve,reject){
+        setTimeout(function() {
+            resolve([
+                { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
+                { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
+                { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
+                { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }
+            ]);
+        }, 500);
+    });
+}
+var _fake1 = function(){
+    return Promise.resolve({
+        "data" : 
+        { 
+            "result":"sql connection is OK!",
+            "table": [
+                {"created_at":"2017-10-16 00:38:21.000","type":101},
+                {"created_at":"2017-10-16 06:23:57.000","type":102}
+            ]
+        }
+    });
+};
+
+
+
 // ----------------------------------------------------------------------
 var client_lib = {};
 
@@ -256,12 +296,14 @@ if( this.window ){
     var browserThis = this;
     window.onload = function(){
         client_lib = {
+            "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie,
+            "convertActivityList2GridData" : _convertActivityList2GridData,
             "axios" : (browserThis.window) ? axios : {}, // ダミー
             "chartInstance" : (browserThis.window) ? new _CHART(browserThis, "id_chart") : {} // ダミー
         };
 
         _setVueComponentGrid( Vue );
-        _vueAppGrid( CREATE_VUE_INSTANCE, client_lib.chartInstance );
+        _vueAppGrid( CREATE_VUE_INSTANCE, client_lib );
         _vueAppSetup( CREATE_VUE_INSTANCE );
         _vueAppAxios( CREATE_VUE_INSTANCE, client_lib.axios )
     };

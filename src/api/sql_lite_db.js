@@ -360,11 +360,9 @@ var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
 			"isReady" : false
 		});
 	}
-
 	return new Promise(function(resolve,reject){
 		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
 		var wrappedDeviceKey = wrapString( deviceKey );
-		var wrappedPassWord = wrapString( passwordStr )
 		var now_date = new Date();
 		var date_str = now_date.toFormat("YYYY-MM-DD HH24:MI:SS.000"); // data-utilsモジュールでの拡張を利用。
 		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash ) ";

@@ -115,7 +115,6 @@ router.post("/add", function(req, res, next){
 	var dataPost = req.body;
 	
 	return api_v1_activitylog_add( null, dataPost ).then((result)=>{
-
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );

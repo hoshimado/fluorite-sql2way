@@ -311,6 +311,7 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
 	};
 	API_ADD.prototype = Object.create( API_V1_BASE.prototype );
 	API_ADD.prototype.requestSql = function( paramClass ){
+		
 		// 対象のログデータをSQLへ要求
 		var outJsonData = this._outJsonData;
 		var config = factoryImpl.CONFIG_SQL.getInstance();

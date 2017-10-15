@@ -42,9 +42,10 @@ var getHashHexStr = function( plainText, algorithm ){
 exports.getHashHexStr = getHashHexStr;
 
 
-var _wrapDeviceKey = function( deviceKey ){
+var _wrapStringValue = function( deviceKey ){
 	return getHashHexStr( deviceKey, "md5" );
 };
+factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
 
 
 
@@ -231,8 +232,11 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 	}
 
 	return new Promise(function(resolve,reject){
+		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+		var wrappedDeviceKey = wrapString( deviceKey );
+		var wrappedPassWord = wrapString( passwordStr )
 		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])";
-		query_str += "VALUES('" + _wrapDeviceKey(deviceKey) + "', " + maxEntrys + ", '" + passwordStr + "')";
+		query_str += "VALUES('" + wrappedDeviceKey + "', " + maxEntrys + ", '" + wrappedPassWord + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
@@ -312,9 +316,11 @@ var isOwnerValid = function( databaseName, deviceKey ){
 	}
 
 	return new Promise(function(resolve,reject){
+		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+		var wrappedDeviceKey = wrapString( deviceKey );
 		var query_str = "SELECT owners_hash, max_entrys";
 		query_str += " FROM owners_permission";
-		query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'";
+		query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'";
 
 		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
 			if(!err){
@@ -356,10 +362,13 @@ var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
 	}
 
 	return new Promise(function(resolve,reject){
+		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+		var wrappedDeviceKey = wrapString( deviceKey );
+		var wrappedPassWord = wrapString( passwordStr )
 		var now_date = new Date();
 		var date_str = now_date.toFormat("YYYY-MM-DD HH24:MI:SS.000"); // data-utilsモジュールでの拡張を利用。
 		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash ) ";
-		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + _wrapDeviceKey(deviceKey) + "')";
+		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + wrappedDeviceKey + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
@@ -389,6 +398,9 @@ exports.addActivityLog2Database = addActivityLog2Database;
  * @returns{Promise} SQLからの取得結果を返すPromiseオブジェクト。成功時resolve( recordset ) 、失敗時reject( err )。
  */
 var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+	var wrappedDeviceKey = wrapString( deviceKey );
+
 	var dbs = factoryImpl.db.getInstance();
 	var db = dbs[ databaseName ];
 	if( !db ){
@@ -398,7 +410,7 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 	}
 
 	var query_str = "SELECT created_at, type FROM activitylogs";
-	query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
+	query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
 	// http://sql55.com/column/string-comparison.php
 	// > SQL Server では文字列を比較する際、比較対象の 2 つの文字列の長さが違った場合、
 	// > 短い方の文字列の後ろにスペースを足して、長さの長い方にあわせてから比較します。

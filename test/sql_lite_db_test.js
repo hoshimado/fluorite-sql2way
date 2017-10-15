@@ -162,14 +162,22 @@ describe( "sql_lite_db_test.js", function(){
             var expected_rows = [
                 { "created_at": '2017-10-22 23:59:00.000', "type": 900 }
             ];
+            var stub_wrapperStr = sinon.stub();
+            
+            stub_wrapperStr.callsFake( function(str){ return str; } );
 
             dbs[ sqlConfig.database ] = {
                 "all" : stub_instance
             };
             stub_instance.callsArgWith(2, null, expected_rows);
+
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+
             return shouldFulfilled(
                 sql_parts.getListOfActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
             ).then(function(result){
+                assert( stub_wrapperStr.calledOnce );
                 assert( stub_instance.calledOnce );
                 var called_args = stub_instance.getCall(0).args;
                 expect( called_args[0] ).to.equal(
@@ -207,86 +215,5 @@ describe( "sql_lite_db_test.js", function(){
     //clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。
     // clock.restore(); // 時間停止解除。
 
-    describe("::SQLiteトライアル。※モック化途中なので、今は動作しない。", function(){
-		it("シークエンス調査", function(){
-            var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
-//            sqlConfig = { "database" : "./db/test.splite3" }
-             
-            var queryFromGet = { "device_key" : "ほげふがぴよ" };
-            var dataFromPost = null;
-            var promise;
-            this.timeout(5000);
-
-            promise = createPromiseForSqlConnection( sqlConfig );
-/*
-            promise = promise.then( function(result){
-                return sql_parts.setupTable1st( sqlConfig.database );
-            });
-*/
-/*
-[ { type: 'table',
-    name: 'activitylogs',
-    tbl_name: 'activitylogs',
-    rootpage: 2,
-    sql: 'CREATE TABLE activitylogs([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [created_at] [datetime] NOT NULL, [type] [int] NULL, [owners_hash] [char](64) NULL )' },
-  { type: 'table',
-    name: 'sqlite_sequence',
-    tbl_name: 'sqlite_sequence',
-    rootpage: 3,
-    sql: 'CREATE TABLE sqlite_sequence(name,seq)' },
-  { type: 'table',
-    name: 'owners_permission',
-    tbl_name: 'owners_permission',
-    rootpage: 4,
-    sql: 'CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NULL, [password] [char](16) NULL, [max_entrys] [int] NOT NULL, UNIQUE ([owners_hash]))' } ]
-*/
-/*
-[ { type: 'table',
-    name: 'activitylogs',
-    tbl_name: 'activitylogs',
-    rootpage: 2,
-    sql: 'CREATE TABLE activitylogs([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [created_at] [datetime] NOT NULL, [ty
-pe] [int] NULL, [owners_hash] [char](64) NULL )' },
-  { type: 'table',
-    name: 'sqlite_sequence',
-    tbl_name: 'sqlite_sequence',
-    rootpage: 3,
-    sql: 'CREATE TABLE sqlite_sequence(name,seq)' },
-  { type: 'table',
-    name: 'owners_permission',
-    tbl_name: 'owners_permission',
-    rootpage: 4,
-    sql: 'CREATE TABLE owners_permission([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [owners_hash] [char](64) NOT NUL
-L, [password] [char](16) NULL, [max_entrys] [int] NOT NULL, UNIQUE ([owners_hash]))' } ]
-*/
-
-            promise = promise.then( function(result){
-                return getNumberOfUsers( sqlConfig.database );
-            });
-/*
-            promise = promise.then( function(result){
-                return addNewUser( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 1024, "password" );
-            });
-
-            promise = promise.then( function(result){
-                return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
-            });
-
-            promise = promise.then(function( result ){
-                return isOwnerValid( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny" );
-            }).then(function( maxCount ){
-				console.log( "[maxCount]" + maxCount );
-                // expect( maxCount, "記録エントリーの最大個数を返却すること" ).to.be.exist;
-                return addActivityLog2Database( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 90 );
-            });
-*/
-            return shouldFulfilled(
-                promise
-			).then(function( result ){
-                console.log( result );
-                closeConnection( sqlConfig.database );
-			});
-		});
-	});
 });
 

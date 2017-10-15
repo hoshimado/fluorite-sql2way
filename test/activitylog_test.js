@@ -305,8 +305,8 @@ describe( "activitylog.js", function(){
                 expect( stubs.sql_parts.getShowObjectFromGetData.getCall(0).args[0] ).to.equal(queryFromGet);
 
                 assert( stubCreateConnection.calledOnce, "SQLへの接続生成、が一度呼ばれること" );
-                expect( stubCreateConnection.getCall(0).args[0] ).to.be.an('object');
-                expect( stubCreateConnection.getCall(0).args[1] ).to.have.ownProperty('device_key');
+                // expect( stubCreateConnection.getCall(0).args[0] ).to.be.an('object');
+                // expect( stubCreateConnection.getCall(0).args[1] ).to.have.ownProperty('device_key');
 
                 assert( stubs.sql_parts.isOwnerValid.calledOnce, "アクセス元の認証、が一度呼ばれること" );
                 expect( stubs.sql_parts.isOwnerValid.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );

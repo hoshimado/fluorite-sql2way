@@ -66,6 +66,26 @@ console.log( stub_vue.getCall(0).args[0] );
             });
         });
     });
+
+    describe("::convertSleepTime6MarkingTimeTwice()",function(){
+        it("夜スタート朝終わりのケース",function(){
+            var convertSleepTime6MarkingTimeTwice = target.client_lib.convertSleepTime6MarkingTimeTwice;
+            var result = convertSleepTime6MarkingTimeTwice([
+                "2017-10-13 23:45",
+                "2017-10-14 08:30",
+                "2017-10-14 23:30",
+                "2017-10-15 06:00",
+                "2017-10-16 01:00",
+                "2017-10-16 07:00"
+            ]);
+
+            expect(result).to.deep.equal([
+                { date: '2017-10-14', sleep: 8.75 },
+                { date: '2017-10-15', sleep: 6.5 },
+                { date: '2017-10-16', sleep: 6 }
+            ])
+        })
+    });
 });
 
 

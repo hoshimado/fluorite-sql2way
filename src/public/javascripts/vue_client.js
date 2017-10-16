@@ -234,6 +234,35 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
 
 
 
+
+
+var _fake1 = function(){
+    return Promise.resolve({
+        "data" : 
+        { 
+            "result":"sql connection is OK!",
+            "table": [
+                {"created_at":"2017-10-16 00:38:21.000","type":101},
+                {"created_at":"2017-10-16 06:23:57.000","type":102}
+            ]
+        }
+    });
+};
+var _getActivityDataInAccordanceWithCookie = function(){
+    return new Promise(function(resolve,reject){
+        setTimeout(function() {
+            resolve([
+                { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
+                { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
+                { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
+                { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }
+            ]);
+        }, 500);
+    });
+}
+
+
+
 var _convertActivityList2GridData = function( typeArray ){
     var MESSAGE_LIST = {
         "101" : "寝る",
@@ -257,35 +286,48 @@ var _convertActivityList2GridData = function( typeArray ){
 // }; [define_activity.js]
 
 
-var _getActivityDataInAccordanceWithCookie = function(){
-    return new Promise(function(resolve,reject){
-        setTimeout(function() {
-            resolve([
-                { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
-                { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
-                { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
-                { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }
-            ]);
-        }, 500);
-    });
-}
-var _fake1 = function(){
-    return Promise.resolve({
-        "data" : 
-        { 
-            "result":"sql connection is OK!",
-            "table": [
-                {"created_at":"2017-10-16 00:38:21.000","type":101},
-                {"created_at":"2017-10-16 06:23:57.000","type":102}
-            ]
+var _convertSleepTime6MarkingTimeTwice = function( arrayDateStr ){
+    var dateList = [];
+    var elapsed1, elapsed2, elapsedList = [];
+    var i, n = arrayDateStr.length;
+    
+    for(i=0; i<n; i++){
+        dateList.push( new Date( arrayDateStr[i] ) );
+        // console.log( dateList[i].toLocaleDateString() );
+    }
+
+    i = 0;
+    n -= 2; // 先の2つを取るので、上限を２減らして置く。
+    while(i < n){
+        elapsed1 = dateList[i+1] - dateList[i];
+        elapsed2 = dateList[i+2] - dateList[i+1];
+        if( elapsed1 < elapsed2 ){ // 前後の値で「前が小さい」なら、それを「終端」として拾う。
+            elapsedList.push({
+                "date" : dateList[i+1].toLocaleDateString(),
+                "sleep" : elapsed1 /1000 /3600
+            });
         }
-    });
+        i++; // ここでカウントアップする。
+        if( i == n ){ // カウントアップ後の最後のデータが「終端」なら追加する。
+            elapsedList.push({
+                "date" : dateList[i+1].toLocaleDateString(),
+                "sleep" : elapsed2/1000 /3600
+            })
+        }
+    }
+    // dt1.toLocaleString()
+
+    return elapsedList;
 };
 
 
 
 // ----------------------------------------------------------------------
-var client_lib = {};
+var client_lib = {
+    "convertSleepTime6MarkingTimeTwice" : _convertSleepTime6MarkingTimeTwice,
+    "convertActivityList2GridData" : _convertActivityList2GridData,
+    "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie
+};
 
 // typeof window !== 'undefined'
 if( this.window ){
@@ -295,12 +337,8 @@ if( this.window ){
     };
     var browserThis = this;
     window.onload = function(){
-        client_lib = {
-            "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie,
-            "convertActivityList2GridData" : _convertActivityList2GridData,
-            "axios" : (browserThis.window) ? axios : {}, // ダミー
-            "chartInstance" : (browserThis.window) ? new _CHART(browserThis, "id_chart") : {} // ダミー
-        };
+        client_lib["axios"] = (browserThis.window) ? axios : {}; // ダミー
+        client_lib["chartInstance"] = (browserThis.window) ? new _CHART(browserThis, "id_chart") : {}; // ダミー
 
         _setVueComponentGrid( Vue );
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib );

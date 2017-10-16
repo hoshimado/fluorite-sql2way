@@ -82,15 +82,33 @@ var _vueAppGrid = function( createVueInstance, client_lib ){
                 var promise = client_lib.getActivityDataInAccordanceWithCookie();
                 promise.then((resultArray)=>{
                     var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
-                    this.gridData = grid_activity_data;
-                }).then(()=>{
+                    this.gridData = grid_activity_data.slice(0, 4);
+                    // ↑カットオフ入れてる。最大４つまで、で。
+
+                    return Promise.resolve( grid_activity_data );
+                }).then(( activitiyData )=>{
                     // チャートのテスト
+                    var chartData = client_lib.convertSleepTime6MarkingTimeTwice( activitiyData.reverse() );
+                    var horizonArray = (function( items ){
+                        var list =[],i, n = items.length;
+                        for(i=0; i<n; i++){
+                            list.push( items[i].date );
+                        }
+                        return list;
+                    }( chartData ));
+                    var verticalArray = (function( items ){
+                        var list =[],i, n = items.length;
+                        for(i=0; i<n; i++){
+                            list.push( items[i].sleep );
+                        }
+                        return list;
+                    }( chartData ));
                     client_lib.chartInstance.show( 
                         "line", 
-                        ["9/27", "9/29", "9/28", "9/29", "9/30"], 
+                        horizonArray, 
                         [{
                             "label" : "睡眠時間",
-                            data : [ 7, 5, 6, 3, 4],
+                            data : verticalArray,
                             backgroundColor: "rgba(153,255,51,0.4)"
                         }] 
                     );
@@ -99,16 +117,6 @@ var _vueAppGrid = function( createVueInstance, client_lib ){
                             resolve();
                         }, 2000);
                     });
-                }).then(()=>{
-                    client_lib.chartInstance.show( 
-                        "line", 
-                        ["9/27", "9/29", "9/28", "9/29", "9/30"], 
-                        [{
-                            "label" : "睡眠時間",
-                            data : [ 5, 6, 3, 4, 0],
-                            backgroundColor: "rgba(153,255,51,0.4)"
-                        }] 
-                    )
                 });
              
                 // */
@@ -222,6 +230,24 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
             "data" : {
                 "labels" : labels,
                 "datasets" : datasets
+            },
+            "options" : { // このシート見やすい⇒ https://qiita.com/masatatsu/items/a311e88f19eecd8f47ab
+                "scales" : {
+                    "yAxes": [{                      //y軸設定
+                        "display": true,             //表示設定
+                        "scaleLabel": {              //軸ラベル設定
+                           // "fontSize": 18,               //フォントサイズ
+                           "display": true,          //表示設定
+                           "labelString": '睡眠時間'  //ラベル
+                        },
+                        "ticks": {                      //最大値最小値設定
+                            // "fontSize": 18,             //フォントサイズ
+                            "min": 0,                   //最小値
+                            "max": 12,                  //最大値
+                            "stepSize": 1               //軸間隔
+                        },
+                    }],
+                }
             }
         });
     }else{
@@ -252,6 +278,10 @@ var _getActivityDataInAccordanceWithCookie = function(){
     return new Promise(function(resolve,reject){
         setTimeout(function() {
             resolve([
+                { "created_at" : "2017-10-13 01:00:00.000", "type" : 101 },
+                { "created_at" : "2017-10-13 06:00:00.000", "type" : 101 },
+                { "created_at" : "2017-10-13 23:45:00.000", "type" : 101 },
+                { "created_at" : "2017-10-14 08:30:20.000", "type" : 102 },
                 { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
                 { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
                 { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
@@ -286,11 +316,20 @@ var _convertActivityList2GridData = function( typeArray ){
 // }; [define_activity.js]
 
 
-var _convertSleepTime6MarkingTimeTwice = function( arrayDateStr ){
+var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
+    var arrayDateStr = (function( arrayWithType ){ // 時刻だけ取り出して、行動型に依存せず時間差だけを見て変換する。
+        var i, n = arrayWithType.length;
+        var array = [];
+        for( i=0; i<n; i++ ){
+            array.push( arrayWithType[i].time );
+        }
+        return array;
+    }( activitiyArray ));
     var dateList = [];
     var elapsed1, elapsed2, elapsedList = [];
     var i, n = arrayDateStr.length;
-    
+console.log( arrayDateStr ); 
+
     for(i=0; i<n; i++){
         dateList.push( new Date( arrayDateStr[i] ) );
         // console.log( dateList[i].toLocaleDateString() );

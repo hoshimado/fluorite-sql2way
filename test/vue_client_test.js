@@ -79,12 +79,19 @@ console.log( stub_vue.getCall(0).args[0] );
                 { "time" : "2017-10-16 07:00", "activity" : 102 }
             ]);
 
-            expect(result).to.deep.equal([
-                { date: '2017-10-14', sleep: 8.75 },
-                { date: '2017-10-15', sleep: 6.5 },
-                { date: '2017-10-16', sleep: 6 }
-            ])
-        })
+            expect(result).to.has.property("date");
+            expect(result).to.has.property("sleepingtime");
+            expect(result.date).to.deep.equal([
+                "2017-10-14",
+                "2017-10-15",
+                "2017-10-16"
+            ]);
+            expect(result.sleepingtime).to.deep.equal([
+                8.75,
+                6.5,
+                6
+            ]);
+        });
     });
 });
 

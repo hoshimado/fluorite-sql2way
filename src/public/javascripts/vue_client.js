@@ -85,26 +85,15 @@ var _vueAppGrid = function( createVueInstance, client_lib ){
                     this.gridData = grid_activity_data.slice(0, 4);
                     // ↑カットオフ入れてる。最大４つまで、で。
 
-                    return Promise.resolve( grid_activity_data );
+                    // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
+                    return Promise.resolve( grid_activity_data.reverse() );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
-                    var chartData = client_lib.convertSleepTime6MarkingTimeTwice( activitiyData.reverse() );
-                    var horizonArray = (function( items ){
-                        var list =[],i, n = items.length;
-                        for(i=0; i<n; i++){
-                            list.push( items[i].date );
-                        }
-                        return list;
-                    }( chartData ));
-                    var verticalArray = (function( items ){
-                        var list =[],i, n = items.length;
-                        for(i=0; i<n; i++){
-                            list.push( items[i].sleep );
-                        }
-                        return list;
-                    }( chartData ));
+                    var chartData = client_lib.convertSleepTime6MarkingTimeTwice( activitiyData );
+                    var horizonArray = chartData.date;
+                    var verticalArray = chartData.sleepingtime;
                     client_lib.chartInstance.show( 
-                        "line", 
+                        "bar", // "line", 
                         horizonArray, 
                         [{
                             "label" : "睡眠時間",
@@ -265,13 +254,15 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
 var _fake1 = function(){
     return Promise.resolve({
         "data" : 
-        { 
+        {
             "result":"sql connection is OK!",
-            "table": [
+            "table":[
                 {"created_at":"2017-10-16 00:38:21.000","type":101},
-                {"created_at":"2017-10-16 06:23:57.000","type":102}
+                {"created_at":"2017-10-16 06:23:57.000","type":102},
+                {"created_at":"2017-10-16 23:52:46.000","type":101},
+                {"created_at":"2017-10-17 06:41:23.000","type":102}
             ]
-        }
+        }        
     });
 };
 var _getActivityDataInAccordanceWithCookie = function(){
@@ -326,9 +317,8 @@ var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
         return array;
     }( activitiyArray ));
     var dateList = [];
-    var elapsed1, elapsed2, elapsedList = [];
+    var elapsed1, elapsed2, elapsedMatrix = { "date" : [], "sleepingtime" : [] };
     var i, n = arrayDateStr.length;
-console.log( arrayDateStr ); 
 
     for(i=0; i<n; i++){
         dateList.push( new Date( arrayDateStr[i] ) );
@@ -341,22 +331,18 @@ console.log( arrayDateStr );
         elapsed1 = dateList[i+1] - dateList[i];
         elapsed2 = dateList[i+2] - dateList[i+1];
         if( elapsed1 < elapsed2 ){ // 前後の値で「前が小さい」なら、それを「終端」として拾う。
-            elapsedList.push({
-                "date" : dateList[i+1].toLocaleDateString(),
-                "sleep" : elapsed1 /1000 /3600
-            });
+            elapsedMatrix.date.push( dateList[i+1].toLocaleDateString() );
+            elapsedMatrix.sleepingtime.push( elapsed1 /1000 /3600 );
         }
         i++; // ここでカウントアップする。
         if( i == n ){ // カウントアップ後の最後のデータが「終端」なら追加する。
-            elapsedList.push({
-                "date" : dateList[i+1].toLocaleDateString(),
-                "sleep" : elapsed2/1000 /3600
-            })
+            elapsedMatrix.date.push( dateList[i+1].toLocaleDateString() );
+            elapsedMatrix.sleepingtime.push( elapsed2 /1000 /3600 );
         }
     }
     // dt1.toLocaleString()
 
-    return elapsedList;
+    return elapsedMatrix;
 };
 
 

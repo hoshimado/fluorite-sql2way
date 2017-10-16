@@ -470,21 +470,6 @@ describe( "activitylog.js", function(){
             activitylog.factoryImpl[ "CONFIG_SQL" ].setStub( {"database" : ""} );
         });
 
-        it("直テスト", function(){
-            var queryFromGet = null;
-            var dataFromPost = { 
-                "device_key" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
-                "type_value" : 4
-            };
-            var api_v1_activitylog_add = activitylog.api_v1_activitylog_add;
-
-            return shouldFulfilled(
-                api_v1_activitylog_add( queryFromGet, dataFromPost )
-            ).then(function( result ){
-                console.log( result );
-            });
-
-        });
     });
 
 });

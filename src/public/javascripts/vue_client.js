@@ -105,6 +105,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
     });
     return app_grid;
 };
+
+
 var _vueAppSetup = function( createVueInstance ){
     var app_setup = createVueInstance({
         el: "#app_setup",
@@ -113,13 +115,65 @@ var _vueAppSetup = function( createVueInstance ){
         },
         methods : {
             createAccount(){
-                var promise = _promiseCreateAccount( this.userName );
+                // var promise = _promiseCreateAccount( this.userName );
+                client_lib.tinyCookie( COOKIE_USER_ID, this.userName );
+            }
+        },
+        mounted : function(){
+            var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
+            if( savedUserName != null ){
+                this.userName = savedUserName;
             }
         }
     });
     return app_setup;
 };
+var COOKIE_USER_ID = "FLUORITE_LIFELOG_USERID20171017";
+var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
+var COOKIE_OPTIONS = {expires: 7};
 
+var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境以外は敢えて「未定義」にしておく。
+/**
+ * Cookieを利用したデータ保存。
+ *
+ */
+/*
+"tinyCookie" : new Factory( this.window ? window.Cookie : undefined ) 
+function Cookie(key, value, opts) {
+    if (value === void 0) {
+      return Cookie.get(key);
+    } else if (value === null) {
+      Cookie.remove(key);
+    } else {
+      Cookie.set(key, value, opts);
+    }
+  }
+var MAX_LISTS = 7;
+var COOKIE_NAME  = "AzBatteryLog_Text";
+var COOKIE_VALUE = "AzBatteryLog_Value";
+var COOKIE_LAST_VALUE = "AzBatteryLog_LastValue";
+var COOKIE_OPTIONS = {expires: 7};
+var _loadItems = function(){
+	var cookie = factoryCkImpl.tinyCookie.getInstance();
+	var list = [];
+	var name, value, n = MAX_LISTS;
+	while( 0 < n-- ){
+		name = cookie( COOKIE_NAME + n );
+		value = cookie( COOKIE_VALUE + n );
+		if( name && value ){
+			list.push({
+				"text" : name,
+				"value" : value
+			});
+		}
+	}
+	return list;
+};
+var cookie = factoryCkImpl.tinyCookie.getInstance();
+        name = cookie( COOKIE_NAME + n, list[n].text, COOKIE_OPTIONS );
+        value = cookie( COOKIE_VALUE + n, list[n].value, COOKIE_OPTIONS );
+*/
+        
 var _vueAppAxios = function( createVueInstance, axiosInstance ){
     var app_axios = createVueInstance({
         el: '#app_axios',
@@ -236,7 +290,8 @@ var _convertActivityList2GridData = function( typeArray ){
 // ----------------------------------------------------------------------
 var client_lib = {
     "convertActivityList2GridData" : _convertActivityList2GridData,
-    "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie
+    "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie,
+    "tinyCookie" : _tinyCookie
 };
 
 // typeof window !== 'undefined'
@@ -248,14 +303,16 @@ if( this.window ){
     var browserThis = this;
     window.onload = function(){
         client_lib["axios"] = (browserThis.window) ? axios : {}; // ダミー
-        client_lib["chartInstance"] = (browserThis.window) ? new _CHART(browserThis, "id_chart") : {}; // ダミー
 
         _setVueComponentGrid( Vue );
         chartsleeping_lib.initialize( this ); // このとき、this.document / window などが存在する。
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
-        _vueAppSetup( CREATE_VUE_INSTANCE );
+        _vueAppSetup( CREATE_VUE_INSTANCE, client_lib );
         _vueAppAxios( CREATE_VUE_INSTANCE, client_lib.axios )
+
     };
+
+
 }else{
     // ここに来るのは、テスト時だけ。on Node.js
     exports.setVueComponentGrid = _setVueComponentGrid;

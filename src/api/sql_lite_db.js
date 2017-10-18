@@ -109,6 +109,10 @@ var getInsertObjectFromPostData = function( postData ){
 			valid_data[ "invalid" ] = "there is NOT type_value.";
 		}
 
+		if( postData["pass_key"] ){
+			valid_data["pass_key"] = postData.pass_key; // アンダーバーの有無注意
+		}
+
 		return valid_data;
 };
 exports.getInsertObjectFromPostData = getInsertObjectFromPostData;

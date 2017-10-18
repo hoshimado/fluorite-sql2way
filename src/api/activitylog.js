@@ -26,6 +26,7 @@ exports.factoryImpl = factoryImpl;
  */
 var API_PARAM = function(init){
 	this.device_key = init.device_key;
+	this.pass_key = init.pass_key;
 	this.type_value = init.type_value;
 	this.date_start = init.date_start;
 	this.date_end   = init.date_end;
@@ -39,6 +40,7 @@ var isDefined = function( self, prop ){
 	return self[prop];
 };
 API_PARAM.prototype.getDeviceKey = function(){ return isDefined( this, "device_key"); };
+API_PARAM.prototype.getPassKey = function(){ return isDefined( this, "pass_key"); };
 API_PARAM.prototype.getTypeValue = function(){ return isDefined( this, "type_value"); };
 API_PARAM.prototype.getStartDate = function(){ return isDefined( this, "date_start"); };
 API_PARAM.prototype.getEndDate   = function(){ return isDefined( this, "date_end"); };
@@ -65,7 +67,8 @@ API_V1_BASE.prototype.isOwnerValid = function( inputData ){
 		var isOwnerValid = factoryImpl.sql_parts.getInstance( "isOwnerValid" );
 		var is_onwer_valid_promise = isOwnerValid( 
 			config.database, 
-			paramClass.getDeviceKey() 
+			paramClass.getDeviceKey(), 
+			paramClass.getPassKey()
 		);
 		is_onwer_valid_promise.then(function( maxCount ){
 			resolve( paramClass ); // ⇒次のthen()が呼ばれる。
@@ -212,7 +215,7 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 	}
 	var inputData = {
 		"device_key" : dataFromPost.username,
-		"password"   : "テストパス"
+		"pass_key"   : dataFromPost.passkey
 	};
 
 
@@ -225,7 +228,7 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 			var promise = getNumberOfUsers( config.database );
 			promise.then((nowNumberOfUsers)=>{
 				if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
-					resolve(inputData);
+					resolve();
 				}else{
 					reject("the number of users is over.");
 				}
@@ -233,11 +236,11 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 				reject(err);
 			});
 		});
-	}).then( (inputData )=>{
+	}).then( ()=>{
 		var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
 
 		// ◆ToDo:↓ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
-		return addNewUser( config.database, inputData.device_key, 128, inputData.password );
+		return addNewUser( config.database, inputData.device_key, 128, inputData.pass_key );
 	}).then( (insertedData)=>{
 		outJsonData [ "signuped" ] = insertedData;
 		return Promise.resolve(200);

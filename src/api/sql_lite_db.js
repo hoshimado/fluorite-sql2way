@@ -53,7 +53,8 @@ factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
 /**
  * HTTP::GETデータから、「SHOW操作」に必要なデータ郡を取得。
  * API呼び出しのフォーマットのチェックを兼ねる。フォーマット不正なら { "invalid" : "理由" } を返却。
- * 入力データは、getData = { device_key } が期待値。
+ * 入力データは、getData = { device_key, pass_key } が期待値。
+ * pass_keyは無くともスルーするが、その後の検証フェースでNGになる（見込み）。
  * 
  * @returns オブジェクト{ device_key: "" }。フォーマット違反なら{ "invalid" : "理由" }
  */
@@ -78,6 +79,9 @@ var getShowObjectFromGetData = function( getData ){
 		}
 		if( !valid_data.date_end.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
 			valid_data[ "invalid" ] = "format of date is wrong.";
+		}
+		if( getData["pass_key"] ){
+			valid_data["pass_key"] = getData.pass_key;
 		}
 	}else{
 		valid_data[ "invalid" ] = "parameter is INVAILD.";
@@ -104,7 +108,7 @@ var getInsertObjectFromPostData = function( postData ){
 		}else{
 			valid_data[ "invalid" ] = "there is NOT type_value.";
 		}
-	
+
 		return valid_data;
 };
 exports.getInsertObjectFromPostData = getInsertObjectFromPostData;
@@ -303,10 +307,11 @@ exports.getNumberOfUsers = getNumberOfUsers;
  * SQLへのアクセスが許可されたアクセス元か？
  * 
  * @param{String} databaseName データベース名
- * @param{String} ownerHash アクセスデバイスごとの一意の識別子。これが「認証用SQLデータベース」に入っていればアクセスOK。
+ * @param{String} deviceKey アクセスデバイスごとの一意の識別子。これが「認証用SQLデータベース」に入っていればアクセスOK。
+ * @param{String} password  アクセスデバイスと紐づいたパスワード。上記の識別子と合わせて認証する。
  * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は引数無し。reject()はエラー内容が引数に入る。
  */
-var isOwnerValid = function( databaseName, deviceKey ){
+var isOwnerValid = function( databaseName, deviceKey, password ){
 	var dbs = factoryImpl.db.getInstance();
 	var db = dbs[ databaseName ];
 	if( !db ){
@@ -318,13 +323,14 @@ var isOwnerValid = function( databaseName, deviceKey ){
 	return new Promise(function(resolve,reject){
 		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
 		var wrappedDeviceKey = wrapString( deviceKey );
-		var query_str = "SELECT owners_hash, max_entrys";
+		var wrappedPassWord  = wrapString( password ); 
+		var query_str = "SELECT owners_hash, password, max_entrys";
 		query_str += " FROM owners_permission";
 		query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'";
 
 		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
 			if(!err){
-				if( rows.length > 0 ){
+				if( (rows.length > 0) && (wrappedPassWord == rows[0].password) ){
 					resolve( rows[0].max_entrys );
 				}else{
 					reject({

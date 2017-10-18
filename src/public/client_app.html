@@ -47,7 +47,9 @@
       <!-- このブロックは丸ごとjQueryで表示／非表示を管理する。 -->
       <div id="app_setup">
         ユーザーID（メールアドレス）<br>
-        <input name="username" v-model="userName">
+        <input id="id_username" name="username" v-model="userName"><br>
+        パスワード<br>
+        <input id="id_passkeyword" name="passKeyWord" type="password" v-model="passKeyWord"><br>
         <!-- ◆バリデーションする。公式メールアドレスの例がある◆ -->
         <input value="登録" type="button" v-on:click="createAccount">
       </div>

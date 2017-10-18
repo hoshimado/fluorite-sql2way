@@ -100,7 +100,12 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             }
         },
         "mounted" : function() {
-            this.getGridData();
+            var self = this;
+            setTimeout(function() {
+                // 初期化の都合で、0.5秒後に実行する。【暫定】
+                // ToDo：単純に「未だ準備が終わって無ければ1秒後にリトライ」が良いのでは？
+                self.getGridData();
+            }, 500);
         }
     });
     return app_grid;
@@ -111,67 +116,34 @@ var _vueAppSetup = function( createVueInstance ){
     var app_setup = createVueInstance({
         el: "#app_setup",
         data: {
-            userName: "sample@mail.address"
+            "userName": "sample@mail.address",
+            "passKeyWord" : ""
         },
         methods : {
             createAccount(){
                 // var promise = _promiseCreateAccount( this.userName );
                 client_lib.tinyCookie( COOKIE_USER_ID, this.userName );
+                client_lib.tinyCookie( COOKIE_USER_PASSWORD, this.passKeyWord );
             }
         },
         mounted : function(){
             var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
+            var savedPassKey = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
             if( savedUserName != null ){
                 this.userName = savedUserName;
             }
+            this.passKeyWord = savedPassKey;
         }
     });
     return app_setup;
 };
 var COOKIE_USER_ID = "FLUORITE_LIFELOG_USERID20171017";
 var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
-var COOKIE_OPTIONS = {expires: 7};
+var COOKIE_OPTIONS = {expires: 7}; // ToDo：要検討
 
 var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境以外は敢えて「未定義」にしておく。
-/**
- * Cookieを利用したデータ保存。
- *
- */
 /*
-"tinyCookie" : new Factory( this.window ? window.Cookie : undefined ) 
-function Cookie(key, value, opts) {
-    if (value === void 0) {
-      return Cookie.get(key);
-    } else if (value === null) {
-      Cookie.remove(key);
-    } else {
-      Cookie.set(key, value, opts);
-    }
-  }
-var MAX_LISTS = 7;
-var COOKIE_NAME  = "AzBatteryLog_Text";
-var COOKIE_VALUE = "AzBatteryLog_Value";
-var COOKIE_LAST_VALUE = "AzBatteryLog_LastValue";
-var COOKIE_OPTIONS = {expires: 7};
-var _loadItems = function(){
-	var cookie = factoryCkImpl.tinyCookie.getInstance();
-	var list = [];
-	var name, value, n = MAX_LISTS;
-	while( 0 < n-- ){
-		name = cookie( COOKIE_NAME + n );
-		value = cookie( COOKIE_VALUE + n );
-		if( name && value ){
-			list.push({
-				"text" : name,
-				"value" : value
-			});
-		}
-	}
-	return list;
-};
-var cookie = factoryCkImpl.tinyCookie.getInstance();
-        name = cookie( COOKIE_NAME + n, list[n].text, COOKIE_OPTIONS );
-        value = cookie( COOKIE_VALUE + n, list[n].value, COOKIE_OPTIONS );
+    name = cookie( COOKIE_NAME + n, list[n].text, COOKIE_OPTIONS );
 */
         
 var _vueAppAxios = function( createVueInstance, axiosInstance ){
@@ -228,36 +200,56 @@ var _promiseCreateAccount = function( mailAddress ){
 
 
 
-var _fake1 = function(){
-    return Promise.resolve({
-        "data" : 
-        {
-            "result":"sql connection is OK!",
-            "table":[
-                {"created_at":"2017-10-16 00:38:21.000","type":101},
-                {"created_at":"2017-10-16 06:23:57.000","type":102},
-                {"created_at":"2017-10-16 23:52:46.000","type":101},
-                {"created_at":"2017-10-17 06:41:23.000","type":102}
-            ]
-        }        
+var _fake_ajax1 = function(){
+    return new Promise(function(resolve,reject){
+        setTimeout(function() {
+            resolve({
+                "data" : 
+                {
+                    "result":"fake ajax is is OK!",
+                    "table":[
+                        { "created_at" : "2017-10-13 01:00:00.000", "type" : 101 },
+                        { "created_at" : "2017-10-13 06:00:00.000", "type" : 101 },
+                        { "created_at" : "2017-10-13 23:45:00.000", "type" : 101 },
+                        { "created_at" : "2017-10-14 08:30:20.000", "type" : 102 },
+                        { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
+                        { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
+                        { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
+                        { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }
+                    ]
+                }        
+            });
+        }, 500);
     });
 };
 var _getActivityDataInAccordanceWithCookie = function(){
-    return new Promise(function(resolve,reject){
-        setTimeout(function() {
-            resolve([
-                { "created_at" : "2017-10-13 01:00:00.000", "type" : 101 },
-                { "created_at" : "2017-10-13 06:00:00.000", "type" : 101 },
-                { "created_at" : "2017-10-13 23:45:00.000", "type" : 101 },
-                { "created_at" : "2017-10-14 08:30:20.000", "type" : 102 },
-                { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
-                { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
-                { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
-                { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }
-            ]);
-        }, 500);
-    });
-}
+    var url = "./api/v1/activitylog/show";
+    var axiosInstance = client_lib.axios;
+    var promise;
+    var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
+    var savedPassKey  = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
+    if( (savedUserName != null) && (savedUserName.length > 10) ){
+console.log( "axios act!" ); // ←↑この辺は、テスト用。暫定。
+        promise = axiosInstance.get(
+            url,
+            {
+                "crossdomain" : true,
+                "params" : {
+                    "device_key" : savedUserName,
+                    "pass_key" : savedPassKey
+                }
+            }
+        );
+    }else{
+console.log( "fake_axios!" );        
+        promise = _fake_ajax1();
+    }
+    return promise.then(function(result){
+console.log( result );
+        var responsedata = result.data;
+        return Promise.resolve( responsedata.table );     
+    })
+};
 
 
 
@@ -305,7 +297,7 @@ if( this.window ){
         client_lib["axios"] = (browserThis.window) ? axios : {}; // ダミー
 
         _setVueComponentGrid( Vue );
-        chartsleeping_lib.initialize( this ); // このとき、this.document / window などが存在する。
+        chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
         _vueAppSetup( CREATE_VUE_INSTANCE, client_lib );
         _vueAppAxios( CREATE_VUE_INSTANCE, client_lib.axios )

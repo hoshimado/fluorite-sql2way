@@ -188,8 +188,10 @@ var _convertActivityList2GridData = function( typeArray ){
     var array = typeArray; // [{ "time", "type" }]
     var n = array.length;
     var grid_activity_data = [], item;
+    var localTime;
     while( 0<n-- ){
         item = array[n];
+        localTime = new Date( item.created_at );
         grid_activity_data.push({
             "time" : item.created_at.substr(0, 16),
             "activity" : (function( obj, type ){

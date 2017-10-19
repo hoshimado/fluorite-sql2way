@@ -73,14 +73,16 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
     var app_grid = createVueInstance({
         el: '#app_grid',
         data: {
-            searchQuery: '',
-            gridColumns: ['time', 'activity'],
-            gridData: []
+            "searchQuery": '',
+            "gridColumns": ['time', 'activity'],
+            "gridData": [],
+            "TEXT_GETUP" : ACTIVITY.GET_UP.title,
+            "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title
         },
         methods : {
-            getGridData() {
+            "getGridData" : function() {
                 var promise = client_lib.getActivityDataInAccordanceWithCookie();
-                promise.then((resultArray)=>{
+                return promise.then((resultArray)=>{
                     var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
                     this.gridData = grid_activity_data.slice(0, 4);
                     // ↑カットオフ入れてる。最大４つまで、で。
@@ -97,6 +99,12 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                         }, 2000);
                     });
                 });
+            },
+            "noticeGotUp" : function(){
+                var promise = client_lib.addActivityDataInAccordanceWithCookie( ACTIVITY.GET_UP.type );
+            },
+            "noticeGotoBed" : function(){
+                var promise = client_lib.addActivityDataInAccordanceWithCookie( ACTIVITY.GOTO_BED.type );
             }
         },
         "mounted" : function() {
@@ -146,49 +154,6 @@ var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境
     name = cookie( COOKIE_NAME + n, list[n].text, COOKIE_OPTIONS );
 */
         
-var _vueAppAxios = function( createVueInstance, axiosInstance ){
-    var app_axios = createVueInstance({
-        el: '#app_axios',
-        data: {
-            axiosQuery: 'SomethingToSend'
-        },
-        methods : {
-            getUsers() {
-                var query = this.axiosQuery;
-                var queryGet = {
-                    "hoge" : query
-                };
-                var url = "./api/v1/activitylog/test";
-                axiosInstance.get(
-                        url,
-                    {
-                        "crossdomain" : true,
-                        "params" : queryGet
-                    }
-                ).then(x => {
-                    var response = x.data;
-                    console.log( response );
-                });
-            },
-            putUsers() {
-                var query = this.axiosQuery;
-                var postData = {
-                    "hoge" : query
-                };
-                var url = "./api/v1/activitylog/test";
-                axiosInstance.post(
-                    url,
-                    postData
-                ).then(x => {
-                    var response = x.data;
-                    console.log( response );
-                });
-                // あれ？クロスドメインの許可は？？？
-            }
-        },
-    });
-    return app_axios;
-};
 
 
 // ToDo: axiosへのインスタンスをフックしておかないと、テストできない！
@@ -198,6 +163,49 @@ var _promiseCreateAccount = function( mailAddress ){
 };
 
 
+
+/**
+ * 動作種別の定義
+ */
+var ACTIVITY = {
+    "GOTO_BED" : {
+        "title" : "寝る",
+        "type" : "101"
+    },
+    "GET_UP" : {
+        "title" : "起きた",
+        "type" : "102"
+    }
+};
+if( !this.window ){
+    exports.ACTIVITY = ACTIVITY;
+}
+
+/**
+ * 逆順で格納されるので注意（グリッドビューの表示は下→上を時系列とする）。
+ */
+var _convertActivityList2GridData = function( typeArray ){
+    var array = typeArray; // [{ "time", "type" }]
+    var n = array.length;
+    var grid_activity_data = [], item;
+    while( 0<n-- ){
+        item = array[n];
+        grid_activity_data.push({
+            "time" : item.created_at.substr(0, 16),
+            "activity" : (function( obj, type ){
+                var keys = Object.keys(obj);
+                var i = keys.length;
+                while( 0<i-- ){
+                    if( obj[ keys[i] ].type == type ){
+                        return obj[ keys[i] ].title;
+                    }
+                }
+                return "No title";
+            }( ACTIVITY, item.type ))
+        });
+    }
+    return grid_activity_data;
+}
 
 
 var _fake_ajax1 = function(){
@@ -250,30 +258,39 @@ console.log( result );
         return Promise.resolve( responsedata.table );     
     })
 };
-
-
-
-var _convertActivityList2GridData = function( typeArray ){
-    var MESSAGE_LIST = {
-        "101" : "寝る",
-        "102" : "起きた"
-    };
-    var array = typeArray; // [{ "time", "type" }]
-    var n = array.length;
-    var grid_activity_data = [], item;
-    while( 0<n-- ){
-        item = array[n];
-        grid_activity_data.push({
-            "time" : item.created_at.substr(0, 16),
-            "activity" : MESSAGE_LIST[ item.type ]
+var _addActivityDataInAccordanceWithCookie = function( typeValue ){
+    var url = "./api/v1/activitylog/add";
+    var axiosInstance = client_lib.axios;
+    var promise;
+    var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
+    var savedPassKey  = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
+    if( (savedUserName != null) && (savedUserName.length > 10) ){
+console.log( "axios act!" ); // ←↑この辺は、テスト用。暫定。
+        promise = axiosInstance.post(
+            url,
+            { // postData
+                "device_key" : savedUserName,
+                "pass_key" : savedPassKey,
+                "type_value" : typeValue
+            }
+        );
+    }else{
+console.log( "fake_axios!" );        
+        promise = Promise.resolve({
+            "data" : { 
+                result: 'Success to insert ' + typeValue + ' as activitylog on Database!',
+                device_key: 'xingyanhuan@yahoo.co.jp'
+            }
         });
     }
-    return grid_activity_data;
-}
-// var ACTIVITY = {
-//    "GOTO_BED" : 101,
-//    "GET_UP" : 102
-// }; [define_activity.js]
+    return promise.then(function(result){
+        var responsedata = result.data;
+console.log( responsedata );
+        return Promise.resolve( responsedata );     
+    })
+};
+// ACTIVITY で定義してる。title, type
+
 
 
 
@@ -283,6 +300,7 @@ var _convertActivityList2GridData = function( typeArray ){
 var client_lib = {
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie,
+    "addActivityDataInAccordanceWithCookie" : _addActivityDataInAccordanceWithCookie,
     "tinyCookie" : _tinyCookie
 };
 
@@ -300,8 +318,6 @@ if( this.window ){
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
         _vueAppSetup( CREATE_VUE_INSTANCE, client_lib );
-        _vueAppAxios( CREATE_VUE_INSTANCE, client_lib.axios )
-
     };
 
 

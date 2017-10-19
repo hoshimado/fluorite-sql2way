@@ -57,33 +57,35 @@
     <hr>
     <!-- grid-view element -->
     <div id="app_grid">
-      <!-- 
-      <form id="search">
-        Search <input name="query" v-model="searchQuery">
-      </form>
-      <vue-my-element-grid
-        :data="gridData"
-        :columns="gridColumns"
-        :filter-key="searchQuery">
-      </vue-my-element-grid>
-      -->
-      <vue-my-element-grid
-        :data="gridData"
-        :columns="gridColumns">
-      </vue-my-element-grid>
+      <div>
+        <a v-on:click="noticeGotUp" class="square_btn" href="javascript:void(0);">
+          {{TEXT_GETUP}}
+        </a>
+        <a v-on:click="noticeGotoBed" class="square_btn" href="javascript:void(0);">
+          {{TEST_GOTOBED}}
+        </a>
+      </div>
+      <div>
+        <!-- 
+        <form id="search">
+          Search <input name="query" v-model="searchQuery">
+        </form>
+        <vue-my-element-grid
+          :data="gridData"
+          :columns="gridColumns"
+          :filter-key="searchQuery">
+        </vue-my-element-grid>
+        -->
+        <vue-my-element-grid
+          :data="gridData"
+          :columns="gridColumns">
+        </vue-my-element-grid>
+      </div>
     </div>
     <div>
       <canvas id="id_chart" style="width: 100%"></canvas>
     </div>
-
     <br><br><br>
-    <div>
-      <form id="app_axios">
-        Axios! <input name="query" v-model="axiosQuery">
-        <input value="GET!" type="button" v-on:click="getUsers">
-        <input value="PUT!" type="button" v-on:click="putUsers">
-      </form>
-    </div>
   </body>
 </html>
 

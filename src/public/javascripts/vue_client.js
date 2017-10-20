@@ -147,7 +147,7 @@ var _vueAppSetup = function( createVueInstance ){
 };
 var COOKIE_USER_ID = "FLUORITE_LIFELOG_USERID20171017";
 var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
-var COOKIE_OPTIONS = {expires: 7}; // ToDo：要検討
+var COOKIE_OPTIONS = {expires: "Mon, 1-Jan-2018 00:00:00 GMT"}; // ToDo：要検討
 
 var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境以外は敢えて「未定義」にしておく。
 /*
@@ -181,6 +181,21 @@ if( !this.window ){
     exports.ACTIVITY = ACTIVITY;
 }
 
+
+/**
+ * 動作ドメイン「azurewebsites.net/」で判別して、GMT→JST補正する。
+ */
+var convertGMT2JST = function( dateStr ){
+    var dt;
+    var TIME_ZONE = 9; // JST
+    if( window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0) ){
+        dt = new Date( dateStr );
+        dt.setHours(dt.getHours() + TIME_ZONE);
+        dateStr = dt.toLocaleString();
+    }
+    return dateStr;
+}
+
 /**
  * 逆順で格納されるので注意（グリッドビューの表示は下→上を時系列とする）。
  */
@@ -188,12 +203,12 @@ var _convertActivityList2GridData = function( typeArray ){
     var array = typeArray; // [{ "time", "type" }]
     var n = array.length;
     var grid_activity_data = [], item;
-    var localTime;
+    var localtime;
     while( 0<n-- ){
         item = array[n];
-        localTime = new Date( item.created_at );
+        localtime = convertGMT2JST( item.created_at );
         grid_activity_data.push({
-            "time" : item.created_at.substr(0, 16),
+            "time" : localtime.substr(0, 16),
             "activity" : (function( obj, type ){
                 var keys = Object.keys(obj);
                 var i = keys.length;

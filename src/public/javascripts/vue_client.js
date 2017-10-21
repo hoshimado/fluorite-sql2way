@@ -84,11 +84,11 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 var promise = client_lib.getActivityDataInAccordanceWithCookie();
                 return promise.then((resultArray)=>{
                     var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
-                    this.gridData = grid_activity_data.slice(0, 4);
-                    // ↑カットオフ入れてる。最大４つまで、で。
+                    this.gridData = grid_activity_data.slice(0, 6);
+                    // ↑カットオフ入れてる。最大６つまで、で。
 
                     // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
-                    return Promise.resolve( grid_activity_data.reverse() );
+                    return Promise.resolve( resultArray );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
                     chartsleeping_lib.plot2Chart( activitiyData );
@@ -124,22 +124,45 @@ var _vueAppSetup = function( createVueInstance ){
     var app_setup = createVueInstance({
         el: "#app_setup",
         data: {
-            "userName": "sample@mail.address",
+            "userName": "",
             "passKeyWord" : ""
+        },
+        computed : {
+            "userNameIsValid" : function(){
+                var pattern = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$");
+                var str = this.userName + "";
+                return str.match( pattern );
+            },
+            "passKeyIsValid" : function(){
+                var key = this.passKeyWord;
+                return (key) && (key.length > 8)
+            }
         },
         methods : {
             createAccount(){
-                // var promise = _promiseCreateAccount( this.userName );
-                client_lib.tinyCookie( COOKIE_USER_ID, this.userName );
-                client_lib.tinyCookie( COOKIE_USER_PASSWORD, this.passKeyWord );
+                var promise = account_lib.promiseCreateAccount( this.userName, this.passKeyWord );
+                promise.then(function(result){
+                    // ToDo：この辺の作りこみ後で。
+
+                    var signupedInfomation = result.signuped;
+                    var str = "ID: " + signupedInfomation.device_key + "\r\n";
+                    str += "パスワード: " + signupedInfomation.password + "\r\n";
+                    str += "\r\n上記にて、アカウント作成に成功しました。";
+                    alert( str );
+
+                    console.log( result );
+
+                    client_lib.tinyCookie( COOKIE_USER_ID, signupedInfomation.device_key );
+                    client_lib.tinyCookie( COOKIE_USER_PASSWORD, signupedInfomation.password );
+                }).catch(function(err){
+                    alert( "登録できませんでした。\r\n\r\n※詳細なエラー表示は未実装。" );
+                });
             }
         },
         mounted : function(){
             var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
             var savedPassKey = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
-            if( savedUserName != null ){
-                this.userName = savedUserName;
-            }
+            this.userName = savedUserName;
             this.passKeyWord = savedPassKey;
         }
     });
@@ -148,6 +171,10 @@ var _vueAppSetup = function( createVueInstance ){
 var COOKIE_USER_ID = "FLUORITE_LIFELOG_USERID20171017";
 var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
 var COOKIE_OPTIONS = {expires: "Mon, 1-Jan-2018 00:00:00 GMT"}; // ToDo：要検討
+// today + 1 year
+// var exdate = new Date().getTime() + (1000*60*60*24*7*52);
+// var date_cookie = new Date(exdate).toUTCString();
+
 
 var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境以外は敢えて「未定義」にしておく。
 /*
@@ -270,7 +297,6 @@ console.log( "fake_axios!" );
         promise = _fake_ajax1();
     }
     return promise.then(function(result){
-console.log( result );
         var responsedata = result.data;
         return Promise.resolve( responsedata.table );     
     })
@@ -329,12 +355,13 @@ if( this.window ){
     };
     var browserThis = this;
     window.onload = function(){
-        client_lib["axios"] = (browserThis.window) ? axios : {}; // ダミー
+        client_lib["axios"] = (browserThis.window) ? browserThis.axios : {}; // ダミー
 
         _setVueComponentGrid( Vue );
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
+        account_lib.initialize( browserThis );
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
-        _vueAppSetup( CREATE_VUE_INSTANCE, client_lib );
+        _vueAppSetup( CREATE_VUE_INSTANCE, client_lib, account_lib );
     };
 
 

@@ -4,6 +4,13 @@
  */
 
 
+ // ブラウザとNode.jsの互換を取る。
+var ACTIVITY; // ブラウザ環境では、vue_client.jsを後から読み込むことで上書きされる。
+if( !this.window ){
+    ACTIVITY = require("./vue_client.js").ACTIVITY;
+}
+
+
 var _CHART = function( browserThis, targetCanvasId ){
     var canvasNode = browserThis.document.getElementById( targetCanvasId );
     this._ctx = canvasNode.getContext("2d");
@@ -46,52 +53,60 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
 };
 
 
-
+/**
+ * 与えられた日時と行動種別から、「就寝⇒起床」までの時間を算出する。
+ * @param{Array}  activitiyArray   [{created_at, type},,,,] の形式であること。
+ * @returns{Object} 「{"date" : [], "sleepingtime" ; []}」の形式を返却する。
+ */
 var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
-    var arrayDateStr = (function( arrayWithType ){ // 時刻だけ取り出して、行動型に依存せず時間差だけを見て変換する。
-        var i, n = arrayWithType.length;
-        var array = [];
-        for( i=0; i<n; i++ ){
-            array.push( arrayWithType[i].time );
-        }
-        return array;
-    }( activitiyArray ));
-    var dateList = [];
     var elapsed1, elapsed2, elapsedMatrix = { "date" : [], "sleepingtime" : [] };
-    var i, n = arrayDateStr.length;
-
-    for(i=0; i<n; i++){
-        dateList.push( new Date( arrayDateStr[i] ) );
-        // console.log( dateList[i].toLocaleDateString() );
-    }
+    var i, n = activitiyArray.length;
 
     i = 0;
-    n -= 2; // 先の2つを取るので、上限を２減らして置く。
-    while(i < n){
-        elapsed1 = dateList[i+1] - dateList[i];
-        elapsed2 = dateList[i+2] - dateList[i+1];
-        if( elapsed1 < elapsed2 ){ // 前後の値で「前が小さい」なら、それを「終端」として拾う。
-            elapsedMatrix.date.push( dateList[i+1].toLocaleDateString() );
-            elapsedMatrix.sleepingtime.push( elapsed1 /1000 /3600 );
+    while (i < n) {
+        while( (i<n) && (activitiyArray[i].type != ACTIVITY.GOTO_BED.type ) ){ 
+            i++; 
         }
-        i++; // ここでカウントアップする。
-        if( i == n ){ // カウントアップ後の最後のデータが「終端」なら追加する。
-            elapsedMatrix.date.push( dateList[i+1].toLocaleDateString() );
-            elapsedMatrix.sleepingtime.push( elapsed2 /1000 /3600 );
+        while( (i<n-1) && (activitiyArray[i+1].type == ACTIVITY.GOTO_BED.type ) ){ 
+            i++; 
         }
+        if( i==n ){
+            break;
+        }
+        elapsed1 = new Date( activitiyArray[i].created_at );
+
+        while( (i<n) && (activitiyArray[i].type != ACTIVITY.GET_UP.type ) ){ 
+            i++; 
+        }
+        while( (i<n-1) && (activitiyArray[i+1].type == ACTIVITY.GET_UP.type ) ){ 
+            i++; 
+        }
+        if( i==n ){
+            break;
+        }
+
+        elapsed2 = new Date( activitiyArray[i].created_at );
+        elapsedMatrix.date.push( elapsed2.toLocaleDateString() );
+        elapsedMatrix.sleepingtime.push( (elapsed2 - elapsed1) /1000 /3600 );
     }
     // dt1.toLocaleString()
 
     return elapsedMatrix;
 };
 
-
-var _plot2Chart = function( activitiyData ){
+/**
+ * 与えられた日時と行動種別から、グラフを描く。
+ * @param{Array}  activitiyData   [{created_at, type},,,,] の形式であること。
+ * @param{String} chartTypeString グラフの表示方法を文字列で指定する。"bar", "line", など。Chart.js準拠。
+ */
+var _plot2Chart = function( activitiyData, chartTypeString ){
     var chartData = _chart_hook.convertSleepTime6MarkingTimeTwice( activitiyData );
     var horizonArray = chartData.date;
     var verticalArray = chartData.sleepingtime;
+
+    chartTypeString = (chartTypeString) ? chartTypeString : "bar";
     _chart_hook.chartInstance.show( 
-        "bar", // "line", 
+        chartTypeString, // "bar", "line",,, 
         horizonArray, 
         [{
             "label" : "睡眠時間",

@@ -130,7 +130,8 @@ var _vueAppSetup = function( createVueInstance ){
         computed : {
             "userNameIsValid" : function(){
                 var pattern = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$");
-                return this.userName.match( pattern );
+                var str = this.userName + "";
+                return str.match( pattern );
             },
             "passKeyIsValid" : function(){
                 var key = this.passKeyWord;

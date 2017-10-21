@@ -10,6 +10,13 @@ body {
 #id_passkeyword {
   width: 280px;
 }
+.error_text {
+  font-size: 10px;
+  color: red;
+  font-weight: bold;
+}
+
+
 
 /*
  * ボタンの装飾。https://saruwakakun.com/html-css/reference/buttons

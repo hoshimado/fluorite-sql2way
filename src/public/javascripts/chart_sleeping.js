@@ -53,7 +53,11 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
 };
 
 
-
+/**
+ * 与えられた日時と行動種別から、「就寝⇒起床」までの時間を算出する。
+ * @param{Array}  activitiyArray   [{created_at, type},,,,] の形式であること。
+ * @returns{Object} 「{"date" : [], "sleepingtime" ; []}」の形式を返却する。
+ */
 var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
     var elapsed1, elapsed2, elapsedMatrix = { "date" : [], "sleepingtime" : [] };
     var i, n = activitiyArray.length;
@@ -90,13 +94,19 @@ var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
     return elapsedMatrix;
 };
 
-
-var _plot2Chart = function( activitiyData ){
+/**
+ * 与えられた日時と行動種別から、グラフを描く。
+ * @param{Array}  activitiyData   [{created_at, type},,,,] の形式であること。
+ * @param{String} chartTypeString グラフの表示方法を文字列で指定する。"bar", "line", など。Chart.js準拠。
+ */
+var _plot2Chart = function( activitiyData, chartTypeString ){
     var chartData = _chart_hook.convertSleepTime6MarkingTimeTwice( activitiyData );
     var horizonArray = chartData.date;
     var verticalArray = chartData.sleepingtime;
+
+    chartTypeString = (chartTypeString) ? chartTypeString : "bar";
     _chart_hook.chartInstance.show( 
-        "bar", // "line", 
+        chartTypeString, // "bar", "line",,, 
         horizonArray, 
         [{
             "label" : "睡眠時間",

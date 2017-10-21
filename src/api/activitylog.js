@@ -4,6 +4,7 @@
  * encoding=utf-8
  */
 
+var console_output = require("./debugger.js").console_output;
 
 var lib = require("./factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
@@ -35,7 +36,7 @@ var API_PARAM = function(init){
 var isDefined = function( self, prop ){
 	if( !self[prop] ){
 		// ここは、正常系では呼ばれないハズなので「console.log()」を直接呼ぶ。
-		console.log( "[API_PARAM]::" + prop + " is NOT defind" );
+		console_output( "[API_PARAM]::" + prop + " is NOT defind" );
 	}
 	return self[prop];
 };
@@ -326,7 +327,7 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
 				paramClass.getDeviceKey(), 
 				paramClass.getTypeValue() 
 			).then(function(resultInsert){
-console.log(resultInsert);
+console_output(resultInsert);
 				// 「インサート」処理が成功
 				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
 				var param = new API_PARAM(resultInsert);

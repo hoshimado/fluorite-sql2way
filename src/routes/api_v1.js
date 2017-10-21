@@ -8,6 +8,7 @@
 var express = require('express');
 var router = express.Router();
 
+var console_output = require("../api/debugger.js").console_output;
 var lib = require("../api/factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
     "sql_lite_db" : new lib.Factory4Require("../api/activitylog.js")
@@ -42,7 +43,7 @@ router.post("/test", function(req, res, next){
 
 // ◆Unitテストに未対応。
 var responseNormal = function( res, result ){
-	console.log( result );
+	console_output( result );
 	
 	res.header({ // res.set(field [, value]) Aliased as res.header(field [, value]).
 		"Access-Control-Allow-Origin" : "*", // JSONはクロスドメインがデフォルトNG。

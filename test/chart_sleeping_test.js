@@ -30,13 +30,14 @@ describe("TEST for chart_sleeping.js", function(){
         it("夜スタート朝終わりのケース",function(){
             var convertSleepTime6MarkingTimeTwice = target.hook.convertSleepTime6MarkingTimeTwice;
             var result = convertSleepTime6MarkingTimeTwice([
-                { "time" : "2017-10-13 23:45", "activity" : 101 },
-                { "time" : "2017-10-14 08:30", "activity" : 102 },
-                { "time" : "2017-10-14 23:30", "activity" : 101 },
-                { "time" : "2017-10-15 06:00", "activity" : 102 },
-                { "time" : "2017-10-16 01:00", "activity" : 101 },
-                { "time" : "2017-10-16 07:00", "activity" : 102 }
+                { "created_at" : "2017-10-13 23:45", "type" : 101 },
+                { "created_at" : "2017-10-14 08:30", "type" : 102 },
+                { "created_at" : "2017-10-14 23:30", "type" : 101 },
+                { "created_at" : "2017-10-15 06:00", "type" : 102 },
+                { "created_at" : "2017-10-16 01:00", "type" : 101 },
+                { "created_at" : "2017-10-16 07:00", "type" : 102 }
             ]);
+            // ToDo：「寝る」が連続した場合にも対応させる。
 
             expect(result).to.has.property("date");
             expect(result).to.has.property("sleepingtime");
@@ -49,6 +50,76 @@ describe("TEST for chart_sleeping.js", function(){
                 8.75,
                 6.5,
                 6
+            ]);
+        });
+        it("夜スタート朝終わりだが、夜が連続2回（最初のを無視）のケース",function(){
+            var convertSleepTime6MarkingTimeTwice = target.hook.convertSleepTime6MarkingTimeTwice;
+            var result = convertSleepTime6MarkingTimeTwice([
+                { "created_at" : "2017-10-13 23:45", "type" : 101 },
+                { "created_at" : "2017-10-14 08:30", "type" : 102 },
+                { "created_at" : "2017-10-14 23:30", "type" : 101 },
+                { "created_at" : "2017-10-15 06:00", "type" : 102 },
+                { "created_at" : "2017-10-15 23:00", "type" : 101 },
+                { "created_at" : "2017-10-16 01:00", "type" : 101 },
+                { "created_at" : "2017-10-16 07:00", "type" : 102 }
+            ]);
+            // ToDo：「寝る」が連続した場合にも対応させる。
+
+            expect(result).to.has.property("date");
+            expect(result).to.has.property("sleepingtime");
+            expect(result.date).to.deep.equal([
+                "2017-10-14",
+                "2017-10-15",
+                "2017-10-16"
+            ]);
+            expect(result.sleepingtime).to.deep.equal([
+                8.75,
+                6.5,
+                6
+            ]);
+        });
+        it("朝スタート朝終わりのケース",function(){
+            var convertSleepTime6MarkingTimeTwice = target.hook.convertSleepTime6MarkingTimeTwice;
+            var result = convertSleepTime6MarkingTimeTwice([
+                { "created_at" : "2017-10-14 08:30", "type" : 102 },
+                { "created_at" : "2017-10-14 23:30", "type" : 101 },
+                { "created_at" : "2017-10-15 06:00", "type" : 102 },
+                { "created_at" : "2017-10-16 01:00", "type" : 101 },
+                { "created_at" : "2017-10-16 07:00", "type" : 102 }
+            ]);
+            // ToDo：「寝る」が連続した場合にも対応させる。
+
+            expect(result).to.has.property("date");
+            expect(result).to.has.property("sleepingtime");
+            expect(result.date).to.deep.equal([
+                "2017-10-15",
+                "2017-10-16"
+            ]);
+            expect(result.sleepingtime).to.deep.equal([
+                6.5,
+                6
+            ]);
+        });
+        it("夜スタート夜終わりのケース",function(){
+            var convertSleepTime6MarkingTimeTwice = target.hook.convertSleepTime6MarkingTimeTwice;
+            var result = convertSleepTime6MarkingTimeTwice([
+                { "created_at" : "2017-10-13 23:45", "type" : 101 },
+                { "created_at" : "2017-10-14 08:30", "type" : 102 },
+                { "created_at" : "2017-10-14 23:30", "type" : 101 },
+                { "created_at" : "2017-10-15 06:00", "type" : 102 },
+                { "created_at" : "2017-10-16 01:00", "type" : 101 },
+            ]);
+            // ToDo：「寝る」が連続した場合にも対応させる。
+
+            expect(result).to.has.property("date");
+            expect(result).to.has.property("sleepingtime");
+            expect(result.date).to.deep.equal([
+                "2017-10-14",
+                "2017-10-15",
+            ]);
+            expect(result.sleepingtime).to.deep.equal([
+                8.75,
+                6.5
             ]);
         });
     });

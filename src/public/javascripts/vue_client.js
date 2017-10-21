@@ -84,11 +84,11 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 var promise = client_lib.getActivityDataInAccordanceWithCookie();
                 return promise.then((resultArray)=>{
                     var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
-                    this.gridData = grid_activity_data.slice(0, 4);
-                    // ↑カットオフ入れてる。最大４つまで、で。
+                    this.gridData = grid_activity_data.slice(0, 6);
+                    // ↑カットオフ入れてる。最大６つまで、で。
 
                     // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
-                    return Promise.resolve( grid_activity_data.reverse() );
+                    return Promise.resolve( resultArray );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
                     chartsleeping_lib.plot2Chart( activitiyData );
@@ -270,7 +270,6 @@ console.log( "fake_axios!" );
         promise = _fake_ajax1();
     }
     return promise.then(function(result){
-console.log( result );
         var responsedata = result.data;
         return Promise.resolve( responsedata.table );     
     })

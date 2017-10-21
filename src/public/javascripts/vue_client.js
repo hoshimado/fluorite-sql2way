@@ -130,7 +130,7 @@ var _vueAppSetup = function( createVueInstance ){
         computed : {
             "userNameIsValid" : function(){
                 var pattern = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$");
-                var str = this.userName + "";
+                var str = this.userName + ""; // Chromeは、明示的に「文字列」にしないとダメなようだ。
                 return str.match( pattern );
             },
             "passKeyIsValid" : function(){

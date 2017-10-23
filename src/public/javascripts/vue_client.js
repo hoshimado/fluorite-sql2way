@@ -81,7 +81,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
         },
         methods : {
             "getGridData" : function() {
-                var promise = client_lib.getActivityDataInAccordanceWithCookie();
+                var promise = client_lib.getActivityDataInAccordanceWithAccountVue();
                 return promise.then((resultArray)=>{
                     var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
                     this.gridData = grid_activity_data.slice(0, 6);
@@ -101,10 +101,10 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 });
             },
             "noticeGotUp" : function(){
-                var promise = client_lib.addActivityDataInAccordanceWithCookie( ACTIVITY.GET_UP.type );
+                var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GET_UP.type );
             },
             "noticeGotoBed" : function(){
-                var promise = client_lib.addActivityDataInAccordanceWithCookie( ACTIVITY.GOTO_BED.type );
+                var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
             }
         },
         "mounted" : function() {
@@ -130,7 +130,7 @@ var _vueAppSetup = function( createVueInstance ){
         computed : {
             "userNameIsValid" : function(){
                 var pattern = new RegExp("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$");
-                var str = this.userName + "";
+                var str = this.userName + ""; // Chromeは、明示的に「文字列」にしないとダメなようだ。
                 return str.match( pattern );
             },
             "passKeyIsValid" : function(){
@@ -274,12 +274,12 @@ var _fake_ajax1 = function(){
         }, 500);
     });
 };
-var _getActivityDataInAccordanceWithCookie = function(){
+var _getActivityDataInAccordanceWithAccountVue = function(){
     var url = "./api/v1/activitylog/show";
     var axiosInstance = client_lib.axios;
     var promise;
-    var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
-    var savedPassKey  = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
+    var savedUserName = client_lib.vueAccountInstance.userName;
+    var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
     if( (savedUserName != null) && (savedUserName.length > 10) ){
 console.log( "axios act!" ); // ←↑この辺は、テスト用。暫定。
         promise = axiosInstance.get(
@@ -301,12 +301,12 @@ console.log( "fake_axios!" );
         return Promise.resolve( responsedata.table );     
     })
 };
-var _addActivityDataInAccordanceWithCookie = function( typeValue ){
+var _addActivityDataInAccordanceWithAccountVue = function( typeValue ){
     var url = "./api/v1/activitylog/add";
     var axiosInstance = client_lib.axios;
     var promise;
-    var savedUserName = client_lib.tinyCookie( COOKIE_USER_ID );
-    var savedPassKey  = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
+    var savedUserName = client_lib.vueAccountInstance.userName;
+    var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
     if( (savedUserName != null) && (savedUserName.length > 10) ){
 console.log( "axios act!" ); // ←↑この辺は、テスト用。暫定。
         promise = axiosInstance.post(
@@ -341,10 +341,10 @@ console.log( responsedata );
 
 // ----------------------------------------------------------------------
 var client_lib = {
+    "tinyCookie" : _tinyCookie,
     "convertActivityList2GridData" : _convertActivityList2GridData,
-    "getActivityDataInAccordanceWithCookie" : _getActivityDataInAccordanceWithCookie,
-    "addActivityDataInAccordanceWithCookie" : _addActivityDataInAccordanceWithCookie,
-    "tinyCookie" : _tinyCookie
+    "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
+    "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue
 };
 
 // typeof window !== 'undefined'
@@ -361,7 +361,7 @@ if( this.window ){
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
         account_lib.initialize( browserThis );
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
-        _vueAppSetup( CREATE_VUE_INSTANCE, client_lib, account_lib );
+        client_lib["vueAccountInstance"] = _vueAppSetup( CREATE_VUE_INSTANCE, client_lib, account_lib );
     };
 
 

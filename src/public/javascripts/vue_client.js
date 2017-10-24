@@ -316,7 +316,9 @@ console.log( "fake_axios!" );
     return promise.then(function(result){
         var responsedata = result.data;
         return Promise.resolve( responsedata.table );     
-    })
+    }).catch((err)=>{
+        alert("[Debug]:\r\n" + err);
+    });
 };
 var _addActivityDataInAccordanceWithAccountVue = function( typeValue ){
     var url = "./api/v1/activitylog/add";

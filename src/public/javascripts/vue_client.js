@@ -61,10 +61,10 @@ var _setVueComponentGrid = function( staticVue ){
             }
         },
         methods: {
-            sortBy: function (key) {
+            "sortBy": function (key) {
                 this.sortKey = key
                 this.sortOrders[key] = this.sortOrders[key] * -1
-            }
+            },
         */
         }
     });
@@ -72,12 +72,20 @@ var _setVueComponentGrid = function( staticVue ){
 var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
     var app_grid = createVueInstance({
         el: '#app_grid',
+        props: {
+            "isShowedGrid" : false
+        },
         data: {
             "searchQuery": '',
             "gridColumns": ['time', 'activity'],
             "gridData": [],
             "TEXT_GETUP" : ACTIVITY.GET_UP.title,
             "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title
+        },
+        computed: {
+            "isDataLoaded" : function(){
+                return !this.isShowedGrid;
+            }
         },
         methods : {
             "getGridData" : function() {
@@ -98,6 +106,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                             resolve();
                         }, 2000);
                     });
+                }).then(function(){
+                    this.isShowedGrid = true;
                 });
             },
             "noticeGotUp" : function(){
@@ -105,6 +115,9 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             },
             "noticeGotoBed" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
+            },
+            "refreshData" : function() {
+                this.getGridData();
             }
         },
         "mounted" : function() {

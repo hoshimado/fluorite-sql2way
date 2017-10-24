@@ -103,6 +103,9 @@
         <a v-on:click="noticeGotoBed" class="square_btn" href="javascript:void(0);">
           {{TEST_GOTOBED}}
         </a>
+        <a v-on:click="refreshData" href="javascript:void(0);">
+          <i class="fa fa-refresh" style="color:#4444ff"></i>
+        </a>
       </div>
       <div>
         <!-- 
@@ -119,6 +122,9 @@
           :data="gridData"
           :columns="gridColumns">
         </vue-my-element-grid>
+      </div>
+      <div v-show="isDataLoaded">
+        <i class="fa fa-spinner fa-spin fa-3x"></i>
       </div>
     </div>
     <div>

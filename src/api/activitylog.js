@@ -214,7 +214,7 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 			"status" : 403 // Forbidden
 		});
 	}
-	var inputData = {
+	var inputData = { // ◆ToDo:ココの実装は暫定◆
 		"device_key" : dataFromPost.username,
 		"pass_key"   : dataFromPost.passkey
 	};
@@ -222,27 +222,50 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 
 	return createPromiseForSqlConnection(
 		config
-	).then( ()=>{
-		return new Promise((resolve,reject)=>{
-			var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
+	).then(()=>{
+		// 先ず既存ユーザーか否かをチェックする。
+		var isOwnerValid = factoryImpl.sql_parts.getInstance( "isOwnerValid" );
+		var is_onwer_valid_promise = isOwnerValid( 
+			config.database, 
+			inputData.device_key,
+			inputData.pass_key
+		);
+		return is_onwer_valid_promise.catch(function(err){
+			// 未登録ユーザーの場合【だけ】、登録処理を行う。
+			// errオブジェクトは読み捨てる。
+			return new Promise((resolve,reject)=>{
+				var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
 
-			var promise = getNumberOfUsers( config.database );
-			promise.then((nowNumberOfUsers)=>{
-				if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
-					resolve();
-				}else{
-					reject("the number of users is over.");
-				}
-			}).catch((err)=>{
-				reject(err);
+				var promise = getNumberOfUsers( config.database );
+				promise.then((nowNumberOfUsers)=>{
+					if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
+						resolve();
+					}else{
+						reject("the number of users is over.");
+					}
+				}).catch((err)=>{
+					reject(err);
+				});
+			}).then(()=>{
+				var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
+				var max_count = 128;
+				// ◆ToDo:↑ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
+
+				return addNewUser( config.database, inputData.device_key, max_count, inputData.pass_key );
 			});
+		}).catch((err)=>{
+			console.log(err)
 		});
-	}).then( ()=>{
-		var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
+	}).then((result)=>{
+		var insertedData = {
+			"device_key" : inputData.device_key,
+			"password"   : inputData.pass_key
+		};
 
-		// ◆ToDo:↓ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
-		return addNewUser( config.database, inputData.device_key, 128, inputData.pass_key );
-	}).then( (insertedData)=>{
+		if( result ){
+			// 既存ユーザーだった場合は、残りの登録可能なデータ数返却される。
+			insertedData["left"] = result;
+		}
 		outJsonData [ "signuped" ] = insertedData;
 		return Promise.resolve(200);
 	}).catch((err)=>{

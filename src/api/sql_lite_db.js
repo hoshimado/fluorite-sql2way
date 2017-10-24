@@ -248,11 +248,7 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
-				var insertedData = {
-					"device_key" : deviceKey,
-					"password"   : passwordStr
-				};
-				return resolve( insertedData );
+				return resolve();
 			}else{
 				// ToDo.
 				// 重複キーだと、以下のerrが返る。

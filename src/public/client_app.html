@@ -123,7 +123,11 @@
           :columns="gridColumns">
         </vue-my-element-grid>
       </div>
-      <div v-show="isDataLoaded">
+      <!-- 
+        スタイル属性の動的なVue.js反映は下記参照（公式）。
+        https://jp.vuejs.org/v2/guide/class-and-style.html
+      -->
+      <div v-bind:style="lodingSpinnerDivStyle">
         <i class="fa fa-spinner fa-spin fa-3x"></i>
       </div>
     </div>

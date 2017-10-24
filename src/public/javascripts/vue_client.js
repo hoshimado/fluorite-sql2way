@@ -72,20 +72,13 @@ var _setVueComponentGrid = function( staticVue ){
 var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
     var app_grid = createVueInstance({
         el: '#app_grid',
-        props: {
-            "isShowedGrid" : false
-        },
         data: {
             "searchQuery": '',
             "gridColumns": ['time', 'activity'],
             "gridData": [],
             "TEXT_GETUP" : ACTIVITY.GET_UP.title,
-            "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title
-        },
-        computed: {
-            "isDataLoaded" : function(){
-                return !this.isShowedGrid;
-            }
+            "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title,
+            "lodingSpinnerDivStyle" : {"display" : "block"}
         },
         methods : {
             "getGridData" : function() {
@@ -100,14 +93,17 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 }).then(( activitiyData )=>{
                     // チャートのテスト
                     chartsleeping_lib.plot2Chart( activitiyData );
+                    return Promise.resolve();
+                }).then(()=>{ // thisの指す先に注意。ここではアロー演算子なので、Vueインスタンス自身。
+                    // 読み込み中、の表示を消す。
+                    this.lodingSpinnerDivStyle.display = "none";
 
+                    // 続く時間差のテスト（なければ消す）。
                     return new Promise((resolve,reject)=>{
                         setTimeout(function() {
                             resolve();
                         }, 2000);
                     });
-                }).then(function(){
-                    this.isShowedGrid = true;
                 });
             },
             "noticeGotUp" : function(){
@@ -117,6 +113,10 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
             },
             "refreshData" : function() {
+                // 読み込み中、の表示を出す。
+                this.lodingSpinnerDivStyle.display = "display";
+
+                // データを、サーバーから再読み込みして表示する。
                 this.getGridData();
             }
         },
@@ -160,7 +160,11 @@ var _vueAppSetup = function( createVueInstance ){
                     var signupedInfomation = result.signuped;
                     var str = "ID: " + signupedInfomation.device_key + "\r\n";
                     str += "パスワード: " + signupedInfomation.password + "\r\n";
-                    str += "\r\n上記にて、アカウント作成に成功しました。";
+                    if( signupedInfomation.left ){
+                        str += "\r\n上記のアカウントの有効性を確認しました。";
+                    }else{
+                        str += "\r\n上記にて、アカウント作成に成功しました。";
+                    }
                     alert( str );
 
                     console.log( result );

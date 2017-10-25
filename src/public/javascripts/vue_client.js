@@ -118,6 +118,12 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
 
                 // データを、サーバーから再読み込みして表示する。
                 this.getGridData();
+            },
+            "setChartStyleLine" : function(){
+                alert( "切り替え未実装。折れ線グラフ" );
+            },
+            "setChartStyleBar" : function(){
+                alert( "霧か未実装。棒グラフ。" )
             }
         },
         "mounted" : function() {
@@ -192,6 +198,9 @@ var COOKIE_OPTIONS = {
 };
 if( this.window && this.window.location && (this.window.location.href.indexOf("https://")==0) ){
     COOKIE_OPTIONS["secure"] = true;
+    // これを指定しないと、Chromeのhttps環境ではCookieが保存されない？？？
+    // それからChrome「Smart Lock」が有効だと、Cookieによるフォームの初期化の
+    // 実装とタイミング問題を起こすことがある？？？
 }
 
 // https://github.com/Alex1990/tiny-cookie

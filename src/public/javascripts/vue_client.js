@@ -169,8 +169,8 @@ var _vueAppSetup = function( createVueInstance ){
 
                     console.log( result );
 
-                    client_lib.tinyCookie( COOKIE_USER_ID, signupedInfomation.device_key );
-                    client_lib.tinyCookie( COOKIE_USER_PASSWORD, signupedInfomation.password );
+                    client_lib.tinyCookie( COOKIE_USER_ID, signupedInfomation.device_key, COOKIE_OPTIONS );
+                    client_lib.tinyCookie( COOKIE_USER_PASSWORD, signupedInfomation.password, COOKIE_OPTIONS );
                 }).catch(function(err){
                     alert( "登録できませんでした。\r\n\r\n※詳細なエラー表示は未実装。" );
                 });
@@ -187,7 +187,15 @@ var _vueAppSetup = function( createVueInstance ){
 };
 var COOKIE_USER_ID = "FLUORITE_LIFELOG_USERID20171017";
 var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
-var COOKIE_OPTIONS = {expires: "Mon, 1-Jan-2018 00:00:00 GMT"}; // ToDo：要検討
+var COOKIE_OPTIONS = { 
+    "expires": "1M" // ToDo：要検討
+};
+if( this.window && this.window.location && (this.window.location.href.indexOf("https://")>0) ){
+    COOKIE_OPTIONS["secure"] = true;
+}
+
+// https://github.com/Alex1990/tiny-cookie
+// 
 // today + 1 year
 // var exdate = new Date().getTime() + (1000*60*60*24*7*52);
 // var date_cookie = new Date(exdate).toUTCString();

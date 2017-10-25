@@ -190,7 +190,7 @@ var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
 var COOKIE_OPTIONS = { 
     "expires": "1M" // ToDo：要検討
 };
-if( this.window && this.window.location && (this.window.location.href.indexOf("https://")>0) ){
+if( this.window && this.window.location && (this.window.location.href.indexOf("https://")==0) ){
     COOKIE_OPTIONS["secure"] = true;
 }
 

@@ -15,9 +15,23 @@ var _CHART = function( browserThis, targetCanvasId ){
     var canvasNode = browserThis.document.getElementById( targetCanvasId );
     this._ctx = canvasNode.getContext("2d");
     this._myChart = null;
+    this._lastType = null;
 }; 
-_CHART.prototype.show = function( chartType, labels, datasets ){
+_CHART.prototype.show = function( labels, datasets, chartType ){
+    if( !chartType ){
+        chartType = this._lastType ? this._lastType : "bar";
+    }
+    if( this._lastType && (this._lastType != chartType) ){
+        // グラフの種別変更（線グラフ、棒グラフ）するには、一度破棄する必要あるらしい？
+        // https://stackoverflow.com/questions/36949343/chart-js-dynamic-changing-of-chart-type-line-to-bar-as-example
+        //
+        // 本家のDocsはこちら。
+        // ToDo: 詳細確認する。 http://www.chartjs.org/docs/latest/developers/api.html
+        this._myChart.destroy();
+        this._myChart = null;
+    }
     if( !this._myChart ){
+        this._lastType = chartType;
         this._myChart = new Chart(this._ctx, {
             "type" : chartType,
             "responsive" : true,
@@ -97,22 +111,21 @@ var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
 /**
  * 与えられた日時と行動種別から、グラフを描く。
  * @param{Array}  activitiyData   [{created_at, type},,,,] の形式であること。
- * @param{String} chartTypeString グラフの表示方法を文字列で指定する。"bar", "line", など。Chart.js準拠。
+ * @param{String} chartTypeString グラフの表示方法を文字列で指定する。省略可能。"bar", "line", など。Chart.js準拠。
  */
 var _plot2Chart = function( activitiyData, chartTypeString ){
     var chartData = _chart_hook.convertSleepTime6MarkingTimeTwice( activitiyData );
     var horizonArray = chartData.date;
     var verticalArray = chartData.sleepingtime;
 
-    chartTypeString = (chartTypeString) ? chartTypeString : "bar";
     _chart_hook.chartInstance.show( 
-        chartTypeString, // "bar", "line",,, 
         horizonArray, 
         [{
             "label" : "睡眠時間",
             data : verticalArray,
             backgroundColor: "rgba(153,255,51,0.4)"
-        }] 
+        }],
+        chartTypeString // "bar", "line",,, show()側のデフォルトを「bar」に設定した。
     );
 };
 

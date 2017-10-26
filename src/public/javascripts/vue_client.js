@@ -78,7 +78,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "gridData": [],
             "TEXT_GETUP" : ACTIVITY.GET_UP.title,
             "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title,
-            "lodingSpinnerDivStyle" : {"display" : "block"}
+            "lodingSpinnerDivStyle" : {"display" : "block"},
+            "lastLoadedActivityData" : null // 最初は「無し」
         },
         methods : {
             "getGridData" : function() {
@@ -93,6 +94,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 }).then(( activitiyData )=>{
                     // チャートのテスト
                     chartsleeping_lib.plot2Chart( activitiyData );
+                    this.lastLoadedActivityData = activitiyData; // 記録しておく。
                     return Promise.resolve();
                 }).then(()=>{ // thisの指す先に注意。ここではアロー演算子なので、Vueインスタンス自身。
                     // 読み込み中、の表示を消す。
@@ -120,10 +122,10 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 this.getGridData();
             },
             "setChartStyleLine" : function(){
-                alert( "切り替え未実装。折れ線グラフ" );
+                chartsleeping_lib.plot2Chart( this.lastLoadedActivityData, "line" );
             },
             "setChartStyleBar" : function(){
-                alert( "霧か未実装。棒グラフ。" )
+                chartsleeping_lib.plot2Chart( this.lastLoadedActivityData, "bar" );
             }
         },
         "mounted" : function() {

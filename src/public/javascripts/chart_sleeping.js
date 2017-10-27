@@ -25,8 +25,13 @@ _CHART.prototype.show = function( labels, datasets, chartType ){
         // グラフの種別変更（線グラフ、棒グラフ）するには、一度破棄する必要あるらしい？
         // https://stackoverflow.com/questions/36949343/chart-js-dynamic-changing-of-chart-type-line-to-bar-as-example
         //
-        // 本家のDocsはこちら。
-        // ToDo: 詳細確認する。 http://www.chartjs.org/docs/latest/developers/api.html
+        // 本家のDocsによると「グラフ種別ごとにインスタンスを生成する」（から変更できない）っぽい。
+        // update()が更新するのはdataプロパティだけ、とのこと。
+        // http://www.chartjs.org/docs/latest/developers/updates.html
+        // http://www.chartjs.org/docs/latest/developers/api.html
+        // > This can be safely called after updating the data object.  
+        // > This will update all scales, legends, and then re-render the chart.
+        // > 以下、サンプルは略。
         this._myChart.destroy();
         this._myChart = null;
     }

@@ -70,6 +70,10 @@ var _setVueComponentGrid = function( staticVue ){
     });
 };  
 var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
+    var ICON_COLOR = {
+        "active" : "color:#4444ff",
+        "inactive" : "color:#aaaaaa"
+    };
     var app_grid = createVueInstance({
         el: '#app_grid',
         data: {
@@ -78,8 +82,10 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "gridData": [],
             "TEXT_GETUP" : ACTIVITY.GET_UP.title,
             "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title,
+            "chartIconColorBar" : ICON_COLOR.active,
+            "chartIconColorLine" : ICON_COLOR.inactive,
             "lodingSpinnerDivStyle" : {"display" : "block"},
-            "lastLoadedActivityData" : null // 最初は「無し」
+            "lastLoadedActivityData" : null, // 最初は「無し」
         },
         methods : {
             "getGridData" : function() {
@@ -110,9 +116,23 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             },
             "noticeGotUp" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GET_UP.type );
+                promise.then((responsedata)=>{ // 引数は読み捨て。
+                    this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                }).catch((err)=>{
+                    if(err.response){ //暫定
+                        alert(err.response.status);
+                    }else{
+                        alert(err.request);
+                    }
+                });
             },
             "noticeGotoBed" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
+                promise.then((responsedata)=>{ // 引数は読み捨て。
+                    this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                }).catch((err)=>{
+                    alert(err); //暫定
+                });
             },
             "refreshData" : function() {
                 // 読み込み中、の表示を出す。
@@ -123,9 +143,13 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             },
             "setChartStyleLine" : function(){
                 chartsleeping_lib.plot2Chart( this.lastLoadedActivityData, "line" );
+                this.chartIconColorBar  = ICON_COLOR.inactive;
+                this.chartIconColorLine = ICON_COLOR.active;
             },
             "setChartStyleBar" : function(){
                 chartsleeping_lib.plot2Chart( this.lastLoadedActivityData, "bar" );
+                this.chartIconColorBar  = ICON_COLOR.active;
+                this.chartIconColorLine = ICON_COLOR.inactive;
             }
         },
         "mounted" : function() {
@@ -335,8 +359,12 @@ console.log( "fake_axios!" );
     return promise.then(function(result){
         var responsedata = result.data;
         return Promise.resolve( responsedata.table );     
+        // 正常応答のフォーマットは、以下の公式さんを参照の事。
+        // https://github.com/axios/axios#response-schema
     }).catch((err)=>{
-        alert("[Debug]:\r\n" + err);
+        return Promise.reject(err); // ってコレだったら、catch()する必要ないんだが、、、まぁ様式美。
+        // エラー応答のフォーマットは以下の公式さんを参照の事。
+        // https://github.com/axios/axios#handling-errors
     });
 };
 var _addActivityDataInAccordanceWithAccountVue = function( typeValue ){
@@ -363,6 +391,11 @@ console.log( "fake_axios!" );
                 device_key: 'xingyanhuan@yahoo.co.jp'
             }
         });
+        // promise = Promise.reject({
+        //     "response" : {
+        //         "status" : 401
+        //     }
+        // });
     }
     return promise.then(function(result){
         var responsedata = result.data;
@@ -370,7 +403,6 @@ console.log( responsedata );
         return Promise.resolve( responsedata );     
     })
 };
-// ACTIVITY で定義してる。title, type
 
 
 

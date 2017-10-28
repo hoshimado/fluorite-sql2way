@@ -358,6 +358,15 @@ console.log( "fake_axios!" );
     }
     return promise.then(function(result){
         var responsedata = result.data;
+(function (array) { // デバッグ用。
+    var str, i , n = array.length;
+    for(i=0;i<n;i++){
+        str = "[" + array[i].created_at + " - ";
+        str += array[i].type + "]";
+        console.log( str );
+    }
+}(responsedata.table));
+        console.log( responsedata.table );
         return Promise.resolve( responsedata.table );     
         // 正常応答のフォーマットは、以下の公式さんを参照の事。
         // https://github.com/axios/axios#response-schema

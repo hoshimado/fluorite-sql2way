@@ -30,10 +30,6 @@ var TEST_CONFIG_SQL = { // テスト用
 
 
 
-// var createPromiseForSqlConnection = function( sqlConfig ){
-// var isOwnerValid = function( databaseName, deviceKey ){
-// exports.closeConnection = closeConnection;
-
 describe( "sql_lite_db_test.js", function(){
     var createPromiseForSqlConnection = sql_parts.createPromiseForSqlConnection;
     var isOwnerValid = sql_parts.isOwnerValid;
@@ -48,7 +44,6 @@ describe( "sql_lite_db_test.js", function(){
      */
     var ORIGINAL = {};
     var sqlConfig = { "database" : "だみ～.sqlite3" };
-    var stubInstance, databaseArgs1;
     beforeEach( function(){
         ORIGINAL[ "sqlite3" ] = sql_parts.factoryImpl.sqlite3.getInstance();
         ORIGINAL[ "dbs" ] = sql_parts.factoryImpl.db.getInstance();
@@ -60,6 +55,8 @@ describe( "sql_lite_db_test.js", function(){
     
 
     describe( "::createPromiseForSqlConnection()",function(){
+        var stubInstance, databaseArgs1;
+
         beforeEach( function(){
             var stubSqlite3 = { 
                 "verbose" : sinon.stub() 

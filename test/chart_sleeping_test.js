@@ -129,8 +129,8 @@ describe("TEST for chart_sleeping.js", function(){
             var stub_convertSleepTime6MarkingTimeTwice = sinon.stub();
             var stub_chartShow = sinon.stub(); // _CHART() に対してstubするべきかもだが。。。
             var EXPECTED_CHART_DATA = {
-                "date" : ["ふが"],
-                "sleepingtime" : ["ほげ"]
+                "date" : ["1900/01/01", "2000/01/02"],
+                "sleepingtime" : [ 5, 6, 7 ]
             };
             var INPUT_DATA = { "dummy" : "ぴよ" };
 
@@ -145,12 +145,13 @@ describe("TEST for chart_sleeping.js", function(){
             plot2Chart( INPUT_DATA );
             assert( stub_convertSleepTime6MarkingTimeTwice.calledOnce );
             assert( stub_chartShow.calledOnce )
-            expect( stub_chartShow.getCall(0).args[1] ).to.equal( EXPECTED_CHART_DATA.date );
-            expect( stub_chartShow.getCall(0).args[2]).to.deep.equal([{
+            expect( stub_chartShow.getCall(0).args[0] ).to.equal( EXPECTED_CHART_DATA.date );
+            expect( stub_chartShow.getCall(0).args[1]).to.deep.equal([{
                 "label" : "睡眠時間",
                 "data" : EXPECTED_CHART_DATA.sleepingtime,
                 "backgroundColor": "rgba(153,255,51,0.4)"
             }]);
+            expect( stub_chartShow.getCall(0).args[2] ).to.not.exit; // 引数で票略しているので、ここも無し。
         });
     });
 });

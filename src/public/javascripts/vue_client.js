@@ -91,12 +91,13 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "getGridData" : function() {
                 var promise = client_lib.getActivityDataInAccordanceWithAccountVue();
                 return promise.then((resultArray)=>{
-                    var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
+                    var localtimedArray = client_lib.modifyTimezoneInActivityList( resultArray );
+                    var grid_activity_data = client_lib.convertActivityList2GridData( localtimedArray );
                     this.gridData = grid_activity_data.slice(0, 6);
                     // ↑カットオフ入れてる。最大６つまで、で。
 
                     // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
-                    return Promise.resolve( resultArray );
+                    return Promise.resolve( localtimedArray );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
                     chartsleeping_lib.plot2Chart( activitiyData );
@@ -276,26 +277,31 @@ var convertGMT2JST = function( dateStr ){
     var dt;
     var TIME_ZONE = 9; // JST
     if( window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0) ){
-        dt = new Date( dateStr );
+    dt = new Date( dateStr );
         dt.setHours(dt.getHours() + TIME_ZONE);
         dateStr = dt.toLocaleString();
     }
     return dateStr;
-}
+};
+var _modifyTimezoneInActivityList = function( typeArray ){
+    var n = typeArray.length
+    while( 0<n-- ){
+        typeArray[n].created_at = convertGMT2JST( typeArray[n].created_at );
+    }
+    return typeArray;
+};
 
 /**
  * 逆順で格納されるので注意（グリッドビューの表示は下→上を時系列とする）。
  */
 var _convertActivityList2GridData = function( typeArray ){
-    var array = typeArray; // [{ "time", "type" }]
+    var array = typeArray; // [{ "create_at", "type" }]
     var n = array.length;
-    var grid_activity_data = [], item;
-    var localtime;
+    var item, grid_activity_data = []; // [{"time", "type"}]
     while( 0<n-- ){
         item = array[n];
-        localtime = convertGMT2JST( item.created_at );
         grid_activity_data.push({
-            "time" : localtime.substr(0, 16),
+            "time" : item.created_at.substr(0, 16), // ToDo:「表示形式」での出力へ変更すること
             "activity" : (function( obj, type ){
                 var keys = Object.keys(obj);
                 var i = keys.length;
@@ -421,6 +427,7 @@ console.log( responsedata );
 // ----------------------------------------------------------------------
 var client_lib = {
     "tinyCookie" : _tinyCookie,
+    "modifyTimezoneInActivityList" : _modifyTimezoneInActivityList,
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
     "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue

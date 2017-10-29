@@ -86,6 +86,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "chartIconColorLine" : ICON_COLOR.inactive,
             "lodingSpinnerDivStyle" : {"display" : "block"},
             "lastLoadedActivityData" : null, // 最初は「無し」
+            "isRefreshDataIcon" : true,
+            "isShowUploadingIcon" : false
         },
         methods : {
             "getGridData" : function() {
@@ -117,6 +119,9 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             },
             "noticeGotUp" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GET_UP.type );
+
+                this.isRefreshDataIcon = false;
+                this.isShowUploadingIcon = true;
                 promise.then((responsedata)=>{ // 引数は読み捨て。
                     this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
@@ -125,14 +130,23 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                     }else{
                         alert(err.request);
                     }
+                }).then(()=>{
+                    this.isRefreshDataIcon = true;
+                    this.isShowUploadingIcon = false;
                 });
             },
             "noticeGotoBed" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
+
+                this.isRefreshDataIcon = false;
+                this.isShowUploadingIcon = true;
                 promise.then((responsedata)=>{ // 引数は読み捨て。
                     this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
                     alert(err); //暫定
+                }).then(()=>{
+                    this.isRefreshDataIcon = true;
+                    this.isShowUploadingIcon = false;
                 });
             },
             "refreshData" : function() {

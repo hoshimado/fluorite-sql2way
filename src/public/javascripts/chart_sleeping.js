@@ -56,8 +56,8 @@ _CHART.prototype.show = function( labels, datasets, chartType ){
                         "ticks": {                      //最大値最小値設定
                             // "fontSize": 18,             //フォントサイズ
                             "min": 0,                   //最小値
-                            "max": 12,                  //最大値
-                            "stepSize": 1               //軸間隔
+                            "max": 10,                  //最大値
+                            "stepSize": 2               //軸間隔
                         },
                     }],
                 }

@@ -13,7 +13,8 @@
      -->
 
     <!-- Font Awesome を利用 -->
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"></link>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"></link>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome-animation/0.0.10/font-awesome-animation.css" type="text/css" media="all"></link>
 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
@@ -88,7 +89,6 @@
         <i v-if="passKeyIsValid" class="fa fa-check" style="color:#4444ff"></i>
 				<span class="error_text" v-if="!passKeyIsValid">8文字以上のパスワードを入力してください</span><br>
         <input id="id_passkeyword" type="password" v-model="passKeyWord"><br>
-        <!-- ◆バリデーションする。公式メールアドレスの例がある◆ -->
         <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
         <br><br>
       </div>
@@ -103,9 +103,14 @@
         <a v-on:click="noticeGotoBed" class="square_btn" href="javascript:void(0);">
           {{TEST_GOTOBED}}
         </a>
-        <a v-on:click="refreshData" href="javascript:void(0);">
+        <a v-show="isRefreshDataIcon" v-on:click="refreshData" href="javascript:void(0);">
           <i class="fa fa-refresh fa-2x" style="color:#4444ff"></i>
         </a>
+        <!-- 
+          ※faa-flashクラスは、font awesome本体ではなく、追加のawesom animateを利用している。
+          https://saruwakakun.com/html-css/basic/font-awesome#section6
+        -->
+        <i v-show="isShowUploadingIcon" class="fa fa-cloud-upload faa-flash animated fa-2x"></i>
       </div>
       <div>
         <!-- 

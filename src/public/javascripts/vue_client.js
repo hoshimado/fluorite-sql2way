@@ -123,7 +123,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 this.isRefreshDataIcon = false;
                 this.isShowUploadingIcon = true;
                 promise.then((responsedata)=>{ // 引数は読み捨て。
-                    this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                    return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
                     if(err.response){ //暫定
                         alert(err.response.status);
@@ -141,7 +141,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 this.isRefreshDataIcon = false;
                 this.isShowUploadingIcon = true;
                 promise.then((responsedata)=>{ // 引数は読み捨て。
-                    this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                    return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
                     alert(err); //暫定
                 }).then(()=>{

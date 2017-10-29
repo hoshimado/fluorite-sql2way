@@ -100,17 +100,19 @@ var getInsertObjectFromPostData = function( postData ){
 			// 数字変換（int）出来る事、も必須。ただし、文字列のままで格納。
 			valid_data[ "type_value" ] = postData[ "type_value" ];
 		}else{
-			valid_data[ "invalid" ] = "type_value is NOT Number.";
+			valid_data[ "invalid" ] = "there is not valid type_value. that must be number.";
 		}
 	
 		if( postData["device_key"] ){
 			valid_data[ "device_key" ] = postData["device_key"];
 		}else{
-			valid_data[ "invalid" ] = "there is NOT type_value.";
+			valid_data[ "invalid" ] = "there is not device_key.";
 		}
 
 		if( postData["pass_key"] ){
 			valid_data["pass_key"] = postData.pass_key; // アンダーバーの有無注意
+		}else{
+			valid_data[ "invalid" ] = "parameter is luck."
 		}
 
 		return valid_data;

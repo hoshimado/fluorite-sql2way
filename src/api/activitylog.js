@@ -84,7 +84,11 @@ API_V1_BASE.prototype.isOwnerValid = function( inputData ){
 	});	
 };
 API_V1_BASE.prototype.isAccessRateValied = function(){};
+/**
+ * サブクラスでオーバーライドする。
+ */
 API_V1_BASE.prototype.requestSql = function( paramClass ){
+	return Promise.resolve();
 	// paramClass =>
 	// API_PARAM.prototype.getDeviceKey = function(){ return isDefined( this, "device_key"); };
 	// API_PARAM.prototype.getTypeValue = function(){ return isDefined( this, "type_value"); };
@@ -141,6 +145,7 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 
 	return new Promise(function(resolve,reject){
 		var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
+		
 		createPromiseForSqlConnection(
 			factoryImpl.CONFIG_SQL.getInstance()
 		).then(function(){
@@ -155,6 +160,7 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 	}).then(function(){
 		return instance.isOwnerValid( inputData ); // ここは、冒頭の引数そのまま渡す。
   	}).then(function( paramClass ){
+		// ToDo：アクセス頻度のガードを入れる。
 		return Promise.resolve( paramClass );
   	}).then( ( paramClass )=>{
 		return instance.requestSql( paramClass );
@@ -166,6 +172,7 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 		return instance.closeAnomaly( err );
 	});
 };
+exports.API_V1_BASE = API_V1_BASE;
 
 
 exports.api_vi_activitylog_setup = function( queryFromGet, dataFromPost ){
@@ -351,7 +358,6 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
 				paramClass.getDeviceKey(), 
 				paramClass.getTypeValue() 
 			).then(function(resultInsert){
-console_output(resultInsert);
 				// 「インサート」処理が成功
 				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
 				var param = new API_PARAM(resultInsert);

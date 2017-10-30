@@ -65,7 +65,7 @@ var getShowObjectFromGetData = function( getData ){
 		var base_sec = now_date.getTime() - pastDay * 86400000; //日数 * 1日のミリ秒数;
 		now_date.setTime( base_sec );
 		return now_date;
-	}( 7 )); // 1週間前までを取得、を基本とする。
+	}( 28 )); // 4週間前までを取得、を基本とする。
 	var date_end = new Date(); // 現時点までを取得。
 
 	if( getData[ "device_key" ] ){

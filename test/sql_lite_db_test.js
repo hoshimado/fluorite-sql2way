@@ -15,30 +15,10 @@ var ApiCommon_StubAndHooker = require("./support_stubhooker.js").ApiCommon_StubA
 
 const sql_parts = require("../src/api/sql_lite_db.js");
 
-var TEST_CONFIG_SQL = { // テスト用
-	user : "fake_user",
-	password : "fake_password",
-	server : "fake_server_url", // You can use 'localhost\\instance' to connect to named instance
-	database : "./db/mydb.splite3",  //"fake_db_name",
-	stream : false,  // if true, query.promise() is NOT work! // You can enable streaming globally
-
-	// Use this if you're on Windows Azure
-	options : {
-		encrypt : true 
-	} // It works well on LOCAL SQL Server if this option is set.
-};
 
 
 
 describe( "sql_lite_db_test.js", function(){
-    var createPromiseForSqlConnection = sql_parts.createPromiseForSqlConnection;
-    var isOwnerValid = sql_parts.isOwnerValid;
-    var closeConnection = sql_parts.closeConnection;
-    var addActivityLog2Database = sql_parts.addActivityLog2Database;
-    var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
-    var addNewUser = sql_parts.addNewUser;
-    var getNumberOfUsers = sql_parts.getNumberOfUsers;
-
     /**
      * @type 各テストからはアクセス（ReadOnly）しない定数扱いの共通変数。
      */
@@ -55,7 +35,8 @@ describe( "sql_lite_db_test.js", function(){
     
 
     describe( "::createPromiseForSqlConnection()",function(){
-        var stubInstance, databaseArgs1;
+        var createPromiseForSqlConnection = sql_parts.createPromiseForSqlConnection;
+        var stubInstance, databaseArgs1, stubDbs = {};
 
         beforeEach( function(){
             var stubSqlite3 = { 
@@ -77,119 +58,24 @@ describe( "sql_lite_db_test.js", function(){
                 }
             });
             sql_parts.factoryImpl.sqlite3.setStub( stubSqlite3 );
+            sql_parts.factoryImpl.db.setStub( stubDbs ); // ToDo: これ、ちゃんと動作してる？
         });
     
         it("正常系",function(){
-            var dbs = sql_parts.factoryImpl.db.getInstance();
-            
+            var dbs = sql_parts.factoryImpl.db.getInstance(); 
+
             expect( dbs[ sqlConfig.database ] ).to.not.exist;
             return shouldFulfilled(
                 sql_parts.createPromiseForSqlConnection( sqlConfig )
             ).then(function(){
-                expect( databaseArgs1 ).to.equal( sqlConfig.database );
-                expect( dbs[ sqlConfig.database ] ).to.equal( stubInstance );
+                expect( databaseArgs1 ).to.equal( sqlConfig.database, "呼び出したデータベース名でnew Databese()されたこと" );
+                expect( dbs[ sqlConfig.database ] ).to.equal( stubInstance, "空だったdbsに、データベースインスタンスが追加されている事" );
             });
         });
-/*
-        it("異常系：SQL接続がエラー", function(){
-            var outJsonData = {};
-            var inputDataObj = {};
-            var sqlConfig = {};
-            var EXPECTED_ERROR= {};
-            var stubs = createAndHookStubs4Mssql( sql_parts );
-            
-            stubs.connect.onCall(0).returns( Promise.reject( EXPECTED_ERROR ) );
-            return shouldRejected(
-                sql_parts.createPromiseForSqlConnection( sqlConfig )
-            ).catch(function(){
-                assert( stubs.connect.calledOnce );
-                expect( stubs.connect.getCall(0).args[0] ).to.equal( sqlConfig );
-                expect( outJsonData.result ).to.not.be.exist;
-            });
-        });
-//*/
-    });
-    describe( "::isOwnerValid()", function(){
-        var isOwnerValid = sql_parts.isOwnerValid;
-        it("正常系");
-/*
-        it(" finds VALID hash.", function(){
-            var stubs = createAndHookStubs4Mssql( sql_parts );
-            var expected_recordset = [
-                { "owners_hash" : "ほげ", 
-                  "max_entrys"  : 127
-                }
-            ];
-            var stub_query = stubs.Request_query;
-
-            stub_query.onCall(0).returns( Promise.resolve( expected_recordset ) );
-
-            return shouldFulfilled(
-                isOwnerValid( TEST_DATABASE_NAME, expected_recordset[0].owners_hash )
-            ).then( function( maxCount ){
-                var query_str = stub_query.getCall(0).args[0];
-                var expected_str = "SELECT owners_hash, max_entrys FROM [";
-                expected_str += TEST_DATABASE_NAME + "].dbo.owners_permission WHERE [owners_hash]='";
-                expected_str += expected_recordset[0].owners_hash + "'";
-
-                assert( stub_query.calledOnce );
-                expect( query_str ).to.be.equal( 
-                    expected_str
-                );
-                expect( maxCount, "記録エントリーの最大個数を返却すること" ).to.be.exist;
-            });
-        });
-        it(" dont finds VALID hash: WHERE command returns 0 array.", function(){
-            var stubs = createAndHookStubs4Mssql( sql_parts );
-            var stub_query = stubs.Request_query;
-            var expected_recordset = [];
-
-            stub_query.onCall(0).returns( Promise.resolve( expected_recordset ) );
-
-            return shouldRejected(
-                isOwnerValid( TEST_DATABASE_NAME, "fuga" )
-            ).catch( function( err ){
-                assert( err, "エラー引数が渡されること" );
-            });
-        });
-//*/
-    });
-    describe( "::getListOfActivityLogWhereDeviceKey()",function(){
-        it("正常系。期間指定なし。",function(){
-            var period = null; //無しの場合
-            var deviceKey = "にゃーん。";
-            var dbs = sql_parts.factoryImpl.db.getInstance();
-            var expected_rows = [
-                { "created_at": '2017-10-22 23:59:00.000', "type": 900 }
-            ];
-            var stub_instance = sinon.stub();
-            var stub_wrapperStr = sinon.stub()
-            .callsFake( function(str){ return str; } );
-
-            dbs[ sqlConfig.database ] = {
-                "all" : stub_instance
-            };
-            stub_instance.callsArgWith(2, null, expected_rows);
-
-            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
-
-
-            return shouldFulfilled(
-                sql_parts.getListOfActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
-            ).then(function(result){
-                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
-                assert( stub_instance.calledOnce );
-                var called_args = stub_instance.getCall(0).args;
-                expect( called_args[0] ).to.equal(
-                    "SELECT created_at, type FROM activitylogs " 
-                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
-                );
-                expect( called_args[1].length ).to.equal( 0 );
-                expect( result ).to.deep.equal( expected_rows );
-            });
-        });
+        it("異常系");
     });
     describe( "::closeConnection()",function(){
+        var closeConnection = sql_parts.closeConnection;
         it("正常系。期間指定なし。",function(){
             var period = null; //無しの場合
             var deviceKey = "にゃーん。";
@@ -209,11 +95,143 @@ describe( "sql_lite_db_test.js", function(){
             
         });
     });
-    //describe( "::addActivityLog2Database()",function(){
-    //    it("正常系");
-    //});
-    //clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。
-    // clock.restore(); // 時間停止解除。
+    describe( "::isOwnerValid()", function(){
+        var isOwnerValid = sql_parts.isOwnerValid;
+        var stubDbs = {};
 
+        beforeEach(function () {
+            stubDbs[ sqlConfig.database ] = {};
+            sql_parts.factoryImpl.db.setStub( stubDbs );
+        });
+
+        it("正常系", function(){
+            var databaseName = sqlConfig.database;
+            var deviceKey = "にゃ～ん";
+            var password = "ほげ";
+            var expectedMaxCount = 32;
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub()
+            .callsFake( function(str){ return str; } );
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            
+            dbs[ databaseName ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, null, [{
+                "owners_hash" : deviceKey,
+                "password" : password, 
+                "max_entrys" : expectedMaxCount
+            }]);
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            return shouldFulfilled(
+                isOwnerValid( databaseName, deviceKey, password )
+            ).then(function (result) {
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_wrapperStr.withArgs( password ).calledOnce );
+                assert( stub_instance.calledOnce );
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "SELECT owners_hash, password, max_entrys " 
+                    + "FROM owners_permission "
+                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.equal( expectedMaxCount );
+                
+            });
+        });
+        it("異常系::識別キーは在ったが、パスワードが異なる");
+    });
+    describe( "::getListOfActivityLogWhereDeviceKey()",function(){
+        var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
+
+        it("正常系。期間指定なし。",function(){
+            var period = null; //無しの場合
+            var deviceKey = "にゃーん。";
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var expectedRows = [
+                { "created_at": '2017-10-22 23:59:00.000', "type": 900 }
+            ];
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub()
+            .callsFake( function(str){ return str; } );
+
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, /* err= */null, /* rows= */expectedRows);
+
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+
+            return shouldFulfilled(
+                sql_parts.getListOfActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
+            ).then(function(result){
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_instance.calledOnce );
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "SELECT created_at, type FROM activitylogs " 
+                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.deep.equal( expectedRows );
+            });
+        });
+    });
+    describe( "::addActivityLog2Database()", function () {
+        var addActivityLog2Database = sql_parts.addActivityLog2Database;
+        it("正常系", function () {
+            var deviceKey = "にゃーん。";
+            var typeOfAction = "111";
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub().callsFake( function(str){ return str; } );
+            var clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。
+            
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, /* err= */null, /* rows= */null);
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            return shouldFulfilled(
+                sql_parts.addActivityLog2Database( sqlConfig.database, deviceKey, typeOfAction )
+            ).then(function(result){
+                clock.restore(); // 時間停止解除。
+
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_instance.calledOnce );
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "INSERT INTO activitylogs(created_at, type, owners_hash ) " 
+                    + "VALUES('1970-01-01 09:00:00.000', " + typeOfAction + ", '" + deviceKey + "')"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.deep.equal({
+                    "type_value" : typeOfAction,
+                    "device_key" : deviceKey
+                });
+            });
+            
+        });
+    });
+    describe( "::deleteActivityLogWhereDeviceKey()",function(){
+        it("正常系");
+    });
+
+
+    describe( "::addNewUser()",function(){
+        var addNewUser = sql_parts.addNewUser;
+        it("正常系");
+    });
+    describe( "::getNumberOfUsers()",function(){
+        var getNumberOfUsers = sql_parts.getNumberOfUsers;
+        it("正常系");
+    });
+    describe( "deleteExistUser()", function () {
+       it("正常系"); 
+    });
 });
 

@@ -470,6 +470,8 @@ describe( "activitylog.js", function(){
             activitylog.factoryImpl[ "CONFIG_SQL" ].setStub( {"database" : ""} );
         });
 
+        it("正常系");
+
     });
 
 });

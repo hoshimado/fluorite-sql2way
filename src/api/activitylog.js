@@ -23,7 +23,7 @@ exports.factoryImpl = factoryImpl;
 
 /**
  * Promiseで受けわたす、APIの引数チェックしたい！
- * device_key, battery_value, date_start, date_end, max_count
+ * device_key, type_value, date_start, date_end, max_count
  */
 var API_PARAM = function(init){
 	this.device_key = init.device_key;
@@ -102,7 +102,7 @@ API_V1_BASE.prototype.closeNormal = function(){
 		closeConnection( config.database ).then(()=>{
 			resolve({
 				"jsonData" : outJsonData,
-				"status" : 200 // OK 【FixMe】直前までの無いように応じて変更する。
+				"status" : 200 // OK 【FixMe】直前までの内容に応じて変更する。
 			});
 		});
 	});

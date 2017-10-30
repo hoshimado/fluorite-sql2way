@@ -302,6 +302,10 @@ exports.getNumberOfUsers = getNumberOfUsers;
 
 
 
+var deleteExistUser = function(databaseName, deviceKey ){
+	return Promise.reject();
+};
+exports.deleteExistUser = deleteExistUser;
 
 
 
@@ -311,7 +315,7 @@ exports.getNumberOfUsers = getNumberOfUsers;
  * @param{String} databaseName データベース名
  * @param{String} deviceKey アクセスデバイスごとの一意の識別子。これが「認証用SQLデータベース」に入っていればアクセスOK。
  * @param{String} password  アクセスデバイスと紐づいたパスワード。上記の識別子と合わせて認証する。
- * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は引数無し。reject()はエラー内容が引数に入る。
+ * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は格納可能なデータ最大数が戻る。reject()はエラー内容が引数に入る。
  */
 var isOwnerValid = function( databaseName, deviceKey, password ){
 	var dbs = factoryImpl.db.getInstance();
@@ -445,6 +449,10 @@ exports.getListOfActivityLogWhereDeviceKey = getListOfActivityLogWhereDeviceKey;
 
 
 
+var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
+	return Promise.reject();
+};
+exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey();
 
 
 

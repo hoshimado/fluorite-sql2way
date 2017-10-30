@@ -291,6 +291,7 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
  */
 exports.api_v1_activitylog_show = function( queryFromGet, dataFromPost ){
 	var API_SHOW = function(){
+		// サブクラスのコンスタラクタ
 		this._outJsonData = {};
 		API_V1_BASE.call( this, this._outJsonData ); // 継承元のコンスタラクタを明示的に呼び出す。
 	};

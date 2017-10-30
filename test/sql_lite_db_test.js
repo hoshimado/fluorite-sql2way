@@ -233,5 +233,13 @@ describe( "sql_lite_db_test.js", function(){
     describe( "deleteExistUser()", function () {
        it("正常系"); 
     });
+
+
+    describe( "::getShowObjectFromGetData()",function(){
+        it("正常系");
+    })
+    describe( "::getInsertObjectFromPostData()", function(){
+        it("正常系");
+    });
 });
 

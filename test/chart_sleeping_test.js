@@ -151,7 +151,7 @@ describe("TEST for chart_sleeping.js", function(){
                 "data" : EXPECTED_CHART_DATA.sleepingtime,
                 "backgroundColor": "rgba(153,255,51,0.4)"
             }]);
-            expect( stub_chartShow.getCall(0).args[2] ).to.not.exit; // 引数で省略しているので、ここも無し。
+            expect( stub_chartShow.getCall(0).args[2] ).to.not.exist; // 引数で省略しているので、ここも無し。
         });
     });
 });

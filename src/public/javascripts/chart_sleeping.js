@@ -15,9 +15,28 @@ var _CHART = function( browserThis, targetCanvasId ){
     var canvasNode = browserThis.document.getElementById( targetCanvasId );
     this._ctx = canvasNode.getContext("2d");
     this._myChart = null;
+    this._lastType = null;
 }; 
-_CHART.prototype.show = function( chartType, labels, datasets ){
+_CHART.prototype.show = function( labels, datasets, chartType ){
+    if( !chartType ){
+        chartType = this._lastType ? this._lastType : "bar";
+    }
+    if( this._lastType && (this._lastType != chartType) ){
+        // グラフの種別変更（線グラフ、棒グラフ）するには、一度破棄する必要あるらしい？
+        // https://stackoverflow.com/questions/36949343/chart-js-dynamic-changing-of-chart-type-line-to-bar-as-example
+        //
+        // 本家のDocsによると「グラフ種別ごとにインスタンスを生成する」（から変更できない）っぽい。
+        // update()が更新するのはdataプロパティだけ、とのこと。
+        // http://www.chartjs.org/docs/latest/developers/updates.html
+        // http://www.chartjs.org/docs/latest/developers/api.html
+        // > This can be safely called after updating the data object.  
+        // > This will update all scales, legends, and then re-render the chart.
+        // > 以下、サンプルは略。
+        this._myChart.destroy();
+        this._myChart = null;
+    }
     if( !this._myChart ){
+        this._lastType = chartType;
         this._myChart = new Chart(this._ctx, {
             "type" : chartType,
             "responsive" : true,
@@ -37,8 +56,8 @@ _CHART.prototype.show = function( chartType, labels, datasets ){
                         "ticks": {                      //最大値最小値設定
                             // "fontSize": 18,             //フォントサイズ
                             "min": 0,                   //最小値
-                            "max": 12,                  //最大値
-                            "stepSize": 1               //軸間隔
+                            "max": 10,                  //最大値
+                            "stepSize": 2               //軸間隔
                         },
                     }],
                 }
@@ -97,22 +116,21 @@ var _convertSleepTime6MarkingTimeTwice = function( activitiyArray ){
 /**
  * 与えられた日時と行動種別から、グラフを描く。
  * @param{Array}  activitiyData   [{created_at, type},,,,] の形式であること。
- * @param{String} chartTypeString グラフの表示方法を文字列で指定する。"bar", "line", など。Chart.js準拠。
+ * @param{String} chartTypeString グラフの表示方法を文字列で指定する。省略可能。"bar", "line", など。Chart.js準拠。
  */
 var _plot2Chart = function( activitiyData, chartTypeString ){
     var chartData = _chart_hook.convertSleepTime6MarkingTimeTwice( activitiyData );
     var horizonArray = chartData.date;
     var verticalArray = chartData.sleepingtime;
 
-    chartTypeString = (chartTypeString) ? chartTypeString : "bar";
     _chart_hook.chartInstance.show( 
-        chartTypeString, // "bar", "line",,, 
         horizonArray, 
         [{
             "label" : "睡眠時間",
             data : verticalArray,
             backgroundColor: "rgba(153,255,51,0.4)"
-        }] 
+        }],
+        chartTypeString // "bar", "line",,, show()側のデフォルトを「bar」に設定した。
     );
 };
 

@@ -61,15 +61,19 @@ var _setVueComponentGrid = function( staticVue ){
             }
         },
         methods: {
-            sortBy: function (key) {
+            "sortBy": function (key) {
                 this.sortKey = key
                 this.sortOrders[key] = this.sortOrders[key] * -1
-            }
+            },
         */
         }
     });
 };  
 var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
+    var ICON_COLOR = {
+        "active" : "color:#4444ff",
+        "inactive" : "color:#aaaaaa"
+    };
     var app_grid = createVueInstance({
         el: '#app_grid',
         data: {
@@ -77,22 +81,35 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "gridColumns": ['time', 'activity'],
             "gridData": [],
             "TEXT_GETUP" : ACTIVITY.GET_UP.title,
-            "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title
+            "TEST_GOTOBED" : ACTIVITY.GOTO_BED.title,
+            "chartIconColorBar" : ICON_COLOR.active,
+            "chartIconColorLine" : ICON_COLOR.inactive,
+            "lodingSpinnerDivStyle" : {"display" : "block"},
+            "lastLoadedActivityData" : null, // 最初は「無し」
+            "isRefreshDataIcon" : true,
+            "isShowUploadingIcon" : false
         },
         methods : {
             "getGridData" : function() {
                 var promise = client_lib.getActivityDataInAccordanceWithAccountVue();
                 return promise.then((resultArray)=>{
-                    var grid_activity_data = client_lib.convertActivityList2GridData( resultArray );
+                    var localtimedArray = client_lib.modifyTimezoneInActivityList( resultArray );
+                    var grid_activity_data = client_lib.convertActivityList2GridData( localtimedArray );
                     this.gridData = grid_activity_data.slice(0, 6);
                     // ↑カットオフ入れてる。最大６つまで、で。
 
                     // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
-                    return Promise.resolve( resultArray );
+                    return Promise.resolve( localtimedArray );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
                     chartsleeping_lib.plot2Chart( activitiyData );
+                    this.lastLoadedActivityData = activitiyData; // 記録しておく。
+                    return Promise.resolve();
+                }).then(()=>{ // thisの指す先に注意。ここではアロー演算子なので、Vueインスタンス自身。
+                    // 読み込み中、の表示を消す。
+                    this.lodingSpinnerDivStyle.display = "none";
 
+                    // 続く時間差のテスト（なければ消す）。
                     return new Promise((resolve,reject)=>{
                         setTimeout(function() {
                             resolve();
@@ -102,9 +119,52 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             },
             "noticeGotUp" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GET_UP.type );
+
+                this.isRefreshDataIcon = false;
+                this.isShowUploadingIcon = true;
+                promise.then((responsedata)=>{ // 引数は読み捨て。
+                    return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                }).catch((err)=>{
+                    if(err.response){ //暫定
+                        alert(err.response.status);
+                    }else{
+                        alert(err.request);
+                    }
+                }).then(()=>{
+                    this.isRefreshDataIcon = true;
+                    this.isShowUploadingIcon = false;
+                });
             },
             "noticeGotoBed" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
+
+                this.isRefreshDataIcon = false;
+                this.isShowUploadingIcon = true;
+                promise.then((responsedata)=>{ // 引数は読み捨て。
+                    return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                }).catch((err)=>{
+                    alert(err); //暫定
+                }).then(()=>{
+                    this.isRefreshDataIcon = true;
+                    this.isShowUploadingIcon = false;
+                });
+            },
+            "refreshData" : function() {
+                // 読み込み中、の表示を出す。
+                this.lodingSpinnerDivStyle.display = "display";
+
+                // データを、サーバーから再読み込みして表示する。
+                this.getGridData();
+            },
+            "setChartStyleLine" : function(){
+                chartsleeping_lib.plot2Chart( this.lastLoadedActivityData, "line" );
+                this.chartIconColorBar  = ICON_COLOR.inactive;
+                this.chartIconColorLine = ICON_COLOR.active;
+            },
+            "setChartStyleBar" : function(){
+                chartsleeping_lib.plot2Chart( this.lastLoadedActivityData, "bar" );
+                this.chartIconColorBar  = ICON_COLOR.active;
+                this.chartIconColorLine = ICON_COLOR.inactive;
             }
         },
         "mounted" : function() {
@@ -147,13 +207,17 @@ var _vueAppSetup = function( createVueInstance ){
                     var signupedInfomation = result.signuped;
                     var str = "ID: " + signupedInfomation.device_key + "\r\n";
                     str += "パスワード: " + signupedInfomation.password + "\r\n";
-                    str += "\r\n上記にて、アカウント作成に成功しました。";
+                    if( signupedInfomation.left ){
+                        str += "\r\n上記のアカウントの有効性を確認しました。";
+                    }else{
+                        str += "\r\n上記にて、アカウント作成に成功しました。";
+                    }
                     alert( str );
 
                     console.log( result );
 
-                    client_lib.tinyCookie( COOKIE_USER_ID, signupedInfomation.device_key );
-                    client_lib.tinyCookie( COOKIE_USER_PASSWORD, signupedInfomation.password );
+                    client_lib.tinyCookie( COOKIE_USER_ID, signupedInfomation.device_key, COOKIE_OPTIONS );
+                    client_lib.tinyCookie( COOKIE_USER_PASSWORD, signupedInfomation.password, COOKIE_OPTIONS );
                 }).catch(function(err){
                     alert( "登録できませんでした。\r\n\r\n※詳細なエラー表示は未実装。" );
                 });
@@ -170,7 +234,18 @@ var _vueAppSetup = function( createVueInstance ){
 };
 var COOKIE_USER_ID = "FLUORITE_LIFELOG_USERID20171017";
 var COOKIE_USER_PASSWORD = "FLUORITE_LIFELOG_PASSWORD20171017";
-var COOKIE_OPTIONS = {expires: "Mon, 1-Jan-2018 00:00:00 GMT"}; // ToDo：要検討
+var COOKIE_OPTIONS = { 
+    "expires": "1M" // ToDo：要検討
+};
+if( this.window && this.window.location && (this.window.location.href.indexOf("https://")==0) ){
+    COOKIE_OPTIONS["secure"] = true;
+    // これを指定しないと、Chromeのhttps環境ではCookieが保存されない？？？
+    // それからChrome「Smart Lock」が有効だと、Cookieによるフォームの初期化の
+    // 実装とタイミング問題を起こすことがある？？？
+}
+
+// https://github.com/Alex1990/tiny-cookie
+// 
 // today + 1 year
 // var exdate = new Date().getTime() + (1000*60*60*24*7*52);
 // var date_cookie = new Date(exdate).toUTCString();
@@ -216,26 +291,31 @@ var convertGMT2JST = function( dateStr ){
     var dt;
     var TIME_ZONE = 9; // JST
     if( window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0) ){
-        dt = new Date( dateStr );
+    dt = new Date( dateStr );
         dt.setHours(dt.getHours() + TIME_ZONE);
         dateStr = dt.toLocaleString();
     }
     return dateStr;
-}
+};
+var _modifyTimezoneInActivityList = function( typeArray ){
+    var n = typeArray.length
+    while( 0<n-- ){
+        typeArray[n].created_at = convertGMT2JST( typeArray[n].created_at );
+    }
+    return typeArray;
+};
 
 /**
  * 逆順で格納されるので注意（グリッドビューの表示は下→上を時系列とする）。
  */
 var _convertActivityList2GridData = function( typeArray ){
-    var array = typeArray; // [{ "time", "type" }]
+    var array = typeArray; // [{ "create_at", "type" }]
     var n = array.length;
-    var grid_activity_data = [], item;
-    var localtime;
+    var item, grid_activity_data = []; // [{"time", "type"}]
     while( 0<n-- ){
         item = array[n];
-        localtime = convertGMT2JST( item.created_at );
         grid_activity_data.push({
-            "time" : localtime.substr(0, 16),
+            "time" : item.created_at.substr(0, 16), // ToDo:「表示形式」での出力へ変更すること
             "activity" : (function( obj, type ){
                 var keys = Object.keys(obj);
                 var i = keys.length;
@@ -298,8 +378,23 @@ console.log( "fake_axios!" );
     }
     return promise.then(function(result){
         var responsedata = result.data;
+(function (array) { // デバッグ用。
+    var str, i , n = array.length;
+    for(i=0;i<n;i++){
+        str = "[" + array[i].created_at + " - ";
+        str += array[i].type + "]";
+        console.log( str );
+    }
+}(responsedata.table));
+        console.log( responsedata.table );
         return Promise.resolve( responsedata.table );     
-    })
+        // 正常応答のフォーマットは、以下の公式さんを参照の事。
+        // https://github.com/axios/axios#response-schema
+    }).catch((err)=>{
+        return Promise.reject(err); // ってコレだったら、catch()する必要ないんだが、、、まぁ様式美。
+        // エラー応答のフォーマットは以下の公式さんを参照の事。
+        // https://github.com/axios/axios#handling-errors
+    });
 };
 var _addActivityDataInAccordanceWithAccountVue = function( typeValue ){
     var url = "./api/v1/activitylog/add";
@@ -325,6 +420,11 @@ console.log( "fake_axios!" );
                 device_key: 'xingyanhuan@yahoo.co.jp'
             }
         });
+        // promise = Promise.reject({
+        //     "response" : {
+        //         "status" : 401
+        //     }
+        // });
     }
     return promise.then(function(result){
         var responsedata = result.data;
@@ -332,7 +432,6 @@ console.log( responsedata );
         return Promise.resolve( responsedata );     
     })
 };
-// ACTIVITY で定義してる。title, type
 
 
 
@@ -342,6 +441,7 @@ console.log( responsedata );
 // ----------------------------------------------------------------------
 var client_lib = {
     "tinyCookie" : _tinyCookie,
+    "modifyTimezoneInActivityList" : _modifyTimezoneInActivityList,
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
     "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue

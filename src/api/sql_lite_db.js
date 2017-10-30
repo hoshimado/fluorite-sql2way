@@ -65,7 +65,7 @@ var getShowObjectFromGetData = function( getData ){
 		var base_sec = now_date.getTime() - pastDay * 86400000; //日数 * 1日のミリ秒数;
 		now_date.setTime( base_sec );
 		return now_date;
-	}( 7 )); // 1週間前までを取得、を基本とする。
+	}( 28 )); // 4週間前までを取得、を基本とする。
 	var date_end = new Date(); // 現時点までを取得。
 
 	if( getData[ "device_key" ] ){
@@ -100,17 +100,19 @@ var getInsertObjectFromPostData = function( postData ){
 			// 数字変換（int）出来る事、も必須。ただし、文字列のままで格納。
 			valid_data[ "type_value" ] = postData[ "type_value" ];
 		}else{
-			valid_data[ "invalid" ] = "type_value is NOT Number.";
+			valid_data[ "invalid" ] = "there is not valid type_value. that must be number.";
 		}
 	
 		if( postData["device_key"] ){
 			valid_data[ "device_key" ] = postData["device_key"];
 		}else{
-			valid_data[ "invalid" ] = "there is NOT type_value.";
+			valid_data[ "invalid" ] = "there is not device_key.";
 		}
 
 		if( postData["pass_key"] ){
 			valid_data["pass_key"] = postData.pass_key; // アンダーバーの有無注意
+		}else{
+			valid_data[ "invalid" ] = "parameter is luck."
 		}
 
 		return valid_data;
@@ -248,11 +250,7 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
-				var insertedData = {
-					"device_key" : deviceKey,
-					"password"   : passwordStr
-				};
-				return resolve( insertedData );
+				return resolve();
 			}else{
 				// ToDo.
 				// 重複キーだと、以下のerrが返る。
@@ -304,6 +302,10 @@ exports.getNumberOfUsers = getNumberOfUsers;
 
 
 
+var deleteExistUser = function(databaseName, deviceKey ){
+	return Promise.reject();
+};
+exports.deleteExistUser = deleteExistUser;
 
 
 
@@ -313,7 +315,7 @@ exports.getNumberOfUsers = getNumberOfUsers;
  * @param{String} databaseName データベース名
  * @param{String} deviceKey アクセスデバイスごとの一意の識別子。これが「認証用SQLデータベース」に入っていればアクセスOK。
  * @param{String} password  アクセスデバイスと紐づいたパスワード。上記の識別子と合わせて認証する。
- * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は引数無し。reject()はエラー内容が引数に入る。
+ * @returns{Promise} 検証結果。Promise経由で非同期に返る。resolve()は格納可能なデータ最大数が戻る。reject()はエラー内容が引数に入る。
  */
 var isOwnerValid = function( databaseName, deviceKey, password ){
 	var dbs = factoryImpl.db.getInstance();
@@ -447,6 +449,10 @@ exports.getListOfActivityLogWhereDeviceKey = getListOfActivityLogWhereDeviceKey;
 
 
 
+var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
+	return Promise.reject();
+};
+exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey();
 
 
 

@@ -85,6 +85,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "chartIconColorBar" : ICON_COLOR.active,
             "chartIconColorLine" : ICON_COLOR.inactive,
             "lodingSpinnerDivStyle" : {"display" : "block"},
+            "normalShownDivStyle"   : {"display" : "none"},
             "lastLoadedActivityData" : null, // 最初は「無し」
             "isRefreshDataIcon" : true,
             "isShowUploadingIcon" : false
@@ -108,6 +109,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 }).then(()=>{ // thisの指す先に注意。ここではアロー演算子なので、Vueインスタンス自身。
                     // 読み込み中、の表示を消す。
                     this.lodingSpinnerDivStyle.display = "none";
+                    this.normalShownDivStyle.display = "block";
 
                     // 続く時間差のテスト（なければ消す）。
                     return new Promise((resolve,reject)=>{
@@ -151,7 +153,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             },
             "refreshData" : function() {
                 // 読み込み中、の表示を出す。
-                this.lodingSpinnerDivStyle.display = "display";
+                this.lodingSpinnerDivStyle.display = "block";
+                this.normalShownDivStyle.display = "none";
 
                 // データを、サーバーから再読み込みして表示する。
                 this.getGridData();

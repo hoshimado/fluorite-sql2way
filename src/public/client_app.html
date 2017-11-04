@@ -96,7 +96,7 @@
     <hr>
     <!-- grid-view element -->
     <div id="app_grid">
-      <div>
+      <div v-bind:style="normalShownDivStyle">
         <a v-on:click="noticeGotUp" class="square_btn" href="javascript:void(0);">
           {{TEXT_GETUP}}
         </a>
@@ -112,7 +112,7 @@
         -->
         <i v-show="isShowUploadingIcon" class="fa fa-cloud-upload faa-flash animated fa-2x"></i>
       </div>
-      <div>
+      <div v-bind:style="normalShownDivStyle">
         <!-- 
         <form id="search">
           Search <input name="query" v-model="searchQuery">
@@ -135,7 +135,7 @@
       <div v-bind:style="lodingSpinnerDivStyle">
         <i class="fa fa-spinner fa-spin fa-3x"></i> loading....
       </div>
-      <div>
+      <div v-bind:style="normalShownDivStyle">
         <!-- 
           ここの一覧からチャートアイコンを拾った。
           https://nj-clucker.com/search-font-awesome-icon-by-japanese/

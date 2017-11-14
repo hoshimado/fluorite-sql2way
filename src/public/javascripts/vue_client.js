@@ -87,8 +87,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "lodingSpinnerDivStyle" : {"display" : "block"},
             "normalShownDivStyle"   : {"display" : "none"},
             "lastLoadedActivityData" : null, // 最初は「無し」
-            "isRefreshDataIcon" : true,
-            "isShowUploadingIcon" : false
+            "actionButtonDivStyle" : {"display" : "none"},
+            "processingDivStyle" : {"display" : "none"}
         },
         methods : {
             "getGridData" : function() {
@@ -110,6 +110,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                     // 読み込み中、の表示を消す。
                     this.lodingSpinnerDivStyle.display = "none";
                     this.normalShownDivStyle.display = "block";
+                    this.actionButtonDivStyle.display = "block";
 
                     // 続く時間差のテスト（なければ消す）。
                     return new Promise((resolve,reject)=>{
@@ -122,8 +123,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "noticeGotUp" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GET_UP.type );
 
-                this.isRefreshDataIcon = false;
-                this.isShowUploadingIcon = true;
+                this.actionButtonDivStyle.display = "none";
+                this.processingDivStyle.display = "block";
                 promise.then((responsedata)=>{ // 引数は読み捨て。
                     return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
@@ -133,22 +134,22 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                         alert(err.request);
                     }
                 }).then(()=>{
-                    this.isRefreshDataIcon = true;
-                    this.isShowUploadingIcon = false;
+                    this.processingDivStyle.display = "none";
+                    this.actionButtonDivStyle.display = "block";
                 });
             },
             "noticeGotoBed" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
 
-                this.isRefreshDataIcon = false;
-                this.isShowUploadingIcon = true;
+                this.actionButtonDivStyle.display = "none";
+                this.processingDivStyle.display = "block";
                 promise.then((responsedata)=>{ // 引数は読み捨て。
                     return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
                     alert(err); //暫定
                 }).then(()=>{
-                    this.isRefreshDataIcon = true;
-                    this.isShowUploadingIcon = false;
+                    this.actionButtonDivStyle.display = "block";
+                    this.processingDivStyle.display = "none";
                 });
             },
             "refreshData" : function() {

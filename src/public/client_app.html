@@ -96,21 +96,23 @@
     <hr>
     <!-- grid-view element -->
     <div id="app_grid">
-      <div v-bind:style="normalShownDivStyle">
+      <div v-bind:style="actionButtonDivStyle">
         <a v-on:click="noticeGotUp" class="square_btn" href="javascript:void(0);">
           {{TEXT_GETUP}}
         </a>
         <a v-on:click="noticeGotoBed" class="square_btn" href="javascript:void(0);">
           {{TEST_GOTOBED}}
         </a>
-        <a v-show="isRefreshDataIcon" v-on:click="refreshData" href="javascript:void(0);">
+        <a v-on:click="refreshData" href="javascript:void(0);">
           <i class="fa fa-refresh fa-2x" style="color:#4444ff"></i>
         </a>
         <!-- 
           ※faa-flashクラスは、font awesome本体ではなく、追加のawesom animateを利用している。
           https://saruwakakun.com/html-css/basic/font-awesome#section6
         -->
-        <i v-show="isShowUploadingIcon" class="fa fa-cloud-upload faa-flash animated fa-2x"></i>
+      </div>
+      <div v-bind:style="processingDivStyle">
+        <i class="fa fa-cloud-upload faa-flash animated fa-2x"></i>
       </div>
       <div v-bind:style="normalShownDivStyle">
         <!-- 

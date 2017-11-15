@@ -59,7 +59,7 @@ factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
  * @returns オブジェクト{ device_key: "" }。フォーマット違反なら{ "invalid" : "理由" }
  */
 var getShowObjectFromGetData = function( getData ){
-	var valid_data = {}
+	var valid_data = {};
 	var date_start = (function( pastDay ){
 		var now_date = new Date();
 		var base_sec = now_date.getTime() - pastDay * 86400000; //日数 * 1日のミリ秒数;
@@ -94,7 +94,7 @@ exports.getShowObjectFromGetData = getShowObjectFromGetData;
 
 
 var getInsertObjectFromPostData = function( postData ){
-	var valid_data = {}
+	var valid_data = {};
 	
 		if( postData["type_value"] && isFinite(postData[ "type_value" ]) ){
 			// 数字変換（int）出来る事、も必須。ただし、文字列のままで格納。
@@ -112,7 +112,7 @@ var getInsertObjectFromPostData = function( postData ){
 		if( postData["pass_key"] ){
 			valid_data["pass_key"] = postData.pass_key; // アンダーバーの有無注意
 		}else{
-			valid_data[ "invalid" ] = "parameter is luck."
+			valid_data[ "invalid" ] = "parameter is luck.";
 		}
 
 		return valid_data;
@@ -132,11 +132,11 @@ var createPromiseForSqlConnection = function( sqlConfig ){
 	var databaseName = sqlConfig.database;
 
 	if( dbs[ databaseName ] ){
-		return Promise.resolve()
+		return Promise.resolve();
 	}else{
 		return new Promise(function(resolve,reject){
 			var sqlite = factoryImpl.sqlite3.getInstance().verbose();
-			var db_connect = new sqlite.Database( databaseName, (err) =>{
+			var db_connect = new sqlite.Database( databaseName, (err)=>{
 				if( !err ){
 					dbs[ databaseName ] = db_connect;
 					resolve();
@@ -144,7 +144,7 @@ var createPromiseForSqlConnection = function( sqlConfig ){
 					reject(err);
 				}
 			});
-		})
+		});
 	}
 };
 exports.createPromiseForSqlConnection = createPromiseForSqlConnection;

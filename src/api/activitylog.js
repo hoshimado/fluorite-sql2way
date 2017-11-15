@@ -150,7 +150,7 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 			factoryImpl.CONFIG_SQL.getInstance()
 		).then(function(){
 			outJsonData["result"] = "sql connection is OK!";
-			resolve()
+			resolve();
 		}).catch(function(err){
 			outJsonData[ "errer_on_connection" ] = err;
 			reject({
@@ -159,10 +159,10 @@ API_V1_BASE.prototype.run = function( inputData ){ // getほげほげObjectFromG
 		});
 	}).then(function(){
 		return instance.isOwnerValid( inputData ); // ここは、冒頭の引数そのまま渡す。
-  	}).then(function( paramClass ){
+	}).then(function( paramClass ){
 		// ToDo：アクセス頻度のガードを入れる。
 		return Promise.resolve( paramClass );
-  	}).then( ( paramClass )=>{
+	}).then( ( paramClass )=>{
 		return instance.requestSql( paramClass );
 	}).then(function(){
 		// ここまですべて正常終了

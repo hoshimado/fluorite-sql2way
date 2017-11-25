@@ -226,6 +226,43 @@ describe( "activitylog.js", function(){
             });
         });
 
+        it("異常系：ユーザー数が上限に達した", function(){
+            var queryFromGet = null;
+            var dataFromPost = { 
+                "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
+                "passkey"  : "cat1cat2"
+            };
+            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
+            stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
+            stubs.sql_parts.isOwnerValid.onCall(0).returns(
+                Promise.reject({"here" : "is new user"})
+            );
+            stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
+                Promise.resolve( 16 ) // 登録済みのユーザー数
+            );
+            activitylog.factoryImpl.MAX_USERS.setStub( 16 ); // 上限値として設定されているユーザー数
+           
+
+            return shouldFulfilled(
+                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
+                assert( stubs.sql_parts.isOwnerValid.calledOnce );
+                assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
+                expect( stubs.sql_parts.addNewUser.callCount ).to.equal( 0, "呼ばれてないこと" );
+                assert( stubs.sql_parts.closeConnection.calledOnce );
+
+                expect( result ).to.have.property( "jsonData" );
+                expect( result.jsonData ).to.have.property( "errorMessage" );
+                expect( result.jsonData.errorMessage ).to.equal("Number of users is over.");
+                expect( result ).to.have.property( "status" ).to.equal( 200 );
+            });
+        });
+
+
+
     });
 
     describe("::api_v1_activitylog_BASE()", function() {

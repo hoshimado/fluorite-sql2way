@@ -260,9 +260,6 @@ describe( "activitylog.js", function(){
                 expect( result ).to.have.property( "status" ).to.equal( 200 );
             });
         });
-
-
-
     });
 
     describe("::api_v1_activitylog_BASE()", function() {

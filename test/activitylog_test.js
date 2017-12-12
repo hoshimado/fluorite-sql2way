@@ -32,9 +32,10 @@ describe( "activitylog.js", function(){
                 "getNumberOfUsers" : sinon.stub(),
                 "setupTable1st" : sinon.stub(),
                 "addNewUser" : sinon.stub(),
+                "deleteExistUser" : sinon.stub(),
                 "getInsertObjectFromPostData" : sinon.stub(),
                 "getShowObjectFromGetData" : sinon.stub(),
-                "getDeleteObjectFromGetData" : sinon.stub(), 
+                "getDeleteObjectFromPostData" : sinon.stub(), 
                 "addActivityLog2Database" : sinon.stub(),
                 "getListOfActivityLogWhereDeviceKey" : sinon.stub(),
                 "deleteActivityLogWhereDeviceKey" : sinon.stub()
@@ -460,6 +461,77 @@ describe( "activitylog.js", function(){
         it("異常系::addActivityLog～（）の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。
     });
 
+    describe("::api_v1_activitylog_delete()",function(){
+        var stubs;
+        var api_v1_activitylog_delete = activitylog.api_v1_activitylog_delete;
+
+        /**
+         * @type beforeEachで初期化される。
+         */
+        beforeEach(function(){ // 内部関数をフックする。
+            stubs = COMMON_STUB_MANAGER.createStubs();
+
+            COMMON_STUB_MANAGER.hookInstance( activitylog, stubs );
+        });
+        afterEach(function(){
+            COMMON_STUB_MANAGER.restoreOriginal( activitylog );
+        });
+
+        // ここからテスト。
+        it("正常系", function(){
+            var queryFromGet = null;
+            var dataFromPost = { "here" : "is スルーパス、なので何でも良い" };
+            var EXPECTED_CONVERTED_PARAM = { 
+                "device_key" : "これは識別キー。必ず必要",
+                "pass_key"   : "これもセットで識別する。",
+                "date_start" : "2017-12-01", // queryGetに無い場合でも、getDeleteObjectFromPostData()でデフォルトを生成する。
+                "date_end"   : "2017-12-14"  // 上同。
+            };
+            var EXPECTED_MAX_COUNT = 32;
+            var EXPECTED_DELETED = {
+                "number_of_logs" : "これ返す？"
+            };
+
+            stubs.sql_parts.createPromiseForSqlConnection.withArgs( TEST_CONFIG_SQL ).returns( Promise.resolve() );
+            stubs.sql_parts.closeConnection.onCall(0).returns( Promise.resolve() );
+            stubs.sql_parts.isOwnerValid.onCall(0).returns(
+                Promise.resolve( EXPECTED_MAX_COUNT )
+            );
+            stubs.sql_parts.getDeleteObjectFromPostData.withArgs(dataFromPost).returns( EXPECTED_CONVERTED_PARAM );
+            stubs.sql_parts.deleteActivityLogWhereDeviceKey.onCall(0).returns(
+                Promise.resolve( EXPECTED_DELETED )
+            );
+
+            return shouldFulfilled(
+                api_v1_activitylog_delete( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                var deletedResponse = stubs.sql_parts.deleteActivityLogWhereDeviceKey;
+                
+                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce, "createPromiseForSqlConnection()が1度呼ばれる" );
+                assert( stubs.sql_parts.closeConnection.calledOnce );
+                assert( stubs.sql_parts.isOwnerValid.calledOnce );
+                expect( result ).to.be.exist;
+                expect( result ).to.have.property("jsonData");
+                expect( result ).to.have.property("status").to.equal(200);
+                // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
+
+                /*
+                assert( stubs.sql_parts.getInsertObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
+                expect( stubs.sql_parts.getInsertObjectFromPostData.getCall(0).args[0] ).to.equal(dataFromPost);
+
+                assert( deletedResponse.calledOnce, "SQLへのログ削除クエリー。deleteActivityLogWhereDeviceKey()が1度呼ばれること。" );
+                expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+                expect( deletedResponse.getCall(0).args[2] ).to.equal( EXPECTED_CONVERTED_PARAM.type_value );
+
+                expect( result.jsonData ).to.have.property( "device_key" );
+                // jsonData.resultには文字列が入るが、特に規定はしない。
+                */
+            });
+        });
+        it("異常系::deleteActivityLogWhereDeviceKey()の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。
+    });
+    
 });
 /*
     参照先Webページメモ

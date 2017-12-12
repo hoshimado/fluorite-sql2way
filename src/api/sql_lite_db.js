@@ -449,6 +449,14 @@ exports.getListOfActivityLogWhereDeviceKey = getListOfActivityLogWhereDeviceKey;
 
 
 
+exports.getDeleteObjectFromPostData = function(){
+	return {
+		"date_start" : "2017-mm-dd", // queryGetに無い場合でも、getDeleteObjectFromPostData()でデフォルトを生成する。
+		"date_end"   : "2017-mm-dd"  // 上同。
+	};
+};
+
+
 var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
 	return Promise.reject();
 };

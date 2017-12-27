@@ -226,6 +226,37 @@ describe( "activitylog.js", function(){
                 expect( result ).to.have.property( "status" ).to.equal( 200 );
             });
         });
+        it("正常系：既存ユーザーだが、パスワードが異なる。", function(){
+            var queryFromGet = null;
+            var dataFromPost = { 
+                "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
+                "passkey"  : "imposter_faker"
+            };
+            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
+            stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
+            stubs.sql_parts.isOwnerValid.onCall(0).returns(
+                Promise.reject({
+                    "isDevicePermission" : false,
+                    "isUserExist" : true
+                })
+            );
+
+            return shouldFulfilled(
+                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
+                assert( stubs.sql_parts.isOwnerValid.calledOnce );
+                expect( stubs.sql_parts.getNumberOfUsers.callCount ).to.equal( 0, "getNumberOfUsers()が呼ばれてないこと" );
+                expect( stubs.sql_parts.addNewUser.callCount ).to.equal( 0, "addNewUser()が呼ばれてないこと" );
+                assert( stubs.sql_parts.closeConnection.calledOnce );
+
+                expect( result.jsonData ).to.have.property( "errorMessage" );
+                expect( result.jsonData.errorMessage ).to.equal("The username is already in use.");
+                expect( result ).to.have.property( "status" ).to.equal( 200 ); // ToDo：これって妥当か？エラーなので、4xxを返すべきでは？
+            });
+        });
 
         it("異常系：ユーザー数が上限に達した", function(){
             var queryFromGet = null;
@@ -252,13 +283,13 @@ describe( "activitylog.js", function(){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
                 assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
-                expect( stubs.sql_parts.addNewUser.callCount ).to.equal( 0, "呼ばれてないこと" );
+                expect( stubs.sql_parts.addNewUser.callCount ).to.equal( 0, "addNewUser()が呼ばれてないこと" );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
 
                 expect( result ).to.have.property( "jsonData" );
                 expect( result.jsonData ).to.have.property( "errorMessage" );
                 expect( result.jsonData.errorMessage ).to.equal("Number of users is over.");
-                expect( result ).to.have.property( "status" ).to.equal( 200 );
+                expect( result ).to.have.property( "status" ).to.equal( 200 ); // ToDo：これって妥当か？エラーなので、4xxを返すべきでは？
             });
         });
     });

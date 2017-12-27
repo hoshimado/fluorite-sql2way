@@ -142,6 +142,11 @@ describe( "sql_lite_db_test.js", function(){
             });
         });
         it("異常系::識別キーは在ったが、パスワードが異なる");
+        // "isDevicePermission" : false,
+        // "isUserExist" : true
+        it("異常系::識別キー自体が無い");
+        // "isDevicePermission" : false,
+        // "isUserExist" : false
     });
     describe( "::getListOfActivityLogWhereDeviceKey()",function(){
         var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;

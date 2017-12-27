@@ -336,11 +336,20 @@ var isOwnerValid = function( databaseName, deviceKey, password ){
 
 		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
 			if(!err){
-				if( (rows.length > 0) && (wrappedPassWord == rows[0].password) ){
-					resolve( rows[0].max_entrys );
+				if( rows.length > 0 ){
+					if(wrappedPassWord == rows[0].password){
+						resolve( rows[0].max_entrys );
+						
+					}else{
+						reject({
+							"isDevicePermission" : false,
+							"isUserExist" : true
+						});
+					}
 				}else{
 					reject({
-						"isDevicePermission" : false
+						"isDevicePermission" : false,
+						"isUserExist" : false
 					});
 				}
 			}else{

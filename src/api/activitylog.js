@@ -260,8 +260,6 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 
 				return addNewUser( config.database, inputData.device_key, max_count, inputData.pass_key );
 			});
-		}).catch((err)=>{
-			console.log(err)
 		});
 	}).then((result)=>{
 		var insertedData = {
@@ -287,9 +285,9 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 					"status" : httpStatus
 				});
 			});		
-		})
+		});
 	});
-}
+};
 
 
 

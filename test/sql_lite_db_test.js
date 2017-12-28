@@ -141,12 +141,78 @@ describe( "sql_lite_db_test.js", function(){
                 
             });
         });
-        it("異常系::識別キーは在ったが、パスワードが異なる");
-        // "isDevicePermission" : false,
-        // "isUserExist" : true
-        it("異常系::識別キー自体が無い");
-        // "isDevicePermission" : false,
-        // "isUserExist" : false
+        it("異常系::識別キーは在ったが、パスワードが異なる", function(){
+            var databaseName = sqlConfig.database;
+            var deviceKey = "にゃ～ん";
+            var passwordInput   = "パスワードが不正な場合のテスト";
+            var passwordCorrect = "正しいパスワード（）";
+            var expectedMaxCount = 32;
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub()
+            .callsFake( function(str){ return str; } );
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            
+            dbs[ databaseName ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, null, [{
+                "owners_hash" : deviceKey,
+                "password" : passwordCorrect, 
+                "max_entrys" : expectedMaxCount
+            }]);
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            return shouldRejected(
+                isOwnerValid( databaseName, deviceKey, passwordInput )
+            ).catch(function (result) {
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_wrapperStr.withArgs( passwordInput ).calledOnce );
+                assert( stub_instance.calledOnce );
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "SELECT owners_hash, password, max_entrys " 
+                    + "FROM owners_permission "
+                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.have.property( "isDevicePermission" ).to.equal( false );
+                expect( result ).to.have.property( "isUserExist" ).to.equal( true );
+            });
+        });
+        it("異常系::識別キー自体が無い", function(){
+            var databaseName = sqlConfig.database;
+            var deviceKey = "そもそも登録されてないキー";
+            var password   = "パスワードの正当性は問わない";
+            var expectedMaxCount = 32;
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub()
+            .callsFake( function(str){ return str; } );
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            
+            dbs[ databaseName ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, null, []); // SQL実行結果が「空」。
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            return shouldRejected(
+                isOwnerValid( databaseName, deviceKey, password )
+            ).catch(function (result) {
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_wrapperStr.withArgs( password ).calledOnce );
+                assert( stub_instance.calledOnce );
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "SELECT owners_hash, password, max_entrys " 
+                    + "FROM owners_permission "
+                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.have.property( "isDevicePermission" ).to.equal( false );
+                expect( result ).to.have.property( "isUserExist" ).to.equal( false );
+            });
+        });
+        it("異常系：SQL実行エラー");
     });
     describe( "::getListOfActivityLogWhereDeviceKey()",function(){
         var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;

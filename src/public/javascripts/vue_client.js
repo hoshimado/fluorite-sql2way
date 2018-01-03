@@ -152,6 +152,17 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                     this.processingDivStyle.display = "none";
                 });
             },
+            "deleteLastData" : function(){
+                var promise = client_lib.deleteLastActivityDataInAccordanceWithGrid( this.gridData );
+
+                this.actionButtonDivStyle.display = "none";
+                this.processingDivStyle.display = "block";
+                promise.then(()=>{
+                    alert("Undoは未実装" );
+                    this.actionButtonDivStyle.display = "block";
+                    this.processingDivStyle.display = "none";
+                });
+            },
             "refreshData" : function() {
                 // 読み込み中、の表示を出す。
                 this.lodingSpinnerDivStyle.display = "block";
@@ -382,15 +393,16 @@ console.log( "fake_axios!" );
     }
     return promise.then(function(result){
         var responsedata = result.data;
-(function (array) { // デバッグ用。
-    var str, i , n = array.length;
-    for(i=0;i<n;i++){
-        str = "[" + array[i].created_at + " - ";
-        str += array[i].type + "]";
-        console.log( str );
-    }
-}(responsedata.table));
-        console.log( responsedata.table );
+        /*
+        (function (array) { // デバッグ用。
+            var str, i , n = array.length;
+            for(i=0;i<n;i++){
+                str = "[" + array[i].created_at + " - ";
+                str += array[i].type + "]";
+                console.log( str );
+            }
+        }(responsedata.table));
+        */
         return Promise.resolve( responsedata.table );     
         // 正常応答のフォーマットは、以下の公式さんを参照の事。
         // https://github.com/axios/axios#response-schema
@@ -406,6 +418,7 @@ var _addActivityDataInAccordanceWithAccountVue = function( typeValue ){
     var promise;
     var savedUserName = client_lib.vueAccountInstance.userName;
     var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
+
     if( (savedUserName != null) && (savedUserName.length > 10) ){
 console.log( "axios act!" ); // ←↑この辺は、テスト用。暫定。
         promise = axiosInstance.post(
@@ -436,7 +449,22 @@ console.log( responsedata );
         return Promise.resolve( responsedata );     
     })
 };
+var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
+    var url = "./api/v1/activitylog/add";
+    var axiosInstance = client_lib.axios;
+    var promise;
+    var savedUserName = client_lib.vueAccountInstance.userName;
+    var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
 
+    promise = new Promise((resolve,reject)=>{
+        // これはモック。
+        setTimeout(() => {
+            resolve();
+        }, 2000);
+    });
+
+    return promise;
+};
 
 
 
@@ -448,7 +476,8 @@ var client_lib = {
     "modifyTimezoneInActivityList" : _modifyTimezoneInActivityList,
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
-    "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue
+    "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue,
+    "deleteLastActivityDataInAccordanceWithGrid" : _deleteLastActivityDataInAccordanceWithGrid
 };
 
 // typeof window !== 'undefined'
@@ -465,7 +494,13 @@ if( this.window ){
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
         account_lib.initialize( browserThis );
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
+
         client_lib["vueAccountInstance"] = _vueAppSetup( CREATE_VUE_INSTANCE, client_lib, account_lib );
+        // 上記の _vueAppSetup()が返すVue.jsインスタンスは、以下を持つ（dataプロパティ名は省略してアクセス可能。
+        // data: {
+        //    "userName": "",
+        //    "passKeyWord" : ""
+        // },
     };
 
 
@@ -476,6 +511,7 @@ if( this.window ){
     exports.vueAppSetup = _vueAppSetup;
     
     exports.promiseCreateAccount = _promiseCreateAccount;
+    client_lib["axios"] = null; // テスト環境では定義しない。テスト側で適切にfookすること。
     exports.client_lib = client_lib;
 }
 

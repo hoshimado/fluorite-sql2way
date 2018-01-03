@@ -34,7 +34,7 @@ var TEST_CONFIG_SQL = { // テスト用
 // var isOwnerValid = function( databaseName, deviceKey ){
 // exports.closeConnection = closeConnection;
 
-describe( "sql_lite_db_test.js", function(){
+describe( "sql_lite_db_test_actual.js", function(){
     var createPromiseForSqlConnection = sql_parts.createPromiseForSqlConnection;
     var isOwnerValid = sql_parts.isOwnerValid;
     var closeConnection = sql_parts.closeConnection;

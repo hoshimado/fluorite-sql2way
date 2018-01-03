@@ -22,7 +22,7 @@ body {
  * ボタンの装飾。https://saruwakakun.com/html-css/reference/buttons
  */
 .square_btn{
-  width: 120px;
+  width: 96px;
   text-align: center;
   display: inline-block;
   padding: 0.5em 1em;

@@ -4,6 +4,7 @@
 */
 
 var chai = require("chai");
+var assert = chai.assert;
 var expect = chai.expect;
 var sinon = require("sinon");
 var promiseTestHelper = require("promise-test-helper");
@@ -34,17 +35,63 @@ describe("TEST for vue_client.js", function(){
         it('construct', function(){
             var setVueComponentGrid = target.setVueComponentGrid( stub_static_vue );
 
-console.log( stub_static_vue.component.getCall(0).args[0] );
-console.log( stub_static_vue.component.getCall(0).args[1] );
+            assert( stub_static_vue.component.getCall(0).args );
+            expect( stub_static_vue.component.getCall(0).args[0] ).to.equal("vue-my-element-grid");
+
+            var args1 = stub_static_vue.component.getCall(0).args[1];
+            expect( args1 ).to.have.property("template").to.equal("#grid-template");
+            expect( args1 ).to.have.property("props");
+            expect( args1.props ).to.have.property( "data" ); // "[Function: Array]"であることの検証は、、、Skip
+            expect( args1.props ).to.have.property( "columns"); // "[Function: Array]"であることの検証は、、、Skip
+            expect( args1 ).to.have.property("computed"); // "[Function]"であることの検証は、、、Skip
         });
     });
     describe("::vueAppGrid()",function(){
         it('construct', function(){
             var vueAppGrid = target.vueAppGrid( stub_vue );
 
+            expect( stub_vue.callCount ).to.equal( 1, "（今の設計では）vueAppGrid()が1回だけ呼ばれること。" )
             expect( stub_vue.getCall(0).args[0] ).to.be.exist;
-            // ToDo: 2回以上呼ばれる場合、区別せずにチェックする方法なかったっけ？
-console.log( stub_vue.getCall(0).args[0] );
+
+            //  el: '#app_grid',
+            //  data:
+            //   { searchQuery: '',
+            //     gridColumns: [ 'time', 'activity' ],
+            //     gridData: [],
+            //     TEXT_GETUP: '起きた',
+            //     TEST_GOTOBED: '寝る',
+            //     chartIconColorBar: 'color:#4444ff',
+            //     chartIconColorLine: 'color:#aaaaaa',
+            //     lodingSpinnerDivStyle: { display: 'block' },
+            //     normalShownDivStyle: { display: 'none' },
+            //     lastLoadedActivityData: null,
+            //     actionButtonDivStyle: { display: 'none' },
+            //     processingDivStyle: { display: 'none' } },
+            //  methods:
+            //   { getGridData: [Function],
+            //     noticeGotUp: [Function],
+            //     noticeGotoBed: [Function],
+            //     refreshData: [Function],
+            //     setChartStyleLine: [Function],
+            //     setChartStyleBar: [Function] },
+            //  mounted: [Function] }
+            // 
+            var args0 = stub_vue.getCall(0).args[0];
+            expect( args0 ).to.have.property("el").to.equal("#app_grid");
+            expect( args0 ).to.have.property("data");
+            expect( args0 ).to.have.property("methods");
+            expect( args0 ).to.have.property("mounted");
+
+            // 不安なところだけテストする。
+            // ⇒ html側に記載する呼び出し関数は、無いとVue.js描画がエラーするのでチェックする。
+            var methods = args0.methods;
+            expect( methods ).to.have.property("getGridData");
+            expect( methods ).to.have.property("noticeGotUp");
+            expect( methods ).to.have.property("noticeGotoBed");
+            expect( methods ).to.have.property("refreshData");
+            expect( methods ).to.have.property("setChartStyleLine");
+            expect( methods ).to.have.property("setChartStyleBar");
+            expect( methods ).to.have.property("deleteLastData");
         });
 
     });

@@ -477,7 +477,7 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
         // これはモック。
         setTimeout(() => {
             reject();
-        }, 2000);
+        }, 1000);
     });
 
     return promise;

@@ -20,7 +20,9 @@ describe("TEST for vue_client.js", function(){
 	beforeEach(()=>{ // フック前の関数を保持する。
 		original = {
             "vueAccountInstance" : target.client_lib.vueAccountInstance,
-            "axios" : target.client_lib.axios
+            "axios" : target.client_lib.axios,
+            "isServerTimeZoneGMT" : target.client_lib.isServerTimeZoneGMT,
+            "convertTimezoneInActivityList" : target.client_lib.convertTimezoneInActivityList
         };
 
         stub_vue = sinon.stub();
@@ -39,6 +41,8 @@ describe("TEST for vue_client.js", function(){
 
         target.client_lib.vueAccountInstance = original.vueAccountInstance;
         target.client_lib.axios = original.axios;
+        target.client_lib.isServerTimeZoneGMT = original.isServerTimeZoneGMT;
+        target.client_lib.convertTimezoneInActivityList = original.convertTimezoneInActivityList;
 	});
 
     describe("::setVueComponentGrid()",function(){
@@ -217,10 +221,10 @@ describe("TEST for vue_client.js", function(){
             });
         });
     });
-    describe("::deleteLastActivityDataInAccordanceWithGrid() - 2秒かかる", function(){
-        it("正常系：仕様検討これから", function(){
+    describe("::deleteLastActivityDataInAccordanceWithGrid()", function(){
+        it("正常系：サーバー側のタイムゾーンはGMT", function(){
             var deleteLastActivityDataInAccordanceWithGrid = target.client_lib.deleteLastActivityDataInAccordanceWithGrid;
-            var gridArray = [
+            var fakeGridArray = [
                 { "created_at" : "2017-10-13 01:00:00.000", "type" : 101 },
                 { "created_at" : "2017-10-13 06:00:00.000", "type" : 101 },
                 { "created_at" : "2017-10-13 23:45:00.000", "type" : 101 },
@@ -230,10 +234,28 @@ describe("TEST for vue_client.js", function(){
                 { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
                 { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }                
             ];
+            var spied_isServerTimeZoneGMT = sinon.stub()
+            .callsFake(()=>{ return true; }); // サーバー側は「GMT」判定を返すとする。
+            var spied_convertTimezoneInActivityList = sinon.spy( target.client_lib.convertTimezoneInActivityList );
+            target.client_lib.isServerTimeZoneGMT = spied_isServerTimeZoneGMT;
+            target.client_lib.convertTimezoneInActivityList = spied_convertTimezoneInActivityList;
 
             // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
             stub_fooked_axios["get"] = sinon.stub();
-            stub_fooked_axios["post"] = sinon.stub();
+            stub_fooked_axios["post"] = sinon.stub()
+            .callsFake((url, postData)=>{
+                // postData = {
+                //    "device_key" : savedUserName,
+                //    "pass_key" : savedPassKey,
+                //    "type_value" : typeValue
+                //}
+                return Promise.resolve({
+                    "data" : {
+                        "result" : "結果データ",
+                        "device_key" : "渡したデバイスキー"
+                    }
+                });
+            });
 
             // client_lib.vueAccountInstance には、beforeEach(), afterEach() にて、
             // 以下を設定済み。
@@ -245,9 +267,17 @@ describe("TEST for vue_client.js", function(){
             // },
             
             return shouldFulfilled(
-                deleteLastActivityDataInAccordanceWithGrid()
+                deleteLastActivityDataInAccordanceWithGrid( fakeGridArray )
             ).then(function(){
-                assert(true); // 未実装
+                expect( spied_isServerTimeZoneGMT.callCount ).to.equal( 1, "isServerTimeZoneGMT()を1度呼ぶこと" );
+                expect( spied_convertTimezoneInActivityList.callCount).to.equal( 1, "convertTimezoneInActivityList()を1度呼ぶこと" );
+                expect( spied_convertTimezoneInActivityList.getCall(0).args[0] ).to.deep.equal( fakeGridArray );
+                expect( spied_convertTimezoneInActivityList.getCall(0).args[1] ).to.equal( -9 );
+
+                var stub_post = stub_fooked_axios.post;
+                expect( stub_fooked_axios.get.callCount ).to.equal( 0, "axios.get()は呼ばれないこと。" )
+                expect( stub_post.getCall(0).args[0] ).to.equal("./api/v1/activitylog/delete");
+
             });
         });
     });

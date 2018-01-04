@@ -122,6 +122,17 @@ router.post("/add", function(req, res, next){
 	});
 });
 
+router.post("/delete", function(req, res, nest) {
+	var api_v1_activitylog_delete = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_delete;
+	var dataPost = req.body;
+	
+	return api_v1_activitylog_delete( null, dataPost).then((result)=>{
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
+	});
+})
+
 
 
 

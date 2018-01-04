@@ -290,6 +290,36 @@ describe( "sql_lite_db_test.js", function(){
     });
     describe( "::deleteActivityLogWhereDeviceKey()",function(){
         it("正常系");
+/*
+                expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+                expect( deletedResponse.getCall(0).args[2] ).to.deep.equal({
+                    "start" : EXPECTED_CONVERTED_PARAM.date_start,
+                    "end"   : EXPECTED_CONVERTED_PARAM.date_end
+                });
+
+                var EXPECTED_QUERY_STR = "DELETE FROM [";
+                EXPECTED_QUERY_STR += TEST_DATABASE_NAME;
+                EXPECTED_QUERY_STR += "].dbo.batterylogs WHERE [owners_hash]='";
+                EXPECTED_QUERY_STR += EXPECTED_DEVICE_KEY;
+                EXPECTED_QUERY_STR += "' AND [created_at] > '";
+                EXPECTED_QUERY_STR += EXPECTED_PERIOD.start;
+                EXPECTED_QUERY_STR += "' AND [created_at] <= '";
+                EXPECTED_QUERY_STR += EXPECTED_PERIOD.end;
+                EXPECTED_QUERY_STR += " 23:59'"; // その日の最後、として指定する。
+                // DELETE FROM [tinydb].dbo.batterylogs WHERE [owners_hash]='xxxx' AND [created_at] > '2017/04/04' AND [created_at] <= '2017/04/09 23:59'
+
+INSERT INTO activitylogs([created_at], [type], [owners_hash] ) VALUES('2018/01/04 18:44:00.000', 111, 'nyan1nyan2nyan3nayn4nayn5nyan6ny');
+DELETE FROM activitylogs WHERE [owners_hash]='nyan1nyan2nyan3nayn4nayn5nyan6ny' AND [created_at] > '2018/01/01' AND [created_at] <= '2018/01/03 23:59';
+DELETE FROM activitylogs WHERE [owners_hash]='nyan1nyan2nyan3nayn4nayn5nyan6ny' AND [created_at] > '2018/01/01' AND [created_at] <= '2018/01/04 23:59';
+SELECT * FROM activitylogs;
+
+                assert( stub_query.calledOnce, "query()が1度だけ呼ばれること" );
+                expect( stub_query.getCall(0).args[0].replace(/ +/g,' ') ).to.equal(
+                    EXPECTED_QUERY_STR
+                )                
+
+*/
     });
 
 

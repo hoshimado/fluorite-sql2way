@@ -546,18 +546,21 @@ describe( "activitylog.js", function(){
                 expect( result ).to.have.property("status").to.equal(200);
                 // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
 
-                /*
-                assert( stubs.sql_parts.getInsertObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
-                expect( stubs.sql_parts.getInsertObjectFromPostData.getCall(0).args[0] ).to.equal(dataFromPost);
-
+                assert( stubs.getDeleteObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
+                expect( stubs.getDeleteObjectFromPostData.getCall.args[0]).to.equal( dataFromPost );
                 assert( deletedResponse.calledOnce, "SQLへのログ削除クエリー。deleteActivityLogWhereDeviceKey()が1度呼ばれること。" );
                 expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
-                expect( deletedResponse.getCall(0).args[2] ).to.equal( EXPECTED_CONVERTED_PARAM.type_value );
+                expect( deletedResponse.getCall(0).args[2] ).to.deep.equal({
+                    "start" : EXPECTED_CONVERTED_PARAM.date_start,
+                    "end"   : EXPECTED_CONVERTED_PARAM.date_end
+                });
 
-                expect( result.jsonData ).to.have.property( "device_key" );
-                // jsonData.resultには文字列が入るが、特に規定はしない。
-                */
+                // resultオブジェクトがjsonDataメンバを持つことは、先に検証済み。
+                expect( result.jsonData ).to.have.property( "device_key" )
+                .to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+                expect( result.jsonData ).to.have.property( "number_of_logs" )
+                .to.equal( EXPECTED_DELETED.number_of_logs );
             });
         });
         it("異常系::deleteActivityLogWhereDeviceKey()の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。

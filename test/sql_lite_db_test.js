@@ -253,7 +253,7 @@ describe( "sql_lite_db_test.js", function(){
     });
     describe( "::addActivityLog2Database()", function () {
         var addActivityLog2Database = sql_parts.addActivityLog2Database;
-        it("正常系", function () {
+        it("正常系：時刻指定はさせない仕様（内部時間を利用する）", function () {
             var deviceKey = "にゃーん。";
             var typeOfAction = "111";
             var dbs = sql_parts.factoryImpl.db.getInstance();
@@ -274,6 +274,7 @@ describe( "sql_lite_db_test.js", function(){
 
                 assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
                 assert( stub_instance.calledOnce );
+
                 var called_args = stub_instance.getCall(0).args;
                 expect( called_args[0] ).to.equal(
                     "INSERT INTO activitylogs(created_at, type, owners_hash ) " 
@@ -289,7 +290,38 @@ describe( "sql_lite_db_test.js", function(){
         });
     });
     describe( "::deleteActivityLogWhereDeviceKey()",function(){
-        it("正常系");
+        var deleteActivityLogWhereDeviceKey = sql_parts.deleteActivityLogWhereDeviceKey;
+        it("正常系",function(){
+            var deviceKey = "にゃーん。";
+            var period = {
+                "start" : "2018-01-02 10:00:00.000",
+                "end"   : "2018-01-03 20:00:00.000"
+            };
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub().callsFake( function(str){ return str; } );
+            
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, /* err= */null, /* rows= */null); // 【未確認だが、コレのハズ】
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            return shouldFulfilled(
+                sql_parts.deleteActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
+            ).then(function(result){
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_instance.calledOnce );
+
+                var called_args = stub_instance.getCall(0).args;
+                // expect( called_args[0] ).to.equal();
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.deep.equal({
+                    "number_of_logs" : "これ返す？" // 【Todo】ってやると、getNumberの呼び出しが別途必要になる？
+                });
+            });
+
+        });
 /*
                 expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );

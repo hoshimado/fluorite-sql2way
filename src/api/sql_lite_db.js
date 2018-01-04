@@ -476,7 +476,7 @@ exports.getDeleteObjectFromPostData = function(){
 var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
 	return Promise.reject();
 };
-exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey();
+exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey;
 
 
 

@@ -17,7 +17,7 @@
 
 .modal-container {
   width: 240px;
-  height: 120px; /* ここ、オートスケール出来ないんだっけ？ */
+  height: 196px; /* ここ、オートスケール出来ないんだっけ？ */
   margin: 0px auto;
   padding: 20px 30px;
   background-color: #fff;

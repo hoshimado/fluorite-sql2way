@@ -100,7 +100,9 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "getGridData" : function() {
                 var promise = client_lib.getActivityDataInAccordanceWithAccountVue();
                 return promise.then((resultArray)=>{
-                    var localtimedArray = client_lib.modifyTimezoneInActivityList( resultArray );
+                    var localtimedArray = (client_lib.isServerTimeZoneGMT()) 
+                        ? client_lib.convertTimezoneInActivityList( resultArray, +9 ) // JST = +9.
+                        : resultArray;
                     var grid_activity_data = client_lib.convertActivityList2GridData( localtimedArray );
                     this.gridData = grid_activity_data.slice(0, 6);
                     // ↑カットオフ入れてる。最大６つまで、で。
@@ -216,7 +218,8 @@ var _vueAppSetup = function( createVueInstance ){
         el: "#app_setup",
         data: {
             "userName": "",
-            "passKeyWord" : ""
+            "passKeyWord" : "",
+            "isNoticeDialogForUpdateInfo" : false
         },
         computed : {
             "userNameIsValid" : function(){
@@ -259,6 +262,8 @@ var _vueAppSetup = function( createVueInstance ){
             var savedPassKey = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
             this.userName = savedUserName;
             this.passKeyWord = savedPassKey;
+
+            this.isNoticeDialogForUpdateInfo = !savedUserName || !savedPassKey;
         }
     });
     return app_setup;
@@ -318,20 +323,16 @@ if( !this.window ){
 /**
  * 動作ドメイン「azurewebsites.net/」で判別して、GMT→JST補正する。
  */
-var convertGMT2JST = function( dateStr ){
-    var dt;
-    var TIME_ZONE = 9; // JST
-    if( window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0) ){
-    dt = new Date( dateStr );
-        dt.setHours(dt.getHours() + TIME_ZONE);
-        dateStr = dt.toLocaleString();
-    }
-    return dateStr;
+var _isServerTimeZoneGMT = function(){
+    return window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0);
 };
-var _modifyTimezoneInActivityList = function( typeArray ){
+var _convertTimezoneInActivityList = function( typeArray, addTimeZoneValue ){
     var n = typeArray.length
+    var dt;
     while( 0<n-- ){
-        typeArray[n].created_at = convertGMT2JST( typeArray[n].created_at );
+        dt = new Date( typeArray[n].created_at );
+        dt.setHours(dt.getHours() + addTimeZoneValue );
+        typeArray[n].created_at = dt.toLocaleString();
     }
     return typeArray;
 };
@@ -489,7 +490,8 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
 // ----------------------------------------------------------------------
 var client_lib = {
     "tinyCookie" : _tinyCookie,
-    "modifyTimezoneInActivityList" : _modifyTimezoneInActivityList,
+    "convertTimezoneInActivityList" : _convertTimezoneInActivityList,
+    "isServerTimeZoneGMT" : _isServerTimeZoneGMT,
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
     "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue,

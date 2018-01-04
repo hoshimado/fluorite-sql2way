@@ -89,8 +89,7 @@
               </div>
 
               <div class="modal-footer">
-                <slot name="footer">
-                  default footer
+                <slot name="footer"><!-- default footer -->
                   <button class="modal-default-button" @click="$emit('close')">
                     OK
                   </button>
@@ -128,6 +127,20 @@
         <input id="id_passkeyword" type="password" v-model="passKeyWord"><br>
         <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
         <br><br>
+        <!-- dialog with using the modal component, pass in the prop -->
+        <!-- 以下のダイアログ用のタグは、先行するmodal-templateにて登録済み。 -->
+        <modal v-if="isNoticeDialogForUpdateInfo" @close="isNoticeDialogForUpdateInfo = false">
+          <!--
+            you can use custom content here to overwrite
+            default content.
+            ref. https://jp.vuejs.org/v2/examples/modal.html
+          -->
+          <h3 slot="header">利用開始ダイアログ</h3>
+          <span slot="body">
+            初めての利用、もしくはキャッシュ保持期限が切れています。
+            ユーザーIDとパスワードを（再）入力して「登録」ボタンを押してください。
+          </span>
+        </modal>
       </div>
     </div>
     <hr>

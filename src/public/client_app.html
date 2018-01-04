@@ -37,7 +37,9 @@
 
     <link rel="stylesheet" type="text/css" href="./stylesheets/client_app.css">
     <link rel="stylesheet" type="text/css" href="./stylesheets/client_app_modal_dialog.css">
-    <!-- component template -->
+    <!-- component template 
+      https://jp.vuejs.org/v2/examples/grid-component.html
+    -->
     <script type="text/x-template" id="grid-template">
       <table>
         <thead>
@@ -65,7 +67,9 @@
         </tbody>
       </table>
     </script>
-    <!-- template for the modal component -->
+    <!-- template for the modal component 
+      https://jp.vuejs.org/v2/examples/modal.html
+    -->
     <script type="text/x-template" id="modal-template">
       <transition name="modal">
         <div class="modal-mask">
@@ -134,7 +138,8 @@
         <!-- close属性は、デフォルト向け。ここでは利用してない。 -->
         <!--
           you can use custom content here to overwrite
-          default content
+          default content.
+          ref. https://jp.vuejs.org/v2/examples/modal.html
         -->
         <h3 slot="header">確認ダイアログ</h3>
         <span slot="body">直前の記録を削除しても良いですか？</span>

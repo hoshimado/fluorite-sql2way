@@ -4,6 +4,11 @@
  */
 
 
+var _setVueModalDialog = function( staticVue ){
+    staticVue.component('modal', {
+        template: '#modal-template'
+    });
+};
 
 var _setVueComponentGrid = function( staticVue ){
     // register the grid component
@@ -88,7 +93,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "normalShownDivStyle"   : {"display" : "none"},
             "lastLoadedActivityData" : null, // 最初は「無し」
             "actionButtonDivStyle" : {"display" : "none"},
-            "processingDivStyle" : {"display" : "none"}
+            "processingDivStyle" : {"display" : "none"},
+            "isConfirmModalDialogForDeletingLastData": false
         },
         methods : {
             "getGridData" : function() {
@@ -152,13 +158,23 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                     this.processingDivStyle.display = "none";
                 });
             },
+            "showModalDialogForDeletingLastData" : function () {
+                this.isConfirmModalDialogForDeletingLastData = true;
+            },
+            "cancelModalDialogForDeletingLastData" : function () {
+                this.isConfirmModalDialogForDeletingLastData = false;
+            },
             "deleteLastData" : function(){
                 var promise = client_lib.deleteLastActivityDataInAccordanceWithGrid( this.gridData );
 
+                this.isConfirmModalDialogForDeletingLastData = false;
+
                 this.actionButtonDivStyle.display = "none";
                 this.processingDivStyle.display = "block";
-                promise.then(()=>{
-                    alert("Undoは未実装" );
+
+                promise.catch(()=>{
+                    alert("失敗しました / 機能は未実装");
+                }).then(()=>{
                     this.actionButtonDivStyle.display = "block";
                     this.processingDivStyle.display = "none";
                 });
@@ -459,7 +475,7 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
     promise = new Promise((resolve,reject)=>{
         // これはモック。
         setTimeout(() => {
-            resolve();
+            reject();
         }, 2000);
     });
 
@@ -489,6 +505,8 @@ if( this.window ){
     var browserThis = this;
     window.onload = function(){
         client_lib["axios"] = (browserThis.window) ? browserThis.axios : {}; // ダミー
+
+        _setVueModalDialog( Vue );
 
         _setVueComponentGrid( Vue );
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。

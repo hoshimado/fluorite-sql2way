@@ -101,6 +101,8 @@ describe("TEST for vue_client.js", function(){
             expect( methods ).to.have.property("refreshData");
             expect( methods ).to.have.property("setChartStyleLine");
             expect( methods ).to.have.property("setChartStyleBar");
+            expect( methods ).to.have.property("showModalDialogForDeletingLastData");
+            expect( methods ).to.have.property("cancelModalDialogForDeletingLastData");
             expect( methods ).to.have.property("deleteLastData");
         });
 
@@ -216,7 +218,7 @@ describe("TEST for vue_client.js", function(){
         });
     });
     describe("::deleteLastActivityDataInAccordanceWithGrid() - 2秒かかる", function(){
-        it("正常系：未だ「関数が存在すること」しかチェックできてない。仕様検討これから", function(){
+        it("正常系：仕様検討これから", function(){
             var deleteLastActivityDataInAccordanceWithGrid = target.client_lib.deleteLastActivityDataInAccordanceWithGrid;
             var gridArray = [
                 { "created_at" : "2017-10-13 01:00:00.000", "type" : 101 },

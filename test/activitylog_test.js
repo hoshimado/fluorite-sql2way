@@ -519,8 +519,9 @@ describe( "activitylog.js", function(){
                 "date_end"   : "2017-12-14"  // 上同。
             };
             var EXPECTED_MAX_COUNT = 32;
+            var EXPECTED_LAST_COUNT = 16;
             var EXPECTED_DELETED = {
-                "number_of_logs" : "これ返す？"
+                "number_of_logs" : EXPECTED_LAST_COUNT
             };
 
             stubs.sql_parts.createPromiseForSqlConnection.withArgs( TEST_CONFIG_SQL ).returns( Promise.resolve() );
@@ -530,9 +531,15 @@ describe( "activitylog.js", function(){
             );
             stubs.sql_parts.getDeleteObjectFromPostData.withArgs(dataFromPost).returns( EXPECTED_CONVERTED_PARAM );
             stubs.sql_parts.deleteActivityLogWhereDeviceKey.onCall(0).returns(
-                Promise.resolve( EXPECTED_DELETED )
+                Promise.resolve()
             );
-
+            stubs.sql_parts.getNumberOfUsers.onCall(0).returns(
+                Promise.resolve( EXPECTED_LAST_COUNT )
+            );
+            // var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
+            // var promise = getNumberOfUsers( config.database );
+            // promise.then((nowNumberOfUsers)=>{
+        
             return shouldFulfilled(
                 api_v1_activitylog_delete( queryFromGet, dataFromPost )
             ).then(function( result ){

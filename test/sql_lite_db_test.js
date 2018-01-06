@@ -323,7 +323,7 @@ describe( "sql_lite_db_test.js", function(){
                 EXPECTED_QUERY_STR += deviceKey;
                 EXPECTED_QUERY_STR += "' AND [created_at] <= '";
                 EXPECTED_QUERY_STR += period.end;
-                EXPECTED_QUERY_STR += "'"; // 与えられた指定をそのままとする。
+                EXPECTED_QUERY_STR += "'";
 
                 assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
                 assert( stub_instance.calledOnce );
@@ -360,7 +360,7 @@ describe( "sql_lite_db_test.js", function(){
                 EXPECTED_QUERY_STR += period.start;
                 EXPECTED_QUERY_STR += "' AND [created_at] <= '";
                 EXPECTED_QUERY_STR += period.end;
-                EXPECTED_QUERY_STR += "'"; // 与えられた指定をそのままとする。
+                EXPECTED_QUERY_STR += "'";
 
                 assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
                 assert( stub_instance.calledOnce );
@@ -521,11 +521,11 @@ describe( "sql_lite_db_test.js", function(){
             expect( result ).to.have.property("date_start")
             .to.equal("1969-12-04"); // 「1970-01-01」の4週間前（28日前）が設定されること。
             expect( result ).to.have.property("date_end")
-            .to.equal("1970-01-01"); // 終端は、Query時に「その日の23:59」を指定しているので、ここは「今日の日付」でOK。
+            .to.equal("1970-01-01 23:59:59.999");
 
             // ↓呼び出し順序までは規定したくないのだが、、、やり方が思いつかない。
             expect( spied_isValidDateFormat.getCall(0).args[0] ).to.equal("1969-12-04");
-            expect( spied_isValidDateFormat.getCall(1).args[0] ).to.equal("1970-01-01");
+            expect( spied_isValidDateFormat.getCall(1).args[0] ).to.equal("1970-01-01 23:59:59.999");
         });
         it("正常系：日付での期間指定あり。",function(){
             var clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。

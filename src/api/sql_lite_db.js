@@ -80,7 +80,7 @@ var getShowObjectFromGetData = function( getData ){
 	if( getData[ "device_key" ] ){
 		valid_data[ "device_key" ] = getData["device_key"];
 		valid_data[ "date_start" ] = getData.date_start ? getData.date_start : date_start.toFormat("YYYY-MM-DD"); // data-utilsモジュールでの拡張を利用。
-		valid_data[ "date_end"   ] = getData.date_end ? getData.date_end : date_end.toFormat("YYYY-MM-DD");
+		valid_data[ "date_end"   ] = getData.date_end ? getData.date_end : date_end.toFormat("YYYY-MM-DD") + " 23:59:59.999"; // その日の最後、として指定する。※「T」は付けない（json変換後だと付いてくるけど）;
 		// 終端は、Query時に「その日の23:59」を指定しているので、「今日」でOK。
 
 		if( !isValidDateFormat( valid_data.date_start ) ){
@@ -540,8 +540,7 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 	if( period && period.end ){
 		query_str += " AND [created_at] <= '";
 		query_str += period.end;
-		// 【ToDo】↓ここでの時刻指定の有無は、仕様を再検討。
-		query_str += " 23:59'"; // その日の最後、として指定する。※「T」は付けない（json変換後だと付いてくるけど）
+		query_str += "'";
 	}
 
 	return new Promise(function(resolve,reject){

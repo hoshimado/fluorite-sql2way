@@ -251,6 +251,11 @@ describe( "sql_lite_db_test.js", function(){
             });
         });
     });
+    describe( "::getNumberOfLogs()", function(){
+        var getNumberOfLogs = sql_parts.getNumberOfLogs;
+
+        it("正常系");
+    });
     describe( "::addActivityLog2Database()", function () {
         var addActivityLog2Database = sql_parts.addActivityLog2Database;
         it("正常系：時刻指定はさせない仕様（内部時間を利用する）", function () {
@@ -363,7 +368,7 @@ SELECT * FROM activitylogs;
         var getNumberOfUsers = sql_parts.getNumberOfUsers;
         it("正常系");
     });
-    describe( "deleteExistUser()", function () {
+    describe( ":: deleteExistUser()", function () {
        it("正常系"); 
     });
 

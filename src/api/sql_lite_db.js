@@ -365,6 +365,49 @@ exports.isOwnerValid = isOwnerValid;
 
 
 
+
+/**
+ * 登録済みのログ数を、ユーザー単位で取得する。
+ * 
+ * @param{String} databaseName データベース名
+ * @param{String} 対象のユーザー識別子
+ * @returns{Promise} 検証結果。Promise経由で非同期に返る。
+ */
+var getNumberOfLogs = function( databaseName, deviceKey ){
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+	var wrappedDeviceKey = wrapString( deviceKey );
+
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function(resolve,reject){
+		var query_str = "SELECT count(*) FROM activitylogs";
+		query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
+
+		db.all(query_str, [], (err, rows) => {
+			var item;
+			if(!err){
+				item = rows[0];
+				return resolve( item["count(*)"] );
+			}else{
+				reject({
+					"isEnableValidationProcedure" : false
+				});
+			}
+		});
+	});
+};
+exports.getNumberOfLogs = getNumberOfLogs;
+
+
+
+
+
 /**
  * デバイスキーを識別子として、ユーザーアクションをデータベースに記録する。
  * 記録する時刻は「これが呼ばれた時刻」とする。

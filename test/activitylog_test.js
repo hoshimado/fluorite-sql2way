@@ -1,3 +1,4 @@
+
 /*
 	[activitylog_test.js]
 
@@ -36,6 +37,7 @@ describe( "activitylog.js", function(){
                 "getInsertObjectFromPostData" : sinon.stub(),
                 "getShowObjectFromGetData" : sinon.stub(),
                 "getDeleteObjectFromPostData" : sinon.stub(), 
+                "getNumberOfLogs" : sinon.stub(),
                 "addActivityLog2Database" : sinon.stub(),
                 "getListOfActivityLogWhereDeviceKey" : sinon.stub(),
                 "deleteActivityLogWhereDeviceKey" : sinon.stub()
@@ -449,6 +451,7 @@ describe( "activitylog.js", function(){
                 "type_value" : "101"
             };
             var EXPECTED_MAX_COUNT = 32;
+            var EXPECTED_EXISTING_COUNT_OF_LOGS = 31;
             var EXPECTED_INSERTED = {
                 "device_key" : "これは識別キー。必ず必要",
                 "type_value" : "101"
@@ -459,6 +462,11 @@ describe( "activitylog.js", function(){
             stubs.sql_parts.isOwnerValid.onCall(0).returns(
                 Promise.resolve( EXPECTED_MAX_COUNT )
             );
+
+            stubs.sql_parts.getNumberOfLogs.onCall(0).returns(
+                Promise.resolve( EXPECTED_EXISTING_COUNT_OF_LOGS )
+            );
+
             stubs.sql_parts.getInsertObjectFromPostData.withArgs(dataFromPost).returns( EXPECTED_CONVERTED_PARAM );
             stubs.sql_parts.addActivityLog2Database.onCall(0).returns(
                 Promise.resolve( EXPECTED_INSERTED )
@@ -477,6 +485,10 @@ describe( "activitylog.js", function(){
                 expect( result ).to.have.property("status").to.equal(200);
                 // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
 
+                assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が一度だけ呼ばれること。記録数上限チェックのために必要" );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( stbus.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+
                 assert( stubs.sql_parts.getInsertObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
                 expect( stubs.sql_parts.getInsertObjectFromPostData.getCall(0).args[0] ).to.equal(dataFromPost);
 
@@ -487,6 +499,61 @@ describe( "activitylog.js", function(){
 
                 expect( result.jsonData ).to.have.property( "device_key" );
                 // jsonData.resultには文字列が入るが、特に規定はしない。
+            });
+        });
+        it("異常系::ログ数が、割り当ての上限数を超えているので、Add出来ない⇒失敗を返す", function(){
+            var queryFromGet = null;
+            var dataFromPost = { "here" : "is スルーパス、なので何でも良い" };
+            var EXPECTED_CONVERTED_PARAM = { 
+                "device_key" : "これは識別キー。必ず必要",
+                "pass_key"   : "これもセットで識別する。",
+                "type_value" : "101"
+            };
+            var EXPECTED_MAX_COUNT = 32;
+            var EXPECTED_EXISTING_COUNT_OF_LOGS = 32; // 上限値に達しているケース
+            var EXPECTED_INSERTED = {
+                "device_key" : "これは識別キー。必ず必要",
+                "type_value" : "101"
+            };
+
+            stubs.sql_parts.createPromiseForSqlConnection.withArgs( TEST_CONFIG_SQL ).returns( Promise.resolve() );
+            stubs.sql_parts.closeConnection.onCall(0).returns( Promise.resolve() );
+            stubs.sql_parts.isOwnerValid.onCall(0).returns(
+                Promise.resolve( EXPECTED_MAX_COUNT )
+            );
+
+            stubs.sql_parts.getNumberOfLogs.onCall(0).returns(
+                Promise.resolve( EXPECTED_EXISTING_COUNT_OF_LOGS )
+            );
+
+            stubs.sql_parts.getInsertObjectFromPostData.withArgs(dataFromPost).returns( EXPECTED_CONVERTED_PARAM );
+
+            return shouldFulfilled(
+                api_v1_activitylog_add( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                var addedResponse = stubs.sql_parts.addActivityLog2Database;
+                
+                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
+                assert( stubs.sql_parts.closeConnection.calledOnce );
+                assert( stubs.sql_parts.isOwnerValid.calledOnce );
+                expect( result ).to.be.exist;
+                expect( result ).to.have.property("jsonData");
+                expect( result ).to.have.property("status").to.equal(429); // Too Many Requests(リクエストの回数制限に引っかかる場合など)
+                // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
+
+                assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が一度だけ呼ばれること。記録数上限チェックのために必要" );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( stbus.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+
+                assert( stubs.sql_parts.getInsertObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
+                expect( stubs.sql_parts.getInsertObjectFromPostData.getCall(0).args[0] ).to.equal(dataFromPost);
+
+                expect( addedResponse.callCount).to.equal(0, "addActivityLog2Database()は呼ばれないこと" );
+
+                // エラーが入っている事。
+                expect( result.jsonData ).to.have.property( "failed" )
+                .to.have.property("message")
+                .to.equal("Therer are too many Logs per account.");
             });
         });
         it("異常系::addActivityLog～（）の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。
@@ -520,9 +587,6 @@ describe( "activitylog.js", function(){
             };
             var EXPECTED_MAX_COUNT = 32;
             var EXPECTED_LAST_COUNT = 16;
-            var EXPECTED_DELETED = {
-                "number_of_logs" : EXPECTED_LAST_COUNT
-            };
 
             stubs.sql_parts.createPromiseForSqlConnection.withArgs( TEST_CONFIG_SQL ).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.onCall(0).returns( Promise.resolve() );
@@ -533,12 +597,9 @@ describe( "activitylog.js", function(){
             stubs.sql_parts.deleteActivityLogWhereDeviceKey.onCall(0).returns(
                 Promise.resolve()
             );
-            stubs.sql_parts.getNumberOfUsers.onCall(0).returns(
+            stubs.sql_parts.getNumberOfLogs.onCall(0).returns(
                 Promise.resolve( EXPECTED_LAST_COUNT )
             );
-            // var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
-            // var promise = getNumberOfUsers( config.database );
-            // promise.then((nowNumberOfUsers)=>{
         
             return shouldFulfilled(
                 api_v1_activitylog_delete( queryFromGet, dataFromPost )
@@ -563,11 +624,15 @@ describe( "activitylog.js", function(){
                     "end"   : EXPECTED_CONVERTED_PARAM.date_end
                 });
 
+                assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が1度だけ呼ばれること。" );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+
                 // resultオブジェクトがjsonDataメンバを持つことは、先に検証済み。
                 expect( result.jsonData ).to.have.property( "device_key" )
                 .to.equal( EXPECTED_CONVERTED_PARAM.device_key );
                 expect( result.jsonData ).to.have.property( "number_of_logs" )
-                .to.equal( EXPECTED_DELETED.number_of_logs );
+                .to.equal( EXPECTED_LAST_COUNT );
             });
         });
         it("異常系::deleteActivityLogWhereDeviceKey()の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。

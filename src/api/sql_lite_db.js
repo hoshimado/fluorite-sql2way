@@ -49,6 +49,14 @@ factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
 
 
 
+var _isValidDateFormat = function( targetString ) {
+	return ( 
+		targetString.match(/^\d{4,4}-\d{2,2}-\d{2,2}$/) 
+	 || targetString.match(/^\d{4,4}-\d{2,2}-\d{2,2} \d{2,2}:\d{2,2}:\d{2,2}.\d{3,3}$/) 
+	);
+};
+factoryImpl[ "_isValidDateFormat" ] = new lib.Factory( _isValidDateFormat );
+
 
 /**
  * HTTP::GETデータから、「SHOW操作」に必要なデータ郡を取得。
@@ -59,6 +67,7 @@ factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
  * @returns オブジェクト{ device_key: "" }。フォーマット違反なら{ "invalid" : "理由" }
  */
 var getShowObjectFromGetData = function( getData ){
+	var isValidDateFormat = factoryImpl._isValidDateFormat.getInstance();
 	var valid_data = {};
 	var date_start = (function( pastDay ){
 		var now_date = new Date();
@@ -74,10 +83,10 @@ var getShowObjectFromGetData = function( getData ){
 		valid_data[ "date_end"   ] = getData.date_end ? getData.date_end : date_end.toFormat("YYYY-MM-DD");
 		// 終端は、Query時に「その日の23:59」を指定しているので、「今日」でOK。
 
-		if( !valid_data.date_start.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
+		if( !isValidDateFormat( valid_data.date_start ) ){
 			valid_data[ "invalid" ] = "format of date is wrong.";
 		}
-		if( !valid_data.date_end.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
+		if( !isValidDateFormat( valid_data.date_end ) ){
 			valid_data[ "invalid" ] = "format of date is wrong.";
 		}
 		if( getData["pass_key"] ){
@@ -90,6 +99,53 @@ var getShowObjectFromGetData = function( getData ){
 	return valid_data;
 };
 exports.getShowObjectFromGetData = getShowObjectFromGetData;
+
+
+
+
+/**
+ * HTTP::GETデータから、「Delete操作」に必要なデータ郡を取得。
+ * API呼び出しのフォーマットのチェックを兼ねる。フォーマット不正なら { "invalid" : "理由" } を返却。
+ * 入力データは、getData = { device_key, pass_key } が期待値。
+ * pass_keyは無くともスルーするが、その後の検証フェースでNGになる（見込み）。
+ * 
+ * @returns オブジェクト{ device_key: "" }。フォーマット違反なら{ "invalid" : "理由" }
+ */
+exports.getDeleteObjectFromPostData = function( postedData ){
+	var isValidDateFormat = factoryImpl._isValidDateFormat.getInstance();
+	var valid_data = {};
+	// date_startは指定しない。
+	var date_end = (function( pastDay ){
+		var now_date = new Date();
+		var base_sec = now_date.getTime() - pastDay * 86400000; //日数 * 1日のミリ秒数;
+		now_date.setTime( base_sec );
+		return now_date;
+	}( 28 )); // 4週間前、より以前を削除対象とする、を基本とする。
+
+
+	if( postedData[ "device_key" ] ){
+		valid_data[ "device_key" ] = postedData["device_key"];
+		if( postedData.date_start ){
+			valid_data[ "date_start" ] =  postedData.date_start; // 指定があるときだけ、設定。
+		}
+		valid_data[ "date_end"   ] = postedData.date_end ? postedData.date_end : date_end.toFormat("YYYY-MM-DD");
+		// 終端は、必ず生成。なお、Query時に「その日の23:59」を指定しているので、「今日」でOK。
+
+		if( valid_data.date_start && !isValidDateFormat( valid_data.date_start ) ){
+			valid_data[ "invalid" ] = "format of date is wrong.";
+		}
+		if( !isValidDateFormat( valid_data.date_end ) ){
+			valid_data[ "invalid" ] = "format of date is wrong.";
+		}
+		if( postedData["pass_key"] ){
+			valid_data["pass_key"] = postedData.pass_key;
+		}
+	}else{
+		valid_data[ "invalid" ] = "parameter is INVAILD.";
+	}
+
+	return valid_data;
+};
 
 
 
@@ -501,12 +557,6 @@ exports.getListOfActivityLogWhereDeviceKey = getListOfActivityLogWhereDeviceKey;
 
 
 
-exports.getDeleteObjectFromPostData = function(){
-	return {
-		"date_start" : "2017-mm-dd", // queryGetに無い場合でも、getDeleteObjectFromPostData()でデフォルトを生成する。
-		"date_end"   : "2017-mm-dd"  // 上同。
-	};
-};
 
 
 /**

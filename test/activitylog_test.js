@@ -582,9 +582,8 @@ describe( "activitylog.js", function(){
             var EXPECTED_CONVERTED_PARAM = { 
                 "device_key" : "これは識別キー。必ず必要",
                 "pass_key"   : "これもセットで識別する。",
-                "date_start" : "2017-12-01", // queryGetに無い場合でも、getDeleteObjectFromPostData()でデフォルトを生成する。
-                "date_end"   : "2017-12-14"  // 上同。
-            };
+                "date_end"   : "2017-12-01" // queryGetに無い場合でも、getDeleteObjectFromPostData()でデフォルトを生成する。
+            };// date_startプロパティは「無くても」良い。
             var EXPECTED_MAX_COUNT = 32;
             var EXPECTED_LAST_COUNT = 16;
 
@@ -620,9 +619,8 @@ describe( "activitylog.js", function(){
                 expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
                 expect( deletedResponse.getCall(0).args[2] ).to.deep.equal({
-                    "start" : EXPECTED_CONVERTED_PARAM.date_start,
                     "end"   : EXPECTED_CONVERTED_PARAM.date_end
-                });
+                }); // "start"は無くても良い。
 
                 assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が1度だけ呼ばれること。" );
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );

@@ -404,7 +404,6 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
  * バッテリーログをSQLから削除API
  */
 exports.api_v1_activitylog_delete = function( queryFromGet, dataFromPost ){
-	/*
 	var API_ADD = function(){
 		this._outJsonData = {};
 		API_V1_BASE.call( this, this._outJsonData ); // 継承元のコンスタラクタを明示的に呼び出す。
@@ -415,37 +414,43 @@ exports.api_v1_activitylog_delete = function( queryFromGet, dataFromPost ){
 		// 対象のログデータをSQLへ要求
 		var outJsonData = this._outJsonData;
 		var config = factoryImpl.CONFIG_SQL.getInstance();
-	    var addActivityLog2Database = factoryImpl.sql_parts.getInstance().addActivityLog2Database;
+		var deleteActivityLogWhereDeviceKey = factoryImpl.sql_parts.getInstance().deleteActivityLogWhereDeviceKey;
+		var period = {};
+
+		if( paramClass.getStartDate() ){
+			period["start"] = paramClass.getStartDate();
+		}
+		if( paramClass.getEndDate() ){
+			period["end"] = paramClass.getEndDate();
+		}
 
 		return new Promise(function(resolve,reject){
-			addActivityLog2Database(
+			deleteActivityLogWhereDeviceKey(
 				config.database, 
 				paramClass.getDeviceKey(), 
-				paramClass.getTypeValue() 
-			).then(function(resultInsert){
-				// 「インサート」処理が成功
-				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
-				var param = new API_PARAM(resultInsert);
-				outJsonData[ "result" ] = "Success to insert " + param.getTypeValue() + " as activitylog on Database!";
-				outJsonData[ "device_key"] = param.getDeviceKey();
-				resolve();
+				period
+			).then(function(){
+				// 「削除」処理が成功
+				var getNumberOfLogs = factoryImpl.sql_parts.getInstance().getNumberOfLogs;
+				return getNumberOfLogs( 
+					config.database,
+					paramClass.getDeviceKey()
+				).then(function(numberOfLogs){
+					outJsonData["number_of_logs"] = numberOfLogs;
+					outJsonData["device_key"] = paramClass.getDeviceKey();
+					resolve();
+				});
 			}).catch(function(err){
-				// 「インサート」処理で失敗。
-				outJsonData[ "error_on_insert" ];
+				// 「削除」or「残ログ数取得」処理で失敗。
+				outJsonData[ "error_on_delete" ];
 				reject( err ); // ⇒次のcatch()が呼ばれる。
 			});
 		});
 	};
 	var subInstance = new API_ADD();
-	var getInsertObjectFromPostData = factoryImpl.sql_parts.getInstance().getInsertObjectFromPostData;
-	var inputData = getInsertObjectFromPostData( dataFromPost );
+	var getDeleteObjectFromPostData = factoryImpl.sql_parts.getInstance().getDeleteObjectFromPostData;
+	var inputData = getDeleteObjectFromPostData( dataFromPost );
 	return subInstance.run( inputData );
-	*/
-	return Promise.resolve({
-		"no-impl" : "未だない",
-		"status" : 403 // OK 【FixMe】直前までの内容に応じて変更する。
-	});
-
 };
 
 

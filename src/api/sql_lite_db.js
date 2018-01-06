@@ -567,7 +567,42 @@ exports.getListOfActivityLogWhereDeviceKey = getListOfActivityLogWhereDeviceKey;
  * @returns{Promise} SQLからの取得結果を返すPromiseオブジェクト。成功時resolve( numberOfLogs ) 、失敗時reject( err )。
  */
 var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
-	return Promise.reject();
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+	var wrappedDeviceKey = wrapString( deviceKey );
+
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	var query_str = "DELETE FROM activitylogs";
+	query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
+	// http://sql55.com/column/string-comparison.php
+	// > SQL Server では文字列を比較する際、比較対象の 2 つの文字列の長さが違った場合、
+	// > 短い方の文字列の後ろにスペースを足して、長さの長い方にあわせてから比較します。
+	if( period && period.start ){
+		query_str += " AND [created_at] > '";
+		query_str += period.start;
+		query_str += "'";
+	}
+	if( period && period.end ){
+		query_str += " AND [created_at] <= '";
+		query_str += period.end;
+		query_str += "'";
+	}
+
+	return new Promise(function(resolve,reject){
+		db.all(query_str, [], (err, rows) => {
+			if(!err){
+				return resolve( rows );
+			}else{
+				return reject( err );
+			}
+		});
+	});
 };
 exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey;
 

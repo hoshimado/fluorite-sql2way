@@ -603,7 +603,6 @@ describe( "activitylog.js", function(){
             return shouldFulfilled(
                 api_v1_activitylog_delete( queryFromGet, dataFromPost )
             ).then(function( result ){
-                var deletedResponse = stubs.sql_parts.deleteActivityLogWhereDeviceKey;
                 
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce, "createPromiseForSqlConnection()が1度呼ばれる" );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
@@ -613,8 +612,10 @@ describe( "activitylog.js", function(){
                 expect( result ).to.have.property("status").to.equal(200);
                 // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
 
-                assert( stubs.getDeleteObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
-                expect( stubs.getDeleteObjectFromPostData.getCall.args[0]).to.equal( dataFromPost );
+                assert( stubs.sql_parts.getDeleteObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
+                expect( stubs.sql_parts.getDeleteObjectFromPostData.getCall(0).args[0]).to.equal( dataFromPost );
+
+                var deletedResponse = stubs.sql_parts.deleteActivityLogWhereDeviceKey;
                 assert( deletedResponse.calledOnce, "SQLへのログ削除クエリー。deleteActivityLogWhereDeviceKey()が1度呼ばれること。" );
                 expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );

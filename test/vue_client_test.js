@@ -247,7 +247,8 @@ describe("TEST for vue_client.js", function(){
                 // postData = {
                 //    "device_key" : savedUserName,
                 //    "pass_key" : savedPassKey,
-                //    "type_value" : typeValue
+                //    "date_start" : "2018-01-06 14:00:03.000"
+                //    "date_end"   : "2018-01-06 23:50:00.000"
                 //}
                 return Promise.resolve({
                     "data" : {
@@ -265,7 +266,7 @@ describe("TEST for vue_client.js", function(){
             //    "userName": "",
             //    "passKeyWord" : ""
             // },
-            
+
             return shouldFulfilled(
                 deleteLastActivityDataInAccordanceWithGrid( fakeGridArray )
             ).then(function(){

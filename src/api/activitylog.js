@@ -45,7 +45,9 @@ API_PARAM.prototype.getPassKey = function(){ return isDefined( this, "pass_key")
 API_PARAM.prototype.getTypeValue = function(){ return isDefined( this, "type_value"); };
 API_PARAM.prototype.getStartDate = function(){ return isDefined( this, "date_start"); };
 API_PARAM.prototype.getEndDate   = function(){ return isDefined( this, "date_end"); };
+
 API_PARAM.prototype.getMaxCount = function(){ return isDefined( this, "max_count"); };
+API_PARAM.prototype.setMaxCount = function( maxCount ){ this.max_count = maxCount; };
 exports.API_PARAM = API_PARAM;
 
 
@@ -72,6 +74,7 @@ API_V1_BASE.prototype.isOwnerValid = function( inputData ){
 			paramClass.getPassKey()
 		);
 		is_onwer_valid_promise.then(function( maxCount ){
+			paramClass.setMaxCount( maxCount );
 			resolve( paramClass ); // ⇒次のthen()が呼ばれる。
 		}).catch(function(err){
 			if( err ){
@@ -344,28 +347,48 @@ exports.api_v1_activitylog_add = function( queryFromGet, dataFromPost ){
 	};
 	API_ADD.prototype = Object.create( API_V1_BASE.prototype );
 	API_ADD.prototype.requestSql = function( paramClass ){
-		
-		// 対象のログデータをSQLへ要求
+
 		var outJsonData = this._outJsonData;
 		var config = factoryImpl.CONFIG_SQL.getInstance();
-	    var addActivityLog2Database = factoryImpl.sql_parts.getInstance().addActivityLog2Database;
 
 		return new Promise(function(resolve,reject){
+			var getNumberOfLogs = factoryImpl.sql_parts.getInstance().getNumberOfLogs;
+
+			// 先ず、データ数をチェックする。
+			getNumberOfLogs( config.database, paramClass.getDeviceKey() )
+			.then( function(numberOfLogs){
+				if( numberOfLogs < paramClass.getMaxCount() ){
+					resolve( paramClass );
+				}else{
+					outJsonData["failed"] = {
+						"message" : "There are too many Logs per account."
+					};
+					reject({
+						"http_status" : 429
+					});
+				}
+			}).catch( function(err){
+				reject( err );
+			});
+		}).then(function( paramClass2 ){
+			var addActivityLog2Database = factoryImpl.sql_parts.getInstance().addActivityLog2Database;
+
+			// 対象のログデータをSQLへ追加
 			addActivityLog2Database(
 				config.database, 
-				paramClass.getDeviceKey(), 
-				paramClass.getTypeValue() 
+				paramClass2.getDeviceKey(), 
+				paramClass2.getTypeValue() 
 			).then(function(resultInsert){
 				// 「インサート」処理が成功
 				// 【FixME】総登録数（対象のデバイスについて）を取得してjsonに含めて返す。取れなければ null でOK（その場合も成功扱い）。
 				var param = new API_PARAM(resultInsert);
 				outJsonData[ "result" ] = "Success to insert " + param.getTypeValue() + " as activitylog on Database!";
 				outJsonData[ "device_key"] = param.getDeviceKey();
-				resolve();
+				return Promise.resolve();
 			}).catch(function(err){
 				// 「インサート」処理で失敗。
 				outJsonData[ "error_on_insert" ];
-				reject( err ); // ⇒次のcatch()が呼ばれる。
+				return Promise.reject( err ); // ⇒次のcatch()が呼ばれる。
 			});
 		});
 	};

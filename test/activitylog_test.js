@@ -487,7 +487,7 @@ describe( "activitylog.js", function(){
 
                 assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が一度だけ呼ばれること。記録数上限チェックのために必要" );
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
-                expect( stbus.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
 
                 assert( stubs.sql_parts.getInsertObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
                 expect( stubs.sql_parts.getInsertObjectFromPostData.getCall(0).args[0] ).to.equal(dataFromPost);
@@ -501,7 +501,7 @@ describe( "activitylog.js", function(){
                 // jsonData.resultには文字列が入るが、特に規定はしない。
             });
         });
-        it("異常系::ログ数が、割り当ての上限数を超えているので、Add出来ない⇒失敗を返す", function(){
+        it("異常系::ログ数が、割り当ての上限数を超えているので、Add出来ない。", function(){
             var queryFromGet = null;
             var dataFromPost = { "here" : "is スルーパス、なので何でも良い" };
             var EXPECTED_CONVERTED_PARAM = { 
@@ -543,7 +543,7 @@ describe( "activitylog.js", function(){
 
                 assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が一度だけ呼ばれること。記録数上限チェックのために必要" );
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
-                expect( stbus.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
 
                 assert( stubs.sql_parts.getInsertObjectFromPostData.calledOnce, "呼び出しパラメータの妥当性検証＆整形、が一度呼ばれること" );
                 expect( stubs.sql_parts.getInsertObjectFromPostData.getCall(0).args[0] ).to.equal(dataFromPost);
@@ -553,7 +553,7 @@ describe( "activitylog.js", function(){
                 // エラーが入っている事。
                 expect( result.jsonData ).to.have.property( "failed" )
                 .to.have.property("message")
-                .to.equal("Therer are too many Logs per account.");
+                .to.equal("There are too many Logs per account.");
             });
         });
         it("異常系::addActivityLog～（）の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。

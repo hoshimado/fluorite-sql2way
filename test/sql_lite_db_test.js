@@ -312,54 +312,65 @@ describe( "sql_lite_db_test.js", function(){
             dbs[ sqlConfig.database ] = {
                 "all" : stub_instance
             };
-            stub_instance.callsArgWith(2, /* err= */null, /* rows= */null); // 【未確認だが、コレのハズ】
+            stub_instance.callsArgWith(2, /* err= */null, /* rows= */null); // 0,1､2番がcallback関数。
             sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
 
             return shouldFulfilled(
                 sql_parts.deleteActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
-            ).then(function(result){
+            ).then(function(){ // 戻り値（引数）は無し。
+                var EXPECTED_QUERY_STR = "DELETE FROM activitylogs";
+                EXPECTED_QUERY_STR += " WHERE [owners_hash]='";
+                EXPECTED_QUERY_STR += deviceKey;
+                EXPECTED_QUERY_STR += "' AND [created_at] <= '";
+                EXPECTED_QUERY_STR += period.end;
+                EXPECTED_QUERY_STR += "'"; // 与えられた指定をそのままとする。
+
                 assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
                 assert( stub_instance.calledOnce );
 
                 var called_args = stub_instance.getCall(0).args;
-                // expect( called_args[0] ).to.equal();
+                expect( called_args[0].replace(/ +/g,' ') ).to.equal( EXPECTED_QUERY_STR );
                 expect( called_args[1].length ).to.equal( 0 );
-                expect( result ).to.deep.equal({
-                    "number_of_logs" : "これ返す？" // 【Todo】ってやると、getNumberの呼び出しが別途必要になる？
-                });
+                // DELETE FROM activitylogs WHERE [owners_hash]='nyan1nyan2nyan3nayn4nayn5nyan6ny' AND [created_at] > '2018/01/01' AND [created_at] <= '2018/01/04 23:59';
             });
-
         });
-/*
-                expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
-                expect( deletedResponse.getCall(0).args[1] ).to.equal( EXPECTED_CONVERTED_PARAM.device_key );
-                expect( deletedResponse.getCall(0).args[2] ).to.deep.equal({
-                    "start" : EXPECTED_CONVERTED_PARAM.date_start,
-                    "end"   : EXPECTED_CONVERTED_PARAM.date_end
-                });
+        it("正常系：period.startも有る（endは必須プロパティ）",function(){
+            var deviceKey = "にゃーん。";
+            var period = {
+                "start" : "2018-12-31 08:00:00.123",
+                "end"   : "2018-01-03 20:00:00.000"
+            }; // startプロパティは「無い」場合もあるので注意。
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub().callsFake( function(str){ return str; } );
+            
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, /* err= */null, /* rows= */null); // 0,1､2番がcallback関数。
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
 
-                var EXPECTED_QUERY_STR = "DELETE FROM [";
-                EXPECTED_QUERY_STR += TEST_DATABASE_NAME;
-                EXPECTED_QUERY_STR += "].dbo.batterylogs WHERE [owners_hash]='";
-                EXPECTED_QUERY_STR += EXPECTED_DEVICE_KEY;
+            return shouldFulfilled(
+                sql_parts.deleteActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
+            ).then(function(){ // 戻り値（引数）は無し。
+                var EXPECTED_QUERY_STR = "DELETE FROM activitylogs";
+                EXPECTED_QUERY_STR += " WHERE [owners_hash]='";
+                EXPECTED_QUERY_STR += deviceKey;
                 EXPECTED_QUERY_STR += "' AND [created_at] > '";
-                EXPECTED_QUERY_STR += EXPECTED_PERIOD.start;
+                EXPECTED_QUERY_STR += period.start;
                 EXPECTED_QUERY_STR += "' AND [created_at] <= '";
-                EXPECTED_QUERY_STR += EXPECTED_PERIOD.end;
-                EXPECTED_QUERY_STR += " 23:59'"; // その日の最後、として指定する。
-                // DELETE FROM [tinydb].dbo.batterylogs WHERE [owners_hash]='xxxx' AND [created_at] > '2017/04/04' AND [created_at] <= '2017/04/09 23:59'
+                EXPECTED_QUERY_STR += period.end;
+                EXPECTED_QUERY_STR += "'"; // 与えられた指定をそのままとする。
 
-INSERT INTO activitylogs([created_at], [type], [owners_hash] ) VALUES('2018/01/04 18:44:00.000', 111, 'nyan1nyan2nyan3nayn4nayn5nyan6ny');
-DELETE FROM activitylogs WHERE [owners_hash]='nyan1nyan2nyan3nayn4nayn5nyan6ny' AND [created_at] > '2018/01/01' AND [created_at] <= '2018/01/03 23:59';
-DELETE FROM activitylogs WHERE [owners_hash]='nyan1nyan2nyan3nayn4nayn5nyan6ny' AND [created_at] > '2018/01/01' AND [created_at] <= '2018/01/04 23:59';
-SELECT * FROM activitylogs;
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_instance.calledOnce );
 
-                assert( stub_query.calledOnce, "query()が1度だけ呼ばれること" );
-                expect( stub_query.getCall(0).args[0].replace(/ +/g,' ') ).to.equal(
-                    EXPECTED_QUERY_STR
-                )                
-
-*/
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0].replace(/ +/g,' ') ).to.equal( EXPECTED_QUERY_STR );
+                expect( called_args[1].length ).to.equal( 0 );
+                // DELETE FROM activitylogs WHERE [owners_hash]='nyan1nyan2nyan3nayn4nayn5nyan6ny' AND [created_at] > '2018/01/01' AND [created_at] <= '2018/01/04 23:59';
+            });
+        });
     });
 
 
@@ -395,6 +406,7 @@ SELECT * FROM activitylogs;
             assert( !result );
         })
     })
+
     describe( "::getInsertObjectFromPostData()", function(){
         it("正常系");
     });

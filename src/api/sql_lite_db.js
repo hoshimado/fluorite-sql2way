@@ -540,6 +540,7 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 	if( period && period.end ){
 		query_str += " AND [created_at] <= '";
 		query_str += period.end;
+		// 【ToDo】↓ここでの時刻指定の有無は、仕様を再検討。
 		query_str += " 23:59'"; // その日の最後、として指定する。※「T」は付けない（json変換後だと付いてくるけど）
 	}
 

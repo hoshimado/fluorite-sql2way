@@ -129,7 +129,6 @@ exports.getDeleteObjectFromPostData = function( postedData ){
 			valid_data[ "date_start" ] =  postedData.date_start; // 指定があるときだけ、設定。
 		}
 		valid_data[ "date_end"   ] = postedData.date_end ? postedData.date_end : date_end.toFormat("YYYY-MM-DD");
-		// 終端は、必ず生成。なお、Query時に「その日の23:59」を指定しているので、「今日」でOK。
 
 		if( valid_data.date_start && !isValidDateFormat( valid_data.date_start ) ){
 			valid_data[ "invalid" ] = "format of date is wrong.";

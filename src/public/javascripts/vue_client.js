@@ -175,7 +175,12 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 this.processingDivStyle.display = "block";
 
                 promise.catch(()=>{
-                    alert("失敗しました / 機能は未実装");
+                    return Promise.reject("失敗しました / 機能は未実装"); // 暫定
+                }).then(()=>{
+                    // 削除操作に成功したので、表示を更新。
+                    return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                }).catch((err)=>{
+                    alert(err); //暫定
                 }).then(()=>{
                     this.actionButtonDivStyle.display = "block";
                     this.processingDivStyle.display = "none";
@@ -467,18 +472,47 @@ console.log( responsedata );
     })
 };
 var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
-    var url = "./api/v1/activitylog/add";
+    var url = "./api/v1/activitylog/delete";
     var axiosInstance = client_lib.axios;
     var promise;
     var savedUserName = client_lib.vueAccountInstance.userName;
     var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
 
-    promise = new Promise((resolve,reject)=>{
-        // これはモック。
-        setTimeout(() => {
-            reject();
-        }, 1000);
-    });
+    // gridArrayは、index=0が最も新しいデータである、前提で実装する。
+    var effectiveTimeZone = client_lib.isServerTimeZoneGMT()
+        ? -9 
+        : 0;
+    var lastDateStr = gridArray[0].time; // 【ToDo】これ、中身が無かったらどうしよう？
+    var dateStart = new Date(lastDateStr);
+    var dateEnd = new Date(lastDateStr);
+    var secondsExpress;
+    var _toDateString = function( dateObj, addTimeZone ){ // 自前実装したくないけど、、、しゃーない。
+        var dateGmt = new Date();
+        dateGmt.setTime( dateObj.getTime() + addTimeZone*3600000 );
+        var yyyy = ("0000" + dateGmt.getFullYear() ).slice(-4);
+        var mm = ("00" + (dateGmt.getMonth() + 1).toString() ).slice(-2);
+        var dd = ("00" + dateGmt.getDate() ).slice(-2);
+        var hh = ("00" + dateGmt.getHours() ).slice(-2);
+        var mi = ("00" + dateGmt.getMinutes() ).slice(-2);
+        var ss = ("00" + dateGmt.getSeconds() ).slice(-2);
+
+        return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss + ".000";
+    }
+
+    secondsExpress = dateStart.getTime() - 60 *1000; // 60秒（ms表現）手前。
+    dateStart.setTime( secondsExpress );
+    secondsExpress = dateEnd.getTime() + 60 *1000; // 60秒（ms表現）後。
+    dateEnd.setTime( secondsExpress );
+
+    promise = axiosInstance.post(
+        url,
+        { // postData
+            "device_key" : savedUserName,
+            "pass_key" : savedPassKey,
+            "date_start" : _toDateString( dateStart, effectiveTimeZone ),
+            "date_end"   : _toDateString( dateEnd, effectiveTimeZone )
+        }
+    );
 
     return promise;
 };

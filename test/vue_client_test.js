@@ -176,16 +176,11 @@ describe("TEST for vue_client.js", function(){
             var getActivityDataInAccordanceWithAccountVue = target.client_lib.getActivityDataInAccordanceWithAccountVue;
 
             // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
-            stub_fooked_axios["get"] = sinon.stub()
-            .callsFake((url, postData)=>{
-                // getData = {
-                //    "crossdomain" : true,
-                //    "params" : {
-                //        "device_key" : savedUserName,
-                //        "pass_key" : savedPassKey
-                //    }
-                // }
-                return Promise.resolve({
+            stub_fooked_axios["get"] = sinon.stub();
+            stub_fooked_axios["post"] = sinon.stub();
+
+            stub_fooked_axios.get.onCall(0).returns(
+                Promise.resolve({
                     "data" : 
                     {
                         "result":"fake ajax is is OK!",
@@ -196,9 +191,8 @@ describe("TEST for vue_client.js", function(){
                             { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 }
                         ]
                     }        
-                });
-            });
-            stub_fooked_axios["post"] = sinon.stub();
+                })
+            );
 
             // client_lib.vueAccountInstance には、beforeEach(), afterEach() にて、
             // ダミー値を設定済み。【ToDo】文字数の都合で、今は「fake」側へ流れる。
@@ -225,43 +219,40 @@ describe("TEST for vue_client.js", function(){
         it("正常系：サーバー側のタイムゾーンはGMT", function(){
             var deleteLastActivityDataInAccordanceWithGrid = target.client_lib.deleteLastActivityDataInAccordanceWithGrid;
             var fakeGridArray = [
-                { "created_at" : "2017-10-13 01:00:00.000", "type" : 101 },
-                { "created_at" : "2017-10-13 06:00:00.000", "type" : 101 },
-                { "created_at" : "2017-10-13 23:45:00.000", "type" : 101 },
-                { "created_at" : "2017-10-14 08:30:20.000", "type" : 102 },
-                { "created_at" : "2017-10-14 23:30:00.000", "type" : 101 },
-                { "created_at" : "2017-10-15 06:00:20.000", "type" : 102 },
-                { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
-                { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }                
+                { "time" : "2017-10-16 06:00", "activity" : "起きた" },
+                { "time" : "2017-10-16 00:38", "activity" : "寝た" },
+                { "time" : "2017-10-15 06:00", "activity" : "起きた" },
+                { "time" : "2017-10-14 23:30", "activity" : "寝た" },
+                { "time" : "2017-10-14 08:30", "activity" : "起きた" },
+                { "time" : "2017-10-13 23:45", "activity" : "寝た" }
             ];
-            var EXPECTED_RESPONSE = {
-                "number_of_logs" : "ログデータの残数（数値）",
-                "device_key" : ""
-            };
             var EXPECTED_USER = {
                 "userName" :    target.client_lib.vueAccountInstance.userName,
                 "passKeyWord" : target.client_lib.vueAccountInstance.passKeyWord
             };
-            var spied_isServerTimeZoneGMT = sinon.stub()
-            .callsFake(()=>{ return true; }); // サーバー側は「GMT」判定を返すとする。
-            var spied_convertTimezoneInActivityList = sinon.spy( target.client_lib.convertTimezoneInActivityList );
+            var EXPECTED_RESPONSE = {
+                "number_of_logs" : "ログデータの残数（数値）",
+                "device_key" : EXPECTED_USER.userName
+            };
+            var spied_isServerTimeZoneGMT = sinon.stub().onCall(0).returns(true); // サーバー側は「GMT」判定を返すとする。
             target.client_lib.isServerTimeZoneGMT = spied_isServerTimeZoneGMT;
-            target.client_lib.convertTimezoneInActivityList = spied_convertTimezoneInActivityList;
 
             // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
             stub_fooked_axios["get"] = sinon.stub();
-            stub_fooked_axios["post"] = sinon.stub()
-            .callsFake(( /* url, postData */ )=>{
+            stub_fooked_axios["post"] = sinon.stub();
+
+            stub_fooked_axios.post.onCall(0).returns(
+                Promise.resolve({
+                    "data" : EXPECTED_RESPONSE
+                })
+            );
+                // url = "./api/v1/activitylog/delete",
                 // postData = {
                 //    "device_key" : savedUserName,
                 //    "pass_key" : savedPassKey,
                 //    "date_start" : "2018-01-06 14:00:03.000"
                 //    "date_end"   : "2018-01-06 23:50:00.000"
                 //}
-                return Promise.resolve({
-                    "data" : EXPECTED_RESPONSE
-                });
-            });
 
             // client_lib.vueAccountInstance には、beforeEach(), afterEach() にて、
             // 以下を設定済み。
@@ -276,14 +267,14 @@ describe("TEST for vue_client.js", function(){
                 deleteLastActivityDataInAccordanceWithGrid( fakeGridArray )
             ).then(function(){
                 expect( spied_isServerTimeZoneGMT.callCount ).to.equal( 1, "isServerTimeZoneGMT()を1度呼ぶこと" );
-                expect( spied_convertTimezoneInActivityList.callCount).to.equal( 1, "convertTimezoneInActivityList()を1度呼ぶこと" );
-                expect( spied_convertTimezoneInActivityList.getCall(0).args[0] ).to.deep.equal( fakeGridArray );
-                expect( spied_convertTimezoneInActivityList.getCall(0).args[1] ).to.equal( -9 );
 
-                var stub_post = stub_fooked_axios.post;
+                var stub_post_args = stub_fooked_axios.post.getCall(0).args;
                 expect( stub_fooked_axios.get.callCount ).to.equal( 0, "axios.get()は呼ばれないこと。" )
-                expect( stub_post.getCall(0).args[0] ).to.equal("./api/v1/activitylog/delete");
-
+                expect( stub_post_args[0] ).to.equal("./api/v1/activitylog/delete");
+                expect( stub_post_args[1] ).to.have.property("device_key").to.equal(EXPECTED_USER.userName);
+                expect( stub_post_args[1] ).to.have.property("pass_key").to.equal(EXPECTED_USER.passKeyWord);
+                expect( stub_post_args[1] ).to.have.property("date_start").to.equal("2017-10-15 20:59:00.000");
+                expect( stub_post_args[1] ).to.have.property("date_end"  ).to.equal("2017-10-15 21:01:00.000");
             });
         });
     });

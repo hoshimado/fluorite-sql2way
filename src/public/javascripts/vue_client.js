@@ -224,7 +224,8 @@ var _vueAppSetup = function( createVueInstance ){
         data: {
             "userName": "",
             "passKeyWord" : "",
-            "isNoticeDialogForUpdateInfo" : false
+            "isNoticeDialogForUpdateInfo" : false,
+            "isConfirmModalDialogForRemoveAccount" : false
         },
         computed : {
             "userNameIsValid" : function(){
@@ -260,6 +261,16 @@ var _vueAppSetup = function( createVueInstance ){
                 }).catch(function(err){
                     alert( "登録できませんでした。\r\n\r\n※詳細なエラー表示は未実装。" );
                 });
+            },
+            showModalDialogForRemovingAccount(){
+                this.isConfirmModalDialogForRemoveAccount = true;
+            },
+            removeAccount(){
+                this.isConfirmModalDialogForRemoveAccount = false;
+                alert("この機能は未実装");
+            },
+            cancelModalDialogForRemovingAccount(){
+                this.isConfirmModalDialogForRemoveAccount = false;
             }
         },
         mounted : function(){
@@ -486,18 +497,21 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
     var dateStart = new Date(lastDateStr);
     var dateEnd = new Date(lastDateStr);
     var secondsExpress;
-    var _toDateString = function( dateObj, addTimeZone ){ // 自前実装したくないけど、、、しゃーない。
-        var dateGmt = new Date();
-        dateGmt.setTime( dateObj.getTime() + addTimeZone*3600000 );
-        var yyyy = ("0000" + dateGmt.getFullYear() ).slice(-4);
-        var mm = ("00" + (dateGmt.getMonth() + 1).toString() ).slice(-2);
-        var dd = ("00" + dateGmt.getDate() ).slice(-2);
-        var hh = ("00" + dateGmt.getHours() ).slice(-2);
-        var mi = ("00" + dateGmt.getMinutes() ).slice(-2);
-        var ss = ("00" + dateGmt.getSeconds() ).slice(-2);
+    var _toDateString = function( dateObj ){ // 自前実装したくないけど、、、しゃーない。
+        var yyyy = ("0000" + dateObj.getFullYear() ).slice(-4);
+        var mm = ("00" + (dateObj.getMonth() + 1).toString() ).slice(-2);
+        var dd = ("00" + dateObj.getDate() ).slice(-2);
+        var hh = ("00" + dateObj.getHours() ).slice(-2);
+        var mi = ("00" + dateObj.getMinutes() ).slice(-2);
+        var ss = ("00" + dateObj.getSeconds() ).slice(-2);
 
         return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss + ".000";
     }
+
+    secondsExpress = dateStart.getTime() + effectiveTimeZone*3600000;
+    dateStart.setTime( secondsExpress );
+    secondsExpress = dateEnd.getTime() + effectiveTimeZone*3600000;
+    dateEnd.setTime( secondsExpress );
 
     secondsExpress = dateStart.getTime() - 60 *1000; // 60秒（ms表現）手前。
     dateStart.setTime( secondsExpress );
@@ -509,8 +523,8 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
         { // postData
             "device_key" : savedUserName,
             "pass_key" : savedPassKey,
-            "date_start" : _toDateString( dateStart, effectiveTimeZone ),
-            "date_end"   : _toDateString( dateEnd, effectiveTimeZone )
+            "date_start" : _toDateString( dateStart ),
+            "date_end"   : _toDateString( dateEnd )
         }
     );
 

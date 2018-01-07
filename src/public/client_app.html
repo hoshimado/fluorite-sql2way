@@ -125,7 +125,15 @@
         <i v-if="passKeyIsValid" class="fa fa-check" style="color:#4444ff"></i>
 				<span class="error_text" v-if="!passKeyIsValid">8文字以上のパスワードを入力してください</span><br>
         <input id="id_passkeyword" type="password" v-model="passKeyWord"><br>
-        <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
+        <div>
+          <div style="text-align: left; float: left">
+            <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
+          </div>
+          <div style="text-align: right;">
+            <input v-show="userNameIsValid && passKeyIsValid" value="削除" type="button" v-on:click="showModalDialogForRemovingAccount">
+          </div>
+          <div style="float:none; clear:both;"></div>
+        </div>
         <br><br>
         <!-- dialog with using the modal component, pass in the prop -->
         <!-- 以下のダイアログ用のタグは、先行するmodal-templateにて登録済み。 -->
@@ -140,6 +148,24 @@
             初めての利用、もしくはキャッシュ保持期限が切れています。
             ユーザーIDとパスワードを（再）入力して「登録」ボタンを押してください。
           </span>
+        </modal>
+        <modal v-if="isConfirmModalDialogForRemoveAccount">
+          <!-- close属性は、デフォルト向け。ここでは利用してない。 -->
+          <!--
+            you can use custom content here to overwrite
+            default content.
+            ref. https://jp.vuejs.org/v2/examples/modal.html
+          -->
+          <h3 slot="header">確認ダイアログ</h3>
+          <span slot="body">全ての記録データを削除して、ユーザーIDを削除しても良いですか？</span>
+          <div slot="footer">
+            <button class="modal-default-button" @click="removeAccount">
+              はい
+            </button>
+            <button @click="cancelModalDialogForRemovingAccount">
+              いいえ<!-- あれ？「modal-default-button」って「右寄せ」属性ある？？？ -->
+            </button>
+          </div>
         </modal>
       </div>
     </div>

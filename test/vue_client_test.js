@@ -246,13 +246,6 @@ describe("TEST for vue_client.js", function(){
                     "data" : EXPECTED_RESPONSE
                 })
             );
-                // url = "./api/v1/activitylog/delete",
-                // postData = {
-                //    "device_key" : savedUserName,
-                //    "pass_key" : savedPassKey,
-                //    "date_start" : "2018-01-06 14:00:03.000"
-                //    "date_end"   : "2018-01-06 23:50:00.000"
-                //}
 
             // client_lib.vueAccountInstance には、beforeEach(), afterEach() にて、
             // 以下を設定済み。

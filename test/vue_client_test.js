@@ -234,6 +234,14 @@ describe("TEST for vue_client.js", function(){
                 { "created_at" : "2017-10-16 00:38:21.000", "type" : 101 },
                 { "created_at" : "2017-10-16 06:23:57.000", "type" : 102 }                
             ];
+            var EXPECTED_RESPONSE = {
+                "number_of_logs" : "ログデータの残数（数値）",
+                "device_key" : ""
+            };
+            var EXPECTED_USER = {
+                "userName" :    target.client_lib.vueAccountInstance.userName,
+                "passKeyWord" : target.client_lib.vueAccountInstance.passKeyWord
+            };
             var spied_isServerTimeZoneGMT = sinon.stub()
             .callsFake(()=>{ return true; }); // サーバー側は「GMT」判定を返すとする。
             var spied_convertTimezoneInActivityList = sinon.spy( target.client_lib.convertTimezoneInActivityList );
@@ -243,7 +251,7 @@ describe("TEST for vue_client.js", function(){
             // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
             stub_fooked_axios["get"] = sinon.stub();
             stub_fooked_axios["post"] = sinon.stub()
-            .callsFake((url, postData)=>{
+            .callsFake(( /* url, postData */ )=>{
                 // postData = {
                 //    "device_key" : savedUserName,
                 //    "pass_key" : savedPassKey,
@@ -251,10 +259,7 @@ describe("TEST for vue_client.js", function(){
                 //    "date_end"   : "2018-01-06 23:50:00.000"
                 //}
                 return Promise.resolve({
-                    "data" : {
-                        "result" : "結果データ",
-                        "device_key" : "渡したデバイスキー"
-                    }
+                    "data" : EXPECTED_RESPONSE
                 });
             });
 

@@ -382,7 +382,7 @@ describe( "sql_lite_db_test.js", function(){
         var getNumberOfUsers = sql_parts.getNumberOfUsers;
         it("正常系");
     });
-    describe( ":: deleteExistUser()", function () {
+    describe( "::deleteExistUser()", function () {
        it("正常系"); 
     });
 

@@ -256,7 +256,7 @@ describe( "activitylog.js", function(){
 
                 expect( result.jsonData ).to.have.property( "errorMessage" );
                 expect( result.jsonData.errorMessage ).to.equal("The username is already in use.");
-                expect( result ).to.have.property( "status" ).to.equal( 200 ); // ToDo：これって妥当か？エラーなので、4xxを返すべきでは？
+                expect( result ).to.have.property( "status" ).to.equal( 401 );
             });
         });
 
@@ -290,10 +290,13 @@ describe( "activitylog.js", function(){
 
                 expect( result ).to.have.property( "jsonData" );
                 expect( result.jsonData ).to.have.property( "errorMessage" );
-                expect( result.jsonData.errorMessage ).to.equal("Number of users is over.");
-                expect( result ).to.have.property( "status" ).to.equal( 200 ); // ToDo：これって妥当か？エラーなので、4xxを返すべきでは？
+                expect( result.jsonData.errorMessage ).to.equal("the number of users is over.");
+                expect( result ).to.have.property( "status" ).to.equal( 429 ); // Too Many Requests(リクエストの回数制限に引っかかる場合など)
             });
         });
+    });
+    describe("::api_vi_activitylog_remove()",function(){
+        it("正常系");
     });
 
     describe("::api_v1_activitylog_BASE()", function() {

@@ -87,7 +87,7 @@ router.post("/setup1st", function(req, res, next){
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
-	});;
+	});
 });
 
 router.post("/signup", function(req, res, next){
@@ -97,7 +97,7 @@ router.post("/signup", function(req, res, next){
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
-	});;
+	});
 });
 
 

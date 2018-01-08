@@ -103,54 +103,173 @@ describe( "sql_lite_db_test.js", function(){
 
     describe( "::addNewUser()",function(){
         var addNewUser = sql_parts.addNewUser;
-        it("正常系");
+
+        var ORIGINAL = {};
+        beforeEach(function () {
+            ORIGINAL["db"] = sql_parts.factoryImpl.db.getInstance();
+            sql_parts.factoryImpl.db.setStub( {} );
+        });
+        afterEach(function () {
+            sql_parts.factoryImpl.db.setStub( ORIGINAL.db );
+        })
+
+        it("正常系", function () {
+            var stub_wrapperStr = sinon.stub().callsFake( function(str){ return str; } );
+
+            var deviceKey = "target_user";
+            var passwordStr = "ユーザー毎のパスワード";
+            var maxEntrys = "ユーザー毎の、記録可能な最大ログ数";
+
+            var databaseName = sqlConfig.database;
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_sql_instance = sinon.stub();
+
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_sql_instance
+            };
+            stub_sql_instance.callsArgWith(2, /* err= */null, /* rows= */null);
+
+            return shouldFulfilled(
+                sql_parts.addNewUser( databaseName, deviceKey, maxEntrys, passwordStr )
+            ).then(function(){
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_wrapperStr.withArgs( passwordStr ).calledOnce );
+                assert( stub_sql_instance.calledOnce );
+
+                var called_args = stub_sql_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])" 
+                    + " VALUES('" + deviceKey + "', " + maxEntrys + ", '" + passwordStr + "')"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+            });
+        });
     });
     describe( "::getNumberOfUsers()",function(){
         var getNumberOfUsers = sql_parts.getNumberOfUsers;
-        it("正常系");
+
+        var ORIGINAL = {};
+        beforeEach(function () {
+            ORIGINAL["db"] = sql_parts.factoryImpl.db.getInstance();
+            sql_parts.factoryImpl.db.setStub( {} );
+        });
+        afterEach(function () {
+            sql_parts.factoryImpl.db.setStub( ORIGINAL.db );
+        })
+        
+        it("正常系",function() {
+            var EXPECTED_COUNT = 8;
+            var EXPECTED_ROWS = [
+                { "count(*)" : EXPECTED_COUNT }
+            ];
+            var databaseName = sqlConfig.database;
+            var stub_sql_instance = sinon.stub();
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+
+            dbs[ databaseName ] = {
+                "all" : stub_sql_instance
+            };
+            stub_sql_instance.callsArgWith(2, /* err= */null, /* rows= */EXPECTED_ROWS ); // 0,1,2番目にcallbackが渡されるので、その2番目を、引数「null, EXPECTED_ROWS」で呼び出す。
+
+            return shouldFulfilled(
+                getNumberOfUsers( databaseName )
+            ).then(function (result) {
+                assert( stub_sql_instance.calledOnce, "db.all()が1度呼ばれること" );
+                var called_args = stub_sql_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "SELECT count(*) FROM owners_permission"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+
+                expect( result ).to.equal( EXPECTED_COUNT );
+            });
+        });
     });
     describe( "::deleteExistUser()", function () {
-       it("正常系"); 
+        var deleteExistUser = sql_parts.deleteExistUser;
+
+        var ORIGINAL = {};
+        beforeEach(function () {
+            ORIGINAL["db"] = sql_parts.factoryImpl.db.getInstance();
+            sql_parts.factoryImpl.db.setStub( {} );
+        });
+        afterEach(function () {
+            sql_parts.factoryImpl.db.setStub( ORIGINAL.db );
+        })
+        
+        it("正常系",function() {
+            var stub_wrapperStr = sinon.stub()
+            .callsFake( function(str){ return str; } ); // 引数に応じた応答になるので、Fake関数で定義する。
+
+            var deviceKey = "target_user"; // パスワード検証は終わっているはずなので、ここでは不要。
+            var databaseName = sqlConfig.database;
+            var stub_sql_instance = sinon.stub();
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+
+            dbs[ databaseName ] = {
+                "all" : stub_sql_instance
+            };
+            stub_sql_instance.callsArgWith(2, /* err= */null, /* rows= */null ); // 0,1,2番目にcallbackが渡されるので、その2番目を、引数「null, null」で呼び出す。
+
+            return shouldFulfilled(
+                deleteExistUser( databaseName, deviceKey )
+            ).then(function () {
+                assert( stub_sql_instance.calledOnce, "db.all()が1度呼ばれること" );
+                var called_args = stub_sql_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "DELETE FROM owners_permission "
+                    + "WHERE [owners_hash]=\'" + deviceKey + "\'"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+            });
+        });
     });
 
 
 
     describe( "::isOwnerValid()", function(){
         var isOwnerValid = sql_parts.isOwnerValid;
-        var stubDbs = {};
 
+        var ORIGINAL = {};
         beforeEach(function () {
-            stubDbs[ sqlConfig.database ] = {};
-            sql_parts.factoryImpl.db.setStub( stubDbs );
+            ORIGINAL["db"] = sql_parts.factoryImpl.db.getInstance();
+            sql_parts.factoryImpl.db.setStub( {} );
         });
+        afterEach(function () {
+            sql_parts.factoryImpl.db.setStub( ORIGINAL.db );
+        })
 
         it("正常系", function(){
             var databaseName = sqlConfig.database;
             var deviceKey = "にゃ～ん";
             var password = "ほげ";
             var expectedMaxCount = 32;
-            var stub_instance = sinon.stub();
             var stub_wrapperStr = sinon.stub()
-            .callsFake( function(str){ return str; } );
+            .callsFake( function(str){ return str; } ); // 引数に応じた応答になるので、Fake関数で定義する。
+
             var dbs = sql_parts.factoryImpl.db.getInstance();
-            
+            var stub_sql_instance = sinon.stub();
+
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
             dbs[ databaseName ] = {
-                "all" : stub_instance
+                "all" : stub_sql_instance
             };
-            stub_instance.callsArgWith(2, null, [{
+            stub_sql_instance.callsArgWith(2, null, [{
                 "owners_hash" : deviceKey,
                 "password" : password, 
                 "max_entrys" : expectedMaxCount
             }]);
-            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
 
             return shouldFulfilled(
                 isOwnerValid( databaseName, deviceKey, password )
             ).then(function (result) {
                 assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
                 assert( stub_wrapperStr.withArgs( password ).calledOnce );
-                assert( stub_instance.calledOnce );
-                var called_args = stub_instance.getCall(0).args;
+                assert( stub_sql_instance.calledOnce );
+                var called_args = stub_sql_instance.getCall(0).args;
                 expect( called_args[0] ).to.equal(
                     "SELECT owners_hash, password, max_entrys " 
                     + "FROM owners_permission "
@@ -239,6 +358,8 @@ describe( "sql_lite_db_test.js", function(){
 
         it("正常系");
     });
+
+
     describe( "::getListOfActivityLogWhereDeviceKey()",function(){
         var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
 
@@ -311,7 +432,6 @@ describe( "sql_lite_db_test.js", function(){
                     "device_key" : deviceKey
                 });
             });
-            
         });
     });
     describe( "::deleteActivityLogWhereDeviceKey()",function(){
@@ -460,9 +580,8 @@ describe( "sql_lite_db_test.js", function(){
             expect( result ).to.have.property("date_end")
             .to.equal(inputGetData.date_end);  // 上同。
 
-            // ↓呼び出し順序までは規定したくないのだが、、、やり方が思いつかない。
-            expect( spied_isValidDateFormat.getCall(0).args[0] ).to.equal( inputGetData.date_start );
-            expect( spied_isValidDateFormat.getCall(1).args[0] ).to.equal( inputGetData.date_end );
+            assert( spied_isValidDateFormat.withArgs( inputGetData.date_start ).calledOnce );
+            assert( spied_isValidDateFormat.withArgs( inputGetData.date_end ).calledOnce );
         });
         it("異常系：期間指定のパラメータの１つめがフォーマット違反",function () {
             var stubed_isValidDateFormat = sinon.stub(); // これ自体をstubで差替えてテスト。
@@ -525,9 +644,8 @@ describe( "sql_lite_db_test.js", function(){
             expect( result ).to.have.property("date_end")
             .to.equal("1970-01-01 23:59:59.999");
 
-            // ↓呼び出し順序までは規定したくないのだが、、、やり方が思いつかない。
-            expect( spied_isValidDateFormat.getCall(0).args[0] ).to.equal("1969-12-04");
-            expect( spied_isValidDateFormat.getCall(1).args[0] ).to.equal("1970-01-01 23:59:59.999");
+            assert( spied_isValidDateFormat.withArgs("1969-12-04").calledOnce );
+            assert( spied_isValidDateFormat.withArgs("1970-01-01 23:59:59.999").calledOnce );
         });
         it("正常系：日付での期間指定あり。",function(){
             var clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。
@@ -552,9 +670,8 @@ describe( "sql_lite_db_test.js", function(){
             expect( result ).to.have.property("date_end")
             .to.equal(inputGetData.date_end);  // 上同。
 
-            // ↓呼び出し順序までは規定したくないのだが、、、やり方が思いつかない。
-            expect( spied_isValidDateFormat.getCall(0).args[0] ).to.equal( inputGetData.date_start );
-            expect( spied_isValidDateFormat.getCall(1).args[0] ).to.equal( inputGetData.date_end );
+            assert( spied_isValidDateFormat.withArgs(inputGetData.date_start).calledOnce );
+            assert( spied_isValidDateFormat.withArgs(inputGetData.date_end).calledOnce );
         });
         it("異常系：期間指定のパラメータの１つめがフォーマット違反",function () {
             var stubed_isValidDateFormat = sinon.stub(); // これ自体をstubで差替えてテスト。

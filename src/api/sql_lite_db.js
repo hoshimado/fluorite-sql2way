@@ -301,7 +301,7 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 		var wrappedDeviceKey = wrapString( deviceKey );
 		var wrappedPassWord = wrapString( passwordStr )
 		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])";
-		query_str += "VALUES('" + wrappedDeviceKey + "', " + maxEntrys + ", '" + wrappedPassWord + "')";
+		query_str += " VALUES('" + wrappedDeviceKey + "', " + maxEntrys + ", '" + wrappedPassWord + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){

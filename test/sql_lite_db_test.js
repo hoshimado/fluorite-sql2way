@@ -99,6 +99,22 @@ describe( "sql_lite_db_test.js", function(){
             
         });
     });
+
+
+    describe( "::addNewUser()",function(){
+        var addNewUser = sql_parts.addNewUser;
+        it("正常系");
+    });
+    describe( "::getNumberOfUsers()",function(){
+        var getNumberOfUsers = sql_parts.getNumberOfUsers;
+        it("正常系");
+    });
+    describe( "::deleteExistUser()", function () {
+       it("正常系"); 
+    });
+
+
+
     describe( "::isOwnerValid()", function(){
         var isOwnerValid = sql_parts.isOwnerValid;
         var stubDbs = {};
@@ -218,6 +234,11 @@ describe( "sql_lite_db_test.js", function(){
         });
         it("異常系：SQL実行エラー");
     });
+    describe( "::getNumberOfLogs()", function(){
+        var getNumberOfLogs = sql_parts.getNumberOfLogs;
+
+        it("正常系");
+    });
     describe( "::getListOfActivityLogWhereDeviceKey()",function(){
         var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
 
@@ -254,11 +275,6 @@ describe( "sql_lite_db_test.js", function(){
                 expect( result ).to.deep.equal( expectedRows );
             });
         });
-    });
-    describe( "::getNumberOfLogs()", function(){
-        var getNumberOfLogs = sql_parts.getNumberOfLogs;
-
-        it("正常系");
     });
     describe( "::addActivityLog2Database()", function () {
         var addActivityLog2Database = sql_parts.addActivityLog2Database;
@@ -372,20 +388,6 @@ describe( "sql_lite_db_test.js", function(){
             });
         });
     });
-
-
-    describe( "::addNewUser()",function(){
-        var addNewUser = sql_parts.addNewUser;
-        it("正常系");
-    });
-    describe( "::getNumberOfUsers()",function(){
-        var getNumberOfUsers = sql_parts.getNumberOfUsers;
-        it("正常系");
-    });
-    describe( "::deleteExistUser()", function () {
-       it("正常系"); 
-    });
-
 
     describe( "::内部関数::_isValidDateFormat()", function(){
         var isValidDateFormat = sql_parts.factoryImpl._isValidDateFormat.getInstance();

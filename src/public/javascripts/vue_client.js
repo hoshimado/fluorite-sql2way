@@ -2,6 +2,16 @@
  * [vue_client.js]
     encoding=utf-8
  */
+var _local_toDateString = function( dateObj ){ // 自前実装したくないけど、、、しゃーない。
+    var yyyy = ("0000" + dateObj.getFullYear() ).slice(-4);
+    var mm = ("00" + (dateObj.getMonth() + 1).toString() ).slice(-2);
+    var dd = ("00" + dateObj.getDate() ).slice(-2);
+    var hh = ("00" + dateObj.getHours() ).slice(-2);
+    var mi = ("00" + dateObj.getMinutes() ).slice(-2);
+    var ss = ("00" + dateObj.getSeconds() ).slice(-2);
+
+    return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss + ".000";
+};
 
 
 var _setVueModalDialog = function( staticVue ){
@@ -107,7 +117,7 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                     this.gridData = grid_activity_data.slice(0, 6);
                     // ↑カットオフ入れてる。最大６つまで、で。
 
-                    // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
+                    // ↓時系列に対して grid_activity_data は逆順（最初が最新）なので、注意。
                     return Promise.resolve( localtimedArray );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
@@ -167,7 +177,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 this.isConfirmModalDialogForDeletingLastData = false;
             },
             "deleteLastData" : function(){
-                var promise = client_lib.deleteLastActivityDataInAccordanceWithGrid( this.gridData );
+                var lastDate = this.lastLoadedActivityData[ this.lastLoadedActivityData.length -1 ].created_at;
+                var promise = client_lib.deleteLastActivityDataInAccordanceWithGrid( lastDate );
 
                 this.isConfirmModalDialogForDeletingLastData = false;
 
@@ -360,10 +371,16 @@ var _convertActivityList2GridData = function( typeArray ){
     var array = typeArray; // [{ "create_at", "type" }]
     var n = array.length;
     var item, grid_activity_data = []; // [{"time", "type"}]
+    var create_at2time = function( created_at ){
+        var date = new Date( created_at );
+        var formatedStr = _local_toDateString(date);
+        return formatedStr.substr(0,16);
+    };
+        
     while( 0<n-- ){
         item = array[n];
         grid_activity_data.push({
-            "time" : item.created_at.substr(0, 16), // ToDo:「表示形式」での出力へ変更すること
+            "time" : create_at2time( item.created_at ), // ToDo:「表示形式」での出力へ変更すること
             "activity" : (function( obj, type ){
                 var keys = Object.keys(obj);
                 var i = keys.length;
@@ -377,7 +394,7 @@ var _convertActivityList2GridData = function( typeArray ){
         });
     }
     return grid_activity_data;
-}
+};
 
 
 var _fake_ajax1 = function(){
@@ -482,31 +499,20 @@ console.log( responsedata );
         return Promise.resolve( responsedata );     
     })
 };
-var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
+var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
     var url = "./api/v1/activitylog/delete";
     var axiosInstance = client_lib.axios;
     var promise;
     var savedUserName = client_lib.vueAccountInstance.userName;
     var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
 
-    // gridArrayは、index=0が最も新しいデータである、前提で実装する。
+    // lastDateStrは、サーバーから取得した生の値の最終行（＝最新）のcreate_atプロパティが格納されている。
     var effectiveTimeZone = client_lib.isServerTimeZoneGMT()
         ? -9 
         : 0;
-    var lastDateStr = gridArray[0].time; // 【ToDo】これ、中身が無かったらどうしよう？
     var dateStart = new Date(lastDateStr);
     var dateEnd = new Date(lastDateStr);
     var secondsExpress;
-    var _toDateString = function( dateObj ){ // 自前実装したくないけど、、、しゃーない。
-        var yyyy = ("0000" + dateObj.getFullYear() ).slice(-4);
-        var mm = ("00" + (dateObj.getMonth() + 1).toString() ).slice(-2);
-        var dd = ("00" + dateObj.getDate() ).slice(-2);
-        var hh = ("00" + dateObj.getHours() ).slice(-2);
-        var mi = ("00" + dateObj.getMinutes() ).slice(-2);
-        var ss = ("00" + dateObj.getSeconds() ).slice(-2);
-
-        return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss + ".000";
-    }
 
     secondsExpress = dateStart.getTime() + effectiveTimeZone*3600000;
     dateStart.setTime( secondsExpress );
@@ -523,8 +529,8 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( gridArray ){
         { // postData
             "device_key" : savedUserName,
             "pass_key" : savedPassKey,
-            "date_start" : _toDateString( dateStart ),
-            "date_end"   : _toDateString( dateEnd )
+            "date_start" : _local_toDateString( dateStart ),
+            "date_end"   : _local_toDateString( dateEnd )
         }
     );
 

@@ -218,14 +218,7 @@ describe("TEST for vue_client.js", function(){
     describe("::deleteLastActivityDataInAccordanceWithGrid()", function(){
         it("正常系：サーバー側のタイムゾーンはGMT", function(){
             var deleteLastActivityDataInAccordanceWithGrid = target.client_lib.deleteLastActivityDataInAccordanceWithGrid;
-            var fakeGridArray = [
-                { "time" : "2017-10-16 06:00", "activity" : "起きた" },
-                { "time" : "2017-10-16 00:38", "activity" : "寝た" },
-                { "time" : "2017-10-15 06:00", "activity" : "起きた" },
-                { "time" : "2017-10-14 23:30", "activity" : "寝た" },
-                { "time" : "2017-10-14 08:30", "activity" : "起きた" },
-                { "time" : "2017-10-13 23:45", "activity" : "寝た" }
-            ];
+            var fakeLastActivitiyDate = "2018-01-06 08:42:16.000";
             var EXPECTED_USER = {
                 "userName" :    target.client_lib.vueAccountInstance.userName,
                 "passKeyWord" : target.client_lib.vueAccountInstance.passKeyWord
@@ -257,7 +250,7 @@ describe("TEST for vue_client.js", function(){
             // },
 
             return shouldFulfilled(
-                deleteLastActivityDataInAccordanceWithGrid( fakeGridArray )
+                deleteLastActivityDataInAccordanceWithGrid( fakeLastActivitiyDate )
             ).then(function(){
                 expect( spied_isServerTimeZoneGMT.callCount ).to.equal( 1, "isServerTimeZoneGMT()を1度呼ぶこと" );
 
@@ -266,8 +259,8 @@ describe("TEST for vue_client.js", function(){
                 expect( stub_post_args[0] ).to.equal("./api/v1/activitylog/delete");
                 expect( stub_post_args[1] ).to.have.property("device_key").to.equal(EXPECTED_USER.userName);
                 expect( stub_post_args[1] ).to.have.property("pass_key").to.equal(EXPECTED_USER.passKeyWord);
-                expect( stub_post_args[1] ).to.have.property("date_start").to.equal("2017-10-15 20:59:00.000");
-                expect( stub_post_args[1] ).to.have.property("date_end"  ).to.equal("2017-10-15 21:01:00.000");
+                expect( stub_post_args[1] ).to.have.property("date_start").to.equal("2018-01-05 23:41:16.000");
+                expect( stub_post_args[1] ).to.have.property("date_end"  ).to.equal("2018-01-05 23:43:16.000");
             });
         });
     });

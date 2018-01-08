@@ -141,6 +141,7 @@ describe( "activitylog.js", function(){
         var stubs, original = {};
         beforeEach(function(){ // 内部関数をフックする。
             original["MAX_USERS"] = activitylog.factoryImpl.MAX_USERS.getInstance();
+            original["MAX_LOGS"]  = activitylog.factoryImpl.MAX_LOGS.getInstance();
             stubs = COMMON_STUB_MANAGER.createStubs();
 
             COMMON_STUB_MANAGER.hookInstance( activitylog, stubs );
@@ -148,9 +149,11 @@ describe( "activitylog.js", function(){
         afterEach(function(){
             COMMON_STUB_MANAGER.restoreOriginal( activitylog );
             activitylog.factoryImpl.MAX_USERS.setStub( original.MAX_USERS );
+            activitylog.factoryImpl.MAX_LOGS.setStub(  original.MAX_LOGS );
         });
 
         it("正常系：新規ユーザー追加", function(){
+            var EXPECTED_MAX_LOGS_FOR_THE_USER = 256
             var queryFromGet = null;
             var dataFromPost = { 
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
@@ -164,12 +167,14 @@ describe( "activitylog.js", function(){
                 Promise.reject({"here" : "is new user"})
             );
             stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
-                Promise.resolve( 15 )
+                Promise.resolve( 15 ) // 登録済みのユーザー数
             );
-            activitylog.factoryImpl.MAX_USERS.setStub( 16 );
+            activitylog.factoryImpl.MAX_USERS.setStub( 16 ); // 上限値として設定されているユーザー数
             stubs.sql_parts.addNewUser.onCall(0).returns(
                 Promise.resolve()
             );
+            activitylog.factoryImpl.MAX_LOGS.setStub( EXPECTED_MAX_LOGS_FOR_THE_USER );
+
            
 
             return shouldFulfilled(
@@ -183,7 +188,7 @@ describe( "activitylog.js", function(){
 
                 expect( stubs.sql_parts.addNewUser.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( stubs.sql_parts.addNewUser.getCall(0).args[1] ).to.equal( dataFromPost.username );
-                // expect( stubs.sql_parts.addNewUser.getCall(0).args[2] ).to.equal( 128 ); データ数は未定。
+                expect( stubs.sql_parts.addNewUser.getCall(0).args[2] ).to.equal( EXPECTED_MAX_LOGS_FOR_THE_USER );
                 expect( stubs.sql_parts.addNewUser.getCall(0).args[3] ).to.equal( dataFromPost.passkey );
                 
                 expect( result ).to.have.property( "jsonData" );
@@ -196,6 +201,7 @@ describe( "activitylog.js", function(){
             });
         });
         it("正常系：既存ユーザーは、追加しないがOK応答する。", function(){
+            var EXPECTED_MAX_LOGS_FOR_THE_USER = 256
             var queryFromGet = null;
             var dataFromPost = { 
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
@@ -206,7 +212,7 @@ describe( "activitylog.js", function(){
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
             stubs.sql_parts.isOwnerValid.onCall(0).returns(
-                Promise.resolve( 128 )
+                Promise.resolve( EXPECTED_MAX_LOGS_FOR_THE_USER )
             );
 
             return shouldFulfilled(
@@ -223,7 +229,7 @@ describe( "activitylog.js", function(){
                 expect( result.jsonData.signuped ).to.deep.equal({
                     "device_key" : dataFromPost.username,
                     "password"   : dataFromPost.passkey,
-                    "left" : 128 // isOwnerValid()が返した数値
+                    "left" : EXPECTED_MAX_LOGS_FOR_THE_USER// isOwnerValid()が返した数値
                 });
                 expect( result ).to.have.property( "status" ).to.equal( 200 );
             });

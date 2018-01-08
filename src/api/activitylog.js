@@ -14,6 +14,7 @@ var _SQL_CONNECTION_CONFIG = require("./sql_config.js");
 factoryImpl[ "CONFIG_SQL" ] = new lib.Factory(_SQL_CONNECTION_CONFIG.CONFIG_SQL);
 factoryImpl[ "SETUP_KEY" ]  = new lib.Factory( _SQL_CONNECTION_CONFIG.SETUP_KEY );
 factoryImpl[ "MAX_USERS"] = new lib.Factory( _SQL_CONNECTION_CONFIG.MAX_USERS );
+factoryImpl[ "MAX_LOGS" ] = new lib.Factory( _SQL_CONNECTION_CONFIG.MAX_LOGS );
 
 
 // UTデバッグ用のHookポイント。運用では外部公開しないメソッドはこっちにまとめる。
@@ -267,7 +268,7 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 					});
 				}).then(()=>{
 					var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
-					var max_count = 128;
+					var max_count = factoryImpl.MAX_LOGS.getInstance();
 					// ◆ToDo:↑ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
 	
 					return addNewUser( config.database, inputData.device_key, max_count, inputData.pass_key );

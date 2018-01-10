@@ -197,7 +197,7 @@ describe( "sql_lite_db_test.js", function(){
         });
         afterEach(function () {
             sql_parts.factoryImpl.db.setStub( ORIGINAL.db );
-        })
+        });
         
         it("正常系",function() {
             var stub_wrapperStr = sinon.stub()
@@ -207,7 +207,9 @@ describe( "sql_lite_db_test.js", function(){
             var databaseName = sqlConfig.database;
             var stub_sql_instance = sinon.stub();
             var dbs = sql_parts.factoryImpl.db.getInstance();
-
+ 
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+ 
             dbs[ databaseName ] = {
                 "all" : stub_sql_instance
             };

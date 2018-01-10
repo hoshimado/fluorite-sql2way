@@ -358,7 +358,31 @@ exports.getNumberOfUsers = getNumberOfUsers;
 
 
 var deleteExistUser = function(databaseName, deviceKey ){
-	return Promise.reject();
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function(resolve,reject){
+		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+		var wrappedDeviceKey = wrapString( deviceKey );
+		var query_str = "DELETE";
+		query_str += " FROM owners_permission";
+		query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'";
+
+		db.all(query_str, [], (err) => {
+			if(!err){
+				return resolve();
+			}else{
+				reject({
+					"isEnableValidationProcedure" : false
+				});
+			}
+		});
+	});
 };
 exports.deleteExistUser = deleteExistUser;
 

@@ -301,8 +301,85 @@ describe( "activitylog.js", function(){
             });
         });
     });
-    describe("::api_vi_activitylog_remove()",function(){
-        it("正常系");
+    describe("::api_vi_activitylog_remove() over API_V1_BASE()",function(){
+        // ※アカウント作成なので、この位置に記述しているが、実装的には、
+        //   後述の API_V1_BASE() の認証機構とQuery発行フローをそのまま利用。
+        var stubs;
+        var api_vi_activitylog_remove = activitylog.api_vi_activitylog_remove;
+
+        /**
+         * @type beforeEachで初期化される。
+         */
+        beforeEach(function(){ // 内部関数をフックする。
+            stubs = COMMON_STUB_MANAGER.createStubs();
+
+            COMMON_STUB_MANAGER.hookInstance( activitylog, stubs );
+        });
+        afterEach(function(){
+            COMMON_STUB_MANAGER.restoreOriginal( activitylog );
+        });
+
+        it("正常系", function(){
+            var queryFromGet = null;
+            var dataFromPost = {
+                "device_key" : "ここは、削除期間の生成が特殊⇒全既刊削除、なのでPostを直に参照する",
+                "pass_key" : "そのためこの値に対する変換もテスト対象とする"
+            };
+            var EXPECTED_MAX_COUNT = 32;
+            var EXPECTED_LAST_COUNT = 0; // これは、ゼロでなければならない。
+
+            stubs.sql_parts.createPromiseForSqlConnection.withArgs( TEST_CONFIG_SQL ).returns( Promise.resolve() );
+            stubs.sql_parts.closeConnection.onCall(0).returns( Promise.resolve() );
+            stubs.sql_parts.isOwnerValid.onCall(0).returns(
+                Promise.resolve( EXPECTED_MAX_COUNT )
+            );
+            // sql_parts.getDeleteObjectFromPostData() は呼ばない。期間指定せず、すべてのログを削除するので、通常と異なる。
+            stubs.sql_parts.deleteActivityLogWhereDeviceKey.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.sql_parts.getNumberOfLogs.onCall(0).returns(
+                Promise.resolve( EXPECTED_LAST_COUNT )
+            );
+
+            // 対象ユーザーのログを削除したのち、アカウントも削除する。
+            stubs.sql_parts.deleteExistUser.onCall(0).returns(
+                Promise.resolve()
+            );
+        
+            return shouldFulfilled(
+                api_vi_activitylog_remove( queryFromGet, dataFromPost )
+            ).then(function( result ){
+                
+                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce, "createPromiseForSqlConnection()が1度呼ばれる" );
+                assert( stubs.sql_parts.closeConnection.calledOnce );
+                assert( stubs.sql_parts.isOwnerValid.calledOnce );
+                expect( result ).to.be.exist;
+                expect( result ).to.have.property("jsonData");
+                expect( result ).to.have.property("status").to.equal(200);
+                // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
+
+                // isOwnerValid()へ渡されるパラメータを直に検証する。
+                // 何故なら「get～()で生成したオブジェクトを直に渡す」ではなく、このテスト対象の中で生成するから。
+                expect( stubs.sql_parts.isOwnerValid.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( stubs.sql_parts.isOwnerValid.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
+                expect( stubs.sql_parts.isOwnerValid.getCall(0).args[2] ).to.equal( dataFromPost.pass_key );
+                
+                var deletedResponse = stubs.sql_parts.deleteActivityLogWhereDeviceKey;
+                assert( deletedResponse.calledOnce, "SQLへのログ削除クエリー。deleteActivityLogWhereDeviceKey()が1度呼ばれること。" );
+                expect( deletedResponse.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( deletedResponse.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
+                expect( deletedResponse.getCall(0).args[2] ).to.be.null; // { start, end } を指定しない。⇒全期間が対象になる。
+
+                assert( stubs.sql_parts.getNumberOfLogs.calledOnce, "getNumberOfLogs()が1度だけ呼ばれること。" );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
+
+                // ◆仕様検討、途中◆。
+
+                // resultオブジェクトがjsonDataメンバを持つことは、先に検証済み。
+                // expect( result.jsonData ).to.have.property( "ここは未検討" )
+            });
+        });
     });
 
     describe("::api_v1_activitylog_BASE()", function() {
@@ -434,7 +511,7 @@ describe( "activitylog.js", function(){
         it("異常系::getList～（）の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。
     });
 
-    describe("::api_vi_activitylog_add()",function(){
+    describe("::api_vi_activitylog_add() over API_V1_BASE()",function(){
         var stubs;
         var api_v1_activitylog_add = activitylog.api_v1_activitylog_add;
 
@@ -568,7 +645,7 @@ describe( "activitylog.js", function(){
         it("異常系::addActivityLog～（）の部分");// だけでいい。他の401認証NGとかは、API_V1_BASE()で検証済み。
     });
 
-    describe("::api_v1_activitylog_delete()",function(){
+    describe("::api_v1_activitylog_delete() over API_V1_BASE()",function(){
         var stubs;
         var api_v1_activitylog_delete = activitylog.api_v1_activitylog_delete;
 

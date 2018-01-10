@@ -100,6 +100,17 @@ router.post("/signup", function(req, res, next){
 	});
 });
 
+router.post("/remove", function(req, res, next){
+	var api_vi_activitylog_remove = factoryImpl.sql_lite_db.getInstance().api_vi_activitylog_remove;
+	var dataPost = req.body;
+	return api_vi_activitylog_remove( null, dataPost ).then((result)=>{
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
+	});
+});
+
+
 
 router.get('/show', function(req, res, next) {
 	var api_v1_activitylog_show = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_show;

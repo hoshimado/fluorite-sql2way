@@ -374,12 +374,18 @@ describe( "activitylog.js", function(){
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
 
-                // ◆仕様検討、途中◆。
+                expect( stubs.sql_parts.deleteExistUser.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
+                expect( stubs.sql_parts.deleteExistUser.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
 
-                // resultオブジェクトがjsonDataメンバを持つことは、先に検証済み。
-                // expect( result.jsonData ).to.have.property( "ここは未検討" )
+                expect( result ).to.have.property( "jsonData" );
+                expect( result.jsonData ).to.have.property( "removed" );
+                expect( result.jsonData.signuped ).to.deep.equal({
+                    "device_key" : dataFromPost.username
+                });
+                expect( result ).to.have.property( "status" ).to.equal( 200 );
             });
         });
+        it("異常系：SQLログの削除は成功を返したが、残存ログがある（が発生得るかは不明だが）");
     });
 
     describe("::api_v1_activitylog_BASE()", function() {

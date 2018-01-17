@@ -12,9 +12,9 @@ var sinon = require("sinon");
 var shouldFulfilled = require("promise-test-helper").shouldFulfilled;
 var shouldRejected  = require("promise-test-helper").shouldRejected;
 require('date-utils');
-var ApiCommon_StubAndHooker = require("./support_stubhooker.js").ApiCommon_StubAndHooker;
+var ApiCommon_StubAndHooker = require("../support_stubhooker.js").ApiCommon_StubAndHooker;
 
-const activitylog = require("../src/api/activitylog.js");
+const activitylog = require("../../src/api/activitylog/activitylog.js");
 
 var TEST_CONFIG_SQL = { // テスト用
 	database : "fake_db_name.sqlite3"

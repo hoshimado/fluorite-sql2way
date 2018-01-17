@@ -4,13 +4,13 @@
  * encoding=utf-8
  */
 
-var console_output = require("./debugger.js").console_output;
+var console_output = require("../debugger.js").console_output;
 
-var lib = require("./factory4require.js");
+var lib = require("../factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
-    "sql_parts" : new lib.Factory4Require("./sql_lite_db.js"),
+    "sql_parts" : new lib.Factory4Require("./sql_lite_db/sql_lite_db.js"),
 };
-var _SQL_CONNECTION_CONFIG = require("./sql_config.js");
+var _SQL_CONNECTION_CONFIG = require("../sql_config.js");
 factoryImpl[ "CONFIG_SQL" ] = new lib.Factory(_SQL_CONNECTION_CONFIG.CONFIG_SQL);
 factoryImpl[ "SETUP_KEY" ]  = new lib.Factory( _SQL_CONNECTION_CONFIG.SETUP_KEY );
 factoryImpl[ "MAX_USERS"] = new lib.Factory( _SQL_CONNECTION_CONFIG.MAX_USERS );

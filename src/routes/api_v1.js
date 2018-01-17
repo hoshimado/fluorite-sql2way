@@ -11,7 +11,7 @@ var router = express.Router();
 var console_output = require("../api/debugger.js").console_output;
 var lib = require("../api/factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
-    "sql_lite_db" : new lib.Factory4Require("../api/activitylog.js")
+    "sql_lite_db" : new lib.Factory4Require("../api/activitylog/activitylog.js")
 };
 
 

@@ -11,9 +11,9 @@ var sinon = require("sinon");
 var shouldFulfilled = require("promise-test-helper").shouldFulfilled;
 var shouldRejected  = require("promise-test-helper").shouldRejected;
 require('date-utils');
-var ApiCommon_StubAndHooker = require("./support_stubhooker.js").ApiCommon_StubAndHooker;
+var ApiCommon_StubAndHooker = require("../support_stubhooker.js").ApiCommon_StubAndHooker;
 
-const sql_parts = require("../src/api/sql_lite_db.js");
+const sql_parts = require("../../src/api/sql_lite_db/sql_lite_db.js");
 
 var TEST_CONFIG_SQL = { // テスト用
 	user : "fake_user",

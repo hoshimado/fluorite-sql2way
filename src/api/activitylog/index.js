@@ -5,7 +5,7 @@
  */
 
 
-var _api_v1_base = require("./api_v1_base.js");
+var _api_v1_base = require("./initialize.js");
 exports.api_vi_activitylog_setup = _api_v1_base.api_vi_activitylog_setup;
 
 var _user_manager = require("./user_manager.js");

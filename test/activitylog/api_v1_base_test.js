@@ -44,103 +44,19 @@ describe( "api_v1_base.js", function(){
             }
         };
     });
-    
-
-    describe("::api_vi_activitylog_setup()",function(){
-        var stubs, original = {};
-        beforeEach(function(){ // 内部関数をフックする。
-            original["SETUP_KEY"] = api_v1_base.factoryImpl.SETUP_KEY.getInstance(); 
-            stubs = COMMON_STUB_MANAGER.createStubs();
-
-            COMMON_STUB_MANAGER.hookInstance( api_v1_base, stubs );
-        });
-        afterEach(function(){
-            COMMON_STUB_MANAGER.restoreOriginal( api_v1_base );
-            api_v1_base.factoryImpl.SETUP_KEY.setStub( original.SETUP_KEY );
-        });
-
-        it("正常系", function(){
-            var queryFromGet = null;
-            var dataFromPost = { "create_key" : "せっとあっぷきー" };
-            var EXPECTED_NEW_TABLE = { "hoge" : "fuga" };
-            var api_vi_activitylog_setup = api_v1_base.api_vi_activitylog_setup;
-
-            api_v1_base.factoryImpl.SETUP_KEY.setStub( dataFromPost.create_key );
-            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
-                Promise.resolve()
-            );
-            stubs.sql_parts.setupTable1st.withArgs( TEST_CONFIG_SQL.database ).returns(
-                Promise.resolve( EXPECTED_NEW_TABLE )
-            );
-            stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns(
-                Promise.resolve()
-            );
-
-            return shouldFulfilled(
-                api_vi_activitylog_setup( queryFromGet, dataFromPost )
-            ).then(function( result ){
-                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
-                assert( stubs.sql_parts.setupTable1st.calledOnce );
-                assert( stubs.sql_parts.closeConnection.calledOnce );
-                expect( result ).to.have.property( "jsonData" );
-                expect( result.jsonData ).to.have.property( "tables" );
-                expect( result.jsonData.tables ).to.deep.equal( EXPECTED_NEW_TABLE );
-                expect( result ).to.have.property( "status" ).to.equal( 200 );
-            });
-        });
-        it("異常系：テーブル生成失敗の内部エラー", function(){
-            var queryFromGet = null;
-            var dataFromPost = { "create_key" : "せっとあっぷきー" };
-            var EXPECTED_FAILED_OBJ = { "table" : "cant create." };
-            var api_vi_activitylog_setup = api_v1_base.api_vi_activitylog_setup;
-    
-            api_v1_base.factoryImpl.SETUP_KEY.setStub( dataFromPost.create_key );
-            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
-                Promise.resolve()
-            );
-            stubs.sql_parts.setupTable1st.withArgs( TEST_CONFIG_SQL.database ).returns(
-                Promise.reject( EXPECTED_FAILED_OBJ )
-            );
-            stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns(
-                Promise.resolve()
-            );
-    
-            return shouldFulfilled(
-                api_vi_activitylog_setup( queryFromGet, dataFromPost )
-            ).then(function( result ){
-                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
-                assert( stubs.sql_parts.setupTable1st.calledOnce );
-                assert( stubs.sql_parts.closeConnection.calledOnce );
-                expect( result ).to.have.property( "jsonData" );
-                expect( result.jsonData ).to.have.property( "setup_err" );
-                expect( result.jsonData.setup_err ).to.deep.equal( EXPECTED_FAILED_OBJ );
-                expect( result ).to.have.property( "status" ).to.equal( 500 );
-            });
-        });
-        it("異常系：セットアップキーが不正", function(){
-            var queryFromGet = null;
-            var dataFromPost = { "create_key" : "不正なキー" };
-            var EXPECTED_FAILED_OBJ = { "table" : "cant create." };
-            var api_vi_activitylog_setup = api_v1_base.api_vi_activitylog_setup;
-    
-            api_v1_base.factoryImpl.SETUP_KEY.setStub( "期待キー" );
-
-            return shouldFulfilled(
-                api_vi_activitylog_setup( queryFromGet, dataFromPost )
-            ).then(function( result ){
-                assert( stubs.sql_parts.createPromiseForSqlConnection.notCalled );
-                assert( stubs.sql_parts.setupTable1st.notCalled );
-                assert( stubs.sql_parts.closeConnection.notCalled );
-                expect( result ).to.have.property( "jsonData" );
-                expect( result ).to.have.property( "status" ).to.equal( 403 );
-            });
-        });
-    });
-
 
     describe("::api_v1_activitylog_BASE()", function() {
         var stubs;
         var API_V1_BASE = api_v1_base.API_V1_BASE;
+
+        // ◆ToDo◆：わざわざhookなんぞせずにもっと分り安いテストドライバー方法があるはず。
+        var lib = require("../../src/api/factory4require.js");
+        var hook = {
+            "factoryImpl" : { // require()を使う代わりに、new Factory() する。
+                "sql_parts" : new lib.Factory4Require("./sql_db_io/index.js"),
+                "CONFIG_SQL" : new lib.Factory({"database" : TEST_CONFIG_SQL})
+            }
+        };
 
         /**
          * @type beforeEachで初期化される。
@@ -148,15 +64,15 @@ describe( "api_v1_base.js", function(){
         beforeEach(function(){ // 内部関数をフックする。
             stubs = COMMON_STUB_MANAGER.createStubs();
 
-            COMMON_STUB_MANAGER.hookInstance( api_v1_base, stubs );
+            COMMON_STUB_MANAGER.hookInstance( hook, stubs );
         });
         afterEach(function(){
-            COMMON_STUB_MANAGER.restoreOriginal( api_v1_base );
+            COMMON_STUB_MANAGER.restoreOriginal( hook );
         });
 
         // ここからテスト。
         it("正常系", function(){
-            var instance = new API_V1_BASE( api_v1_base.factoryImpl.CONFIG_SQL, api_v1_base.factoryImpl.sql_parts );
+            var instance = new API_V1_BASE( hook.factoryImpl.CONFIG_SQL, hook.factoryImpl.sql_parts );
             var spied_requestSql = sinon.spy( instance, "requestSql" );
             var inputData = {
                 "device_key" : "これは識別キー。必ず必要",

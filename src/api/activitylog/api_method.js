@@ -4,9 +4,10 @@
  * encoding=utf-8
  */
 
-var lib = require("../factory4require.js");
 var API_PARAM = require("./api_param.js").API_PARAM;
 var API_V1_BASE = require("./api_v1_base.js").API_V1_BASE;
+
+var lib = require("../factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
     "sql_parts" : new lib.Factory4Require("./sql_db_io/index.js"),
 };

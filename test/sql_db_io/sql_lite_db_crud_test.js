@@ -13,7 +13,7 @@ var shouldRejected  = require("promise-test-helper").shouldRejected;
 require('date-utils');
 var ApiCommon_StubAndHooker = require("../support_stubhooker.js").ApiCommon_StubAndHooker;
 
-const sql_parts = require("../../src/api/sql_lite_db/sql_lite_db_crud.js");
+const sql_parts = require("../../src/api/sql_db_io/sql_lite_db_crud.js");
 
 
 

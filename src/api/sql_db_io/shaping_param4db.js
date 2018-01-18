@@ -1,5 +1,5 @@
 /**
- * [sql_lite_db.js]
+ * [shaping_param4db.js]
  * 
  *  encoding=utf-8
  */
@@ -144,20 +144,6 @@ var getInsertObjectFromPostData = function( postData ){
 };
 exports.getInsertObjectFromPostData = getInsertObjectFromPostData;
 
-
-
-var _crud = require("./sql_lite_db_crud.js");
-exports.createPromiseForSqlConnection = _crud.createPromiseForSqlConnection;
-exports.closeConnection = _crud.closeConnection;
-exports.setupTable1st = _crud.setupTable1st;
-exports.addNewUser = _crud.addNewUser;
-exports.getNumberOfUsers = _crud.getNumberOfUsers;
-exports.deleteExistUser = _crud.deleteExistUser;
-exports.isOwnerValid = _crud.isOwnerValid;
-exports.getNumberOfLogs = _crud.getNumberOfLogs;
-exports.addActivityLog2Database = _crud.addActivityLog2Database;
-exports.getListOfActivityLogWhereDeviceKey = _crud.getListOfActivityLogWhereDeviceKey;
-exports.deleteActivityLogWhereDeviceKey = _crud.deleteActivityLogWhereDeviceKey;
 
 
 

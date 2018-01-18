@@ -1,5 +1,5 @@
 /*
-    [sql_lite_db_test.js]
+    [shaping_param4db_test.js]
 
     encoding=utf-8
 */
@@ -13,7 +13,7 @@ var shouldRejected  = require("promise-test-helper").shouldRejected;
 require('date-utils');
 var ApiCommon_StubAndHooker = require("../support_stubhooker.js").ApiCommon_StubAndHooker;
 
-const sql_parts = require("../../src/api/sql_lite_db/sql_lite_db.js");
+const sql_parts = require("../../src/api/sql_db_io/shaping_param4db.js");
 
 
 

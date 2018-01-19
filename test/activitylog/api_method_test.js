@@ -21,7 +21,7 @@ var TEST_CONFIG_SQL = { // テスト用
 };
 
 
-describe( "activitylog.js", function(){
+describe( "api_method.js", function(){
 
     var COMMON_STUB_MANAGER = new ApiCommon_StubAndHooker(function(){
         return {

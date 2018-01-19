@@ -21,7 +21,7 @@ var TEST_CONFIG_SQL = { // テスト用
 };
 
 
-describe( "activitylog.js", function(){
+describe( "user_manager.js", function(){
 
     var COMMON_STUB_MANAGER = new ApiCommon_StubAndHooker(function(){
         return {
@@ -231,8 +231,8 @@ describe( "activitylog.js", function(){
         it("正常系", function(){
             var queryFromGet = null;
             var dataFromPost = {
-                "device_key" : "ここは、削除期間の生成が特殊⇒全既刊削除、なのでPostを直に参照する",
-                "pass_key" : "そのためこの値に対する変換もテスト対象とする"
+                "device_key" : "ユーザー識別キー",  // ここは、削除期間の生成が特殊⇒全既刊削除、なのでPostを直に参照する
+                "pass_key" : "ユーザー毎の認証キー" // そのためこの値に対する変換もテスト対象とする
             };
             var EXPECTED_MAX_COUNT = 32;
             var EXPECTED_LAST_COUNT = 0; // これは、ゼロでなければならない。
@@ -262,9 +262,6 @@ describe( "activitylog.js", function(){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce, "createPromiseForSqlConnection()が1度呼ばれる" );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
-                expect( result ).to.be.exist;
-                expect( result ).to.have.property("jsonData");
-                expect( result ).to.have.property("status").to.equal(200);
                 // ここまでは、API_V1_BASE()で検証済みなので、簡易検証。
 
                 // isOwnerValid()へ渡されるパラメータを直に検証する。
@@ -283,15 +280,18 @@ describe( "activitylog.js", function(){
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( stubs.sql_parts.getNumberOfLogs.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
 
+                assert( stubs.sql_parts.deleteExistUser.calledOnce, "deleteExistUser()が1度だけ呼ばれること。" );
                 expect( stubs.sql_parts.deleteExistUser.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
                 expect( stubs.sql_parts.deleteExistUser.getCall(0).args[1] ).to.equal( dataFromPost.device_key );
 
-                expect( result ).to.have.property( "jsonData" );
+                expect( result ).to.be.exist;
+                expect( result ).to.have.property("status").to.equal(200);
+                expect( result ).to.have.property("jsonData");
                 expect( result.jsonData ).to.have.property( "removed" );
-                expect( result.jsonData.signuped ).to.deep.equal({
-                    "device_key" : dataFromPost.username
+                expect( result.jsonData.removed ).to.deep.equal({
+                    "device_key" : dataFromPost.device_key
                 });
-                expect( result ).to.have.property( "status" ).to.equal( 200 );
+
             });
         });
         it("異常系：SQLログの削除は成功を返したが、残存ログがある（が発生得るかは不明だが）");

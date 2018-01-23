@@ -9,7 +9,7 @@ var expect = chai.expect;
 var sinon = require("sinon");
 var promiseTestHelper = require("promise-test-helper");
 var shouldFulfilled = promiseTestHelper.shouldFulfilled;
-var target = require("../src/public/javascripts/chart_sleeping.js");
+var target = require("../../src/public/javascripts/chart_sleeping.js");
 
 
 describe("TEST for chart_sleeping.js", function(){

@@ -9,7 +9,7 @@ var expect = chai.expect;
 var sinon = require("sinon");
 var promiseTestHelper = require("promise-test-helper");
 var shouldFulfilled = promiseTestHelper.shouldFulfilled;
-var target = require("../src/public/javascripts/vue_client.js");
+var target = require("../../src/public/javascripts/vue_client.js");
 
 
 describe("TEST for vue_client.js", function(){
@@ -110,22 +110,6 @@ describe("TEST for vue_client.js", function(){
             expect( methods ).to.have.property("deleteLastData");
         });
 
-    });
-    describe("::promiseCreateAccount()",function(){
-        it('正常系', function(){
-            var mailAddress = "hogehoge";
-            var promiseCreateAccount = target.promiseCreateAccount;
-
-            // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
-            stub_fooked_axios["get"] = sinon.stub();
-            stub_fooked_axios["post"] = sinon.stub();
-            
-            return shouldFulfilled(
-                promiseCreateAccount( mailAddress )
-            ).then(function(result){
-                expect(result).to.equal( stub_fooked_axios );
-            });
-        });
     });
 
 

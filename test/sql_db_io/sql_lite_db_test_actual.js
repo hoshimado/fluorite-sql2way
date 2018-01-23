@@ -44,10 +44,9 @@ describe( "sql_lite_db_test_actual.js", function(){
     var getNumberOfUsers = sql_parts.getNumberOfUsers;
 
 
-    describe("::SQLiteトライアル。※モック化途中なので、今は動作しない。", function(){
-		it("シークエンス調査");
-/*
-		it("シークエンス調査", function(){
+    describe("::SQLiteトライアル。", function(){
+//		it("シークエンス調査");
+		it.skip("実際の入出力を伴うシークエンスの調査用⇒普段はSkipさせる", function(){
             var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
 //            sqlConfig = { "database" : "./db/test.splite3" }
              
@@ -65,7 +64,7 @@ describe( "sql_lite_db_test_actual.js", function(){
             promise = promise.then( function(result){
                 return getNumberOfUsers( sqlConfig.database );
             });
-/*
+
             promise = promise.then( function(result){
                 return addNewUser( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", 1024, "password" );
             });
@@ -88,7 +87,6 @@ describe( "sql_lite_db_test_actual.js", function(){
                 closeConnection( sqlConfig.database );
 			});
 		});
-*/
 	});
 });
 /*

@@ -251,6 +251,7 @@ var _vueAppSetup = function( createVueInstance ){
         },
         methods : {
             createAccount(){
+                // account_libは、manage_account.jsで定義されている。
                 var promise = account_lib.promiseCreateAccount( this.userName, this.passKeyWord );
                 promise.then(function(result){
                     // ToDo：この辺の作りこみ後で。
@@ -320,12 +321,6 @@ var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境
 */
         
 
-
-// ToDo: axiosへのインスタンスをフックしておかないと、テストできない！
-var _promiseCreateAccount = function( mailAddress ){
-    // ToDo:これから実装
-    return Promise.resolve( client_lib.axios );
-};
 
 
 
@@ -584,7 +579,6 @@ if( this.window ){
     exports.vueAppGrid = _vueAppGrid;
     exports.vueAppSetup = _vueAppSetup;
     
-    exports.promiseCreateAccount = _promiseCreateAccount;
     client_lib["axios"] = null; // テスト環境では定義しない。テスト側で適切にfookすること。
     exports.client_lib = client_lib;
 }

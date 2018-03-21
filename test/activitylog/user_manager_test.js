@@ -46,7 +46,7 @@ describe( "user_manager.js", function(){
     });
     
 
-    describe("::api_vi_activitylog_signup()",function(){
+    describe("::api_v1_activitylog_signup()",function(){
         var stubs, original = {};
         beforeEach(function(){ // 内部関数をフックする。
             original["MAX_USERS"] = activitylog.factoryImpl.MAX_USERS.getInstance();
@@ -68,12 +68,15 @@ describe( "user_manager.js", function(){
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
                 "passkey"  : "cat1cat2"
             };
-            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+            var api_v1_activitylog_signup = activitylog.api_v1_activitylog_signup;
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
             stubs.sql_parts.isOwnerValid.onCall(0).returns(
-                Promise.reject({"here" : "is new user"})
+                Promise.reject({
+                    "isDevicePermission" : false,
+                    "isUserExist" : false
+                })
             );
             stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
                 Promise.resolve( 15 ) // 登録済みのユーザー数
@@ -87,7 +90,7 @@ describe( "user_manager.js", function(){
            
 
             return shouldFulfilled(
-                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+                api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
@@ -116,7 +119,7 @@ describe( "user_manager.js", function(){
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
                 "passkey"  : "cat1cat2"
             };
-            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+            var api_v1_activitylog_signup = activitylog.api_v1_activitylog_signup;
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
@@ -125,7 +128,7 @@ describe( "user_manager.js", function(){
             );
 
             return shouldFulfilled(
-                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+                api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
@@ -149,7 +152,7 @@ describe( "user_manager.js", function(){
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
                 "passkey"  : "imposter_faker"
             };
-            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+            var api_v1_activitylog_signup = activitylog.api_v1_activitylog_signup;
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
@@ -161,7 +164,7 @@ describe( "user_manager.js", function(){
             );
 
             return shouldFulfilled(
-                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+                api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
@@ -181,7 +184,7 @@ describe( "user_manager.js", function(){
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
                 "passkey"  : "cat1cat2"
             };
-            var api_vi_activitylog_signup = activitylog.api_vi_activitylog_signup;
+            var api_v1_activitylog_signup = activitylog.api_v1_activitylog_signup;
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
@@ -195,7 +198,7 @@ describe( "user_manager.js", function(){
            
 
             return shouldFulfilled(
-                api_vi_activitylog_signup( queryFromGet, dataFromPost )
+                api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
@@ -210,11 +213,11 @@ describe( "user_manager.js", function(){
             });
         });
     });
-    describe("::api_vi_activitylog_remove() over API_V1_BASE()",function(){
+    describe("::api_v1_activitylog_remove() over API_V1_BASE()",function(){
         // ※アカウント作成なので、この位置に記述しているが、実装的には、
         //   後述のinsert系と同様に API_V1_BASE() の認証機構とQuery発行フローをそのまま利用。
         var stubs;
-        var api_vi_activitylog_remove = activitylog.api_vi_activitylog_remove;
+        var api_v1_activitylog_remove = activitylog.api_v1_activitylog_remove;
 
         /**
          * @type beforeEachで初期化される。
@@ -256,7 +259,7 @@ describe( "user_manager.js", function(){
             );
         
             return shouldFulfilled(
-                api_vi_activitylog_remove( queryFromGet, dataFromPost )
+                api_v1_activitylog_remove( queryFromGet, dataFromPost )
             ).then(function( result ){
                 
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce, "createPromiseForSqlConnection()が1度呼ばれる" );

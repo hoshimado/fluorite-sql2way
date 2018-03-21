@@ -20,7 +20,7 @@ factoryImpl[ "MAX_LOGS" ] = new lib.Factory( _SQL_CONNECTION_CONFIG.MAX_LOGS );
 exports.factoryImpl = factoryImpl;
 
 
-exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
+exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
 	var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
 	var outJsonData = {};
 	var config = factoryImpl.CONFIG_SQL.getInstance();
@@ -117,7 +117,7 @@ exports.api_vi_activitylog_signup = function( queryFromGet, dataFromPost ){
 };
 
 
-exports.api_vi_activitylog_remove = function( queryFromGet, dataFromPost ){
+exports.api_v1_activitylog_remove = function( queryFromGet, dataFromPost ){
 	var inputData = {
 		"device_key" : dataFromPost.device_key,
 		"pass_key"   : dataFromPost.pass_key

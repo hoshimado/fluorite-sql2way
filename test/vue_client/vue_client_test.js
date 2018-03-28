@@ -211,8 +211,8 @@ describe("TEST for vue_client.js", function(){
                 "number_of_logs" : "ログデータの残数（数値）",
                 "device_key" : EXPECTED_USER.userName
             };
-            var spied_isServerTimeZoneGMT = sinon.stub().onCall(0).returns(true); // サーバー側は「GMT」判定を返すとする。
-            target.client_lib.isServerTimeZoneGMT = spied_isServerTimeZoneGMT;
+            var stub_isServerTimeZoneGMT = sinon.stub().onCall(0).returns(true); // サーバー側は「GMT」判定を返すとする。
+            target.client_lib.isServerTimeZoneGMT = stub_isServerTimeZoneGMT;
 
             // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
             stub_fooked_axios["get"] = sinon.stub();
@@ -236,7 +236,7 @@ describe("TEST for vue_client.js", function(){
             return shouldFulfilled(
                 deleteLastActivityDataInAccordanceWithGrid( fakeLastActivitiyDate )
             ).then(function(){
-                expect( spied_isServerTimeZoneGMT.callCount ).to.equal( 1, "isServerTimeZoneGMT()を1度呼ぶこと" );
+                expect( stub_isServerTimeZoneGMT.callCount ).to.equal( 1, "isServerTimeZoneGMT()を1度呼ぶこと" );
 
                 var stub_post_args = stub_fooked_axios.post.getCall(0).args;
                 expect( stub_fooked_axios.get.callCount ).to.equal( 0, "axios.get()は呼ばれないこと。" )

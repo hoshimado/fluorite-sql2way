@@ -104,8 +104,7 @@ describe( "user_manager.js", function(){
                 expect( stubs.sql_parts.addNewUser.getCall(0).args[3] ).to.equal( dataFromPost.passkey );
                 
                 expect( result ).to.have.property( "jsonData" );
-                expect( result.jsonData ).to.have.property( "signuped" );
-                expect( result.jsonData.signuped ).to.deep.equal({
+                expect( result.jsonData ).to.have.property( "signuped" ).to.deep.equal({
                     "device_key" : dataFromPost.username,
                     "password"   : dataFromPost.passkey
                 });

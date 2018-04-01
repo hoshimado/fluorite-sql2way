@@ -9,7 +9,7 @@ var expect = chai.expect;
 var sinon = require("sinon");
 var promiseTestHelper = require("promise-test-helper");
 var shouldFulfilled = promiseTestHelper.shouldFulfilled;
-var target = require("../src/public/javascripts/chart_sleeping.js");
+var target = require("../../src/public/javascripts/chart_sleeping.js");
 
 
 describe("TEST for chart_sleeping.js", function(){
@@ -144,7 +144,7 @@ describe("TEST for chart_sleeping.js", function(){
 
             plot2Chart( INPUT_DATA );
             assert( stub_convertSleepTime6MarkingTimeTwice.calledOnce );
-            assert( stub_chartShow.calledOnce )
+            assert( stub_chartShow.calledOnce );
             expect( stub_chartShow.getCall(0).args[0] ).to.equal( EXPECTED_CHART_DATA.date );
             expect( stub_chartShow.getCall(0).args[1]).to.deep.equal([{
                 "label" : "睡眠時間",

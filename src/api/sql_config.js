@@ -20,4 +20,6 @@ exports.CONFIG_SQL = CONFIG_SQL;
 
 exports.SETUP_KEY = process.env.CREATE_KEY;
 exports.MAX_USERS = process.env.MAX_USERS;
+exports.MAX_LOGS  = process.env.MAX_LOGS;
+
 

@@ -3,7 +3,7 @@
     encoding=utf-8
  */
 
-var _promiseCreateAccount = function(userNameStr, passKeyStr ){
+var _promiseCreateAccount = function( userNameStr, passKeyStr ){
     var url = "./api/v1/activitylog/signup";
     var axiosInstance = _acount_hook.axios;
     var promise = axiosInstance.post(
@@ -16,16 +16,7 @@ var _promiseCreateAccount = function(userNameStr, passKeyStr ){
     return promise.then(function(result){
         return Promise.resolve( result.data );
     });
-}
-/*
-上記でaxios()の戻す期待値。
-data : {
-    signuped : {
-        device_key : ""
-        password : ""
-    }
-}
-*/
+};
 
 
 

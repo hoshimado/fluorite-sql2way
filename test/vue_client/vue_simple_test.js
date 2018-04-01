@@ -8,7 +8,7 @@ var expect = chai.expect;
 var sinon = require("sinon");
 var promiseTestHelper = require("promise-test-helper");
 var shouldFulfilled = promiseTestHelper.shouldFulfilled;
-var target = require("../src/public/javascripts/vue_simple.js");
+var target = require("../../src/public/javascripts/vue_simple.js");
 
 
 describe("TEST for vue_simple.js", function(){

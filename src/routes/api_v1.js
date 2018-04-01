@@ -11,7 +11,7 @@ var router = express.Router();
 var console_output = require("../api/debugger.js").console_output;
 var lib = require("../api/factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
-    "sql_lite_db" : new lib.Factory4Require("../api/activitylog.js")
+    "sql_activitylog" : new lib.Factory4Require("../api/activitylog/index.js")
 };
 
 
@@ -80,29 +80,40 @@ var responseAnomaly = function( res, err ){
 
 
 router.post("/setup1st", function(req, res, next){
-	var api_vi_activitylog_setup = factoryImpl.sql_lite_db.getInstance().api_vi_activitylog_setup;
+	var api_vi_activitylog_setup = factoryImpl.sql_activitylog.getInstance().api_vi_activitylog_setup;
 	var dataPost = req.body; // app.jsで「app.use(bodyParser.json());」してるので、bodyプロパティが使える。
 
 	return api_vi_activitylog_setup( null, dataPost ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
-	});;
+	});
 });
 
 router.post("/signup", function(req, res, next){
-	var api_vi_activitylog_signup = factoryImpl.sql_lite_db.getInstance().api_vi_activitylog_signup;
+	var api_vi_activitylog_signup = factoryImpl.sql_activitylog.getInstance().api_vi_activitylog_signup;
 	var dataPost = req.body;
 	return api_vi_activitylog_signup( null, dataPost ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
-	});;
+	});
+});
+
+router.post("/remove", function(req, res, next){
+	var api_vi_activitylog_remove = factoryImpl.sql_activitylog.getInstance().api_vi_activitylog_remove;
+	var dataPost = req.body;
+	return api_vi_activitylog_remove( null, dataPost ).then((result)=>{
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
+	});
 });
 
 
+
 router.get('/show', function(req, res, next) {
-	var api_v1_activitylog_show = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_show;
+	var api_v1_activitylog_show = factoryImpl.sql_activitylog.getInstance().api_v1_activitylog_show;
 
 	return api_v1_activitylog_show(req.query, null ).then((result)=>{
 		responseNormal( res, result );
@@ -112,7 +123,7 @@ router.get('/show', function(req, res, next) {
 });
 
 router.post("/add", function(req, res, next){
-	var api_v1_activitylog_add = factoryImpl.sql_lite_db.getInstance().api_v1_activitylog_add;
+	var api_v1_activitylog_add = factoryImpl.sql_activitylog.getInstance().api_v1_activitylog_add;
 	var dataPost = req.body;
 	
 	return api_v1_activitylog_add( null, dataPost ).then((result)=>{
@@ -121,6 +132,17 @@ router.post("/add", function(req, res, next){
 		responseAnomaly( res, err );
 	});
 });
+
+router.post("/delete", function(req, res, nest) {
+	var api_v1_activitylog_delete = factoryImpl.sql_activitylog.getInstance().api_v1_activitylog_delete;
+	var dataPost = req.body;
+	
+	return api_v1_activitylog_delete( null, dataPost).then((result)=>{
+		responseNormal( res, result );
+	}).catch((err)=>{
+		responseAnomaly( res, err );
+	});
+})
 
 
 

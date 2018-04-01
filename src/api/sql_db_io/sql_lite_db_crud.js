@@ -1,5 +1,5 @@
 /**
- * [sql_lite_db.js]
+ * [sql_lite_db_crud.js]
  * 
  *  encoding=utf-8
  */
@@ -7,7 +7,7 @@
 
 require('date-utils'); // Data() クラスのtoString()を拡張してくれる。
 // const debug = require("./debugger.js");
-var lib = require("./factory4require.js");
+var lib = require("../factory4require.js");
 var factoryImpl = { // require()を使う代わりに、new Factory() する。
 	"crypto" : new lib.Factory4Require("crypto"),
     "sqlite3" : new lib.Factory4Require("sqlite3"),  // https://www.npmjs.com/package/mssql
@@ -16,108 +16,6 @@ var factoryImpl = { // require()を使う代わりに、new Factory() する。
 
 // UTデバッグ用のHookポイント。運用では外部公開しないメソッドはこっちにまとめる。
 exports.factoryImpl = factoryImpl;
-
-
-
-
-/**
- * 渡されたMACアドレス（じゃなくても良いけど）から、ハッシュ値を求める。
- * 一応、ハッシュパターンは選択できるようにしておく。
- * 
- * @param{String} plainText 変換元になる文字列。
- * @param{String} ハッシュ値の計算方法。cryptoモジュール準拠。とりあえず「md5」設定しておけ。
- */
-var getHashHexStr = function( plainText, algorithm ){
-	var crypto = factoryImpl.crypto.getInstance();
-	var hashsum = crypto.createHash(algorithm);
-	hashsum.update(plainText);
-
-	// cryptoモジュール（node.js標準）の詳細は以下のURL参照
-	// http://qiita.com/_daisuke/items/990513e89ca169e9c4ad
-	// http://kaworu.jpn.org/javascript/node.js%E3%81%A7%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E3%82%92%E8%A8%88%E7%AE%97%E3%81%99%E3%82%8B
-	// http://nodejs.jp/nodejs.org_ja/docs/v0.4/api/crypto.html
-
-	return hashsum.digest("hex");
-};
-exports.getHashHexStr = getHashHexStr;
-
-
-var _wrapStringValue = function( deviceKey ){
-	return getHashHexStr( deviceKey, "md5" );
-};
-factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
-
-
-
-
-/**
- * HTTP::GETデータから、「SHOW操作」に必要なデータ郡を取得。
- * API呼び出しのフォーマットのチェックを兼ねる。フォーマット不正なら { "invalid" : "理由" } を返却。
- * 入力データは、getData = { device_key, pass_key } が期待値。
- * pass_keyは無くともスルーするが、その後の検証フェースでNGになる（見込み）。
- * 
- * @returns オブジェクト{ device_key: "" }。フォーマット違反なら{ "invalid" : "理由" }
- */
-var getShowObjectFromGetData = function( getData ){
-	var valid_data = {}
-	var date_start = (function( pastDay ){
-		var now_date = new Date();
-		var base_sec = now_date.getTime() - pastDay * 86400000; //日数 * 1日のミリ秒数;
-		now_date.setTime( base_sec );
-		return now_date;
-	}( 28 )); // 4週間前までを取得、を基本とする。
-	var date_end = new Date(); // 現時点までを取得。
-
-	if( getData[ "device_key" ] ){
-		valid_data[ "device_key" ] = getData["device_key"];
-		valid_data[ "date_start" ] = getData.date_start ? getData.date_start : date_start.toFormat("YYYY-MM-DD"); // data-utilsモジュールでの拡張を利用。
-		valid_data[ "date_end"   ] = getData.date_end ? getData.date_end : date_end.toFormat("YYYY-MM-DD");
-		// 終端は、Query時に「その日の23:59」を指定しているので、「今日」でOK。
-
-		if( !valid_data.date_start.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
-			valid_data[ "invalid" ] = "format of date is wrong.";
-		}
-		if( !valid_data.date_end.match(/\d{4,4}-\d{2,2}-\d{2,2}/) ){
-			valid_data[ "invalid" ] = "format of date is wrong.";
-		}
-		if( getData["pass_key"] ){
-			valid_data["pass_key"] = getData.pass_key;
-		}
-	}else{
-		valid_data[ "invalid" ] = "parameter is INVAILD.";
-	}
-
-	return valid_data;
-};
-exports.getShowObjectFromGetData = getShowObjectFromGetData;
-
-
-
-var getInsertObjectFromPostData = function( postData ){
-	var valid_data = {}
-	
-		if( postData["type_value"] && isFinite(postData[ "type_value" ]) ){
-			// 数字変換（int）出来る事、も必須。ただし、文字列のままで格納。
-			valid_data[ "type_value" ] = postData[ "type_value" ];
-		}else{
-			valid_data[ "invalid" ] = "there is not valid type_value. that must be number.";
-		}
-	
-		if( postData["device_key"] ){
-			valid_data[ "device_key" ] = postData["device_key"];
-		}else{
-			valid_data[ "invalid" ] = "there is not device_key.";
-		}
-
-		if( postData["pass_key"] ){
-			valid_data["pass_key"] = postData.pass_key; // アンダーバーの有無注意
-		}else{
-			valid_data[ "invalid" ] = "parameter is luck."
-		}
-
-		return valid_data;
-};
-exports.getInsertObjectFromPostData = getInsertObjectFromPostData;
 
 
 
@@ -132,11 +30,11 @@ var createPromiseForSqlConnection = function( sqlConfig ){
 	var databaseName = sqlConfig.database;
 
 	if( dbs[ databaseName ] ){
-		return Promise.resolve()
+		return Promise.resolve();
 	}else{
 		return new Promise(function(resolve,reject){
 			var sqlite = factoryImpl.sqlite3.getInstance().verbose();
-			var db_connect = new sqlite.Database( databaseName, (err) =>{
+			var db_connect = new sqlite.Database( databaseName, (err)=>{
 				if( !err ){
 					dbs[ databaseName ] = db_connect;
 					resolve();
@@ -144,7 +42,7 @@ var createPromiseForSqlConnection = function( sqlConfig ){
 					reject(err);
 				}
 			});
-		})
+		});
 	}
 };
 exports.createPromiseForSqlConnection = createPromiseForSqlConnection;
@@ -223,6 +121,36 @@ exports.setupTable1st = setupTable1st;
 
 
 
+
+/**
+ * 渡されたMACアドレス（じゃなくても良いけど）から、ハッシュ値を求める。
+ * 一応、ハッシュパターンは選択できるようにしておく。
+ * 
+ * @param{String} plainText 変換元になる文字列。
+ * @param{String} ハッシュ値の計算方法。cryptoモジュール準拠。とりあえず「md5」設定しておけ。
+ */
+var getHashHexStr = function( plainText, algorithm ){
+	var crypto = factoryImpl.crypto.getInstance();
+	var hashsum = crypto.createHash(algorithm);
+	hashsum.update(plainText);
+
+	// cryptoモジュール（node.js標準）の詳細は以下のURL参照
+	// http://qiita.com/_daisuke/items/990513e89ca169e9c4ad
+	// http://kaworu.jpn.org/javascript/node.js%E3%81%A7%E3%83%8F%E3%83%83%E3%82%B7%E3%83%A5%E3%82%92%E8%A8%88%E7%AE%97%E3%81%99%E3%82%8B
+	// http://nodejs.jp/nodejs.org_ja/docs/v0.4/api/crypto.html
+
+	return hashsum.digest("hex");
+};
+exports.getHashHexStr = getHashHexStr;
+
+
+var _wrapStringValue = function( deviceKey ){
+	return getHashHexStr( deviceKey, "md5" );
+};
+factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
+
+
+
 /**
  * ユーザーを、テーブルに登録する。
  * 
@@ -246,7 +174,7 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 		var wrappedDeviceKey = wrapString( deviceKey );
 		var wrappedPassWord = wrapString( passwordStr )
 		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])";
-		query_str += "VALUES('" + wrappedDeviceKey + "', " + maxEntrys + ", '" + wrappedPassWord + "')";
+		query_str += " VALUES('" + wrappedDeviceKey + "', " + maxEntrys + ", '" + wrappedPassWord + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
@@ -264,6 +192,9 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 	});
 };
 exports.addNewUser = addNewUser;
+
+
+
 
 
 
@@ -303,7 +234,31 @@ exports.getNumberOfUsers = getNumberOfUsers;
 
 
 var deleteExistUser = function(databaseName, deviceKey ){
-	return Promise.reject();
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function(resolve,reject){
+		var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+		var wrappedDeviceKey = wrapString( deviceKey );
+		var query_str = "DELETE";
+		query_str += " FROM owners_permission";
+		query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'";
+
+		db.all(query_str, [], (err) => {
+			if(!err){
+				return resolve();
+			}else{
+				reject({
+					"isEnableValidationProcedure" : false
+				});
+			}
+		});
+	});
 };
 exports.deleteExistUser = deleteExistUser;
 
@@ -336,11 +291,20 @@ var isOwnerValid = function( databaseName, deviceKey, password ){
 
 		db.all(query_str, [], (err, rows) => { // get()でショートハンドしても良いが、Queryの分かりやすさ考慮でall()する。
 			if(!err){
-				if( (rows.length > 0) && (wrappedPassWord == rows[0].password) ){
-					resolve( rows[0].max_entrys );
+				if( rows.length > 0 ){
+					if(wrappedPassWord == rows[0].password){
+						resolve( rows[0].max_entrys );
+						
+					}else{
+						reject({
+							"isDevicePermission" : false,
+							"isUserExist" : true
+						});
+					}
 				}else{
 					reject({
-						"isDevicePermission" : false
+						"isDevicePermission" : false,
+						"isUserExist" : false
 					});
 				}
 			}else{
@@ -352,6 +316,49 @@ var isOwnerValid = function( databaseName, deviceKey, password ){
 	});
 }
 exports.isOwnerValid = isOwnerValid;
+
+
+
+
+
+/**
+ * 登録済みのログ数を、ユーザー単位で取得する。
+ * 
+ * @param{String} databaseName データベース名
+ * @param{String} 対象のユーザー識別子
+ * @returns{Promise} 検証結果。Promise経由で非同期に返る。
+ */
+var getNumberOfLogs = function( databaseName, deviceKey ){
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+	var wrappedDeviceKey = wrapString( deviceKey );
+
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function(resolve,reject){
+		var query_str = "SELECT count(*) FROM activitylogs";
+		query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
+
+		db.all(query_str, [], (err, rows) => {
+			var item;
+			if(!err){
+				item = rows[0];
+				return resolve( item["count(*)"] );
+			}else{
+				reject({
+					"isEnableValidationProcedure" : false
+				});
+			}
+		});
+	});
+};
+exports.getNumberOfLogs = getNumberOfLogs;
+
 
 
 
@@ -401,7 +408,7 @@ exports.addActivityLog2Database = addActivityLog2Database;
 
 
 /**
- * デバイス識別キーに紐づいたバッテリーログを、指定されたデータベースから取得する。
+ * デバイス識別キーに紐づいたアクティビティログを、指定されたデータベースから取得する。
  * @param{String} Database データベース名
  * @param{String} deviceKey デバイスの識別キー
  * @param{Object} period 取得する日付の期間 { start : null, end : null }を許容する。ただし、使う場合はyyyy-mm-dd整形済みを前提。
@@ -432,7 +439,7 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 	if( period && period.end ){
 		query_str += " AND [created_at] <= '";
 		query_str += period.end;
-		query_str += " 23:59'"; // その日の最後、として指定する。※「T」は付けない（json変換後だと付いてくるけど）
+		query_str += "'";
 	}
 
 	return new Promise(function(resolve,reject){
@@ -449,10 +456,52 @@ exports.getListOfActivityLogWhereDeviceKey = getListOfActivityLogWhereDeviceKey;
 
 
 
+
+
+/**
+ * デバイス識別キーに紐づいたアクティビティログを、指定されたデータベースから削除する。
+ * @param{String} Database データベース名
+ * @param{String} deviceKey デバイスの識別キー
+ * @param{Object} period 取得する日付の期間 { start : null, end : null }を許容する⇒全部消去。ただし、使う場合はyyyy-mm-dd整形済みを前提。
+ * @returns{Promise} SQLからの取得結果を返すPromiseオブジェクト。成功時resolve( numberOfLogs ) 、失敗時reject( err )。
+ */
 var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
-	return Promise.reject();
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
+	var wrappedDeviceKey = wrapString( deviceKey );
+
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	var query_str = "DELETE FROM activitylogs";
+	query_str += " WHERE [owners_hash]='" + wrappedDeviceKey + "'"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
+	// http://sql55.com/column/string-comparison.php
+	// > SQL Server では文字列を比較する際、比較対象の 2 つの文字列の長さが違った場合、
+	// > 短い方の文字列の後ろにスペースを足して、長さの長い方にあわせてから比較します。
+	if( period && period.start ){
+		query_str += " AND [created_at] > '";
+		query_str += period.start;
+		query_str += "'";
+	}
+	if( period && period.end ){
+		query_str += " AND [created_at] <= '";
+		query_str += period.end;
+		query_str += "'";
+	}
+
+	return new Promise(function(resolve,reject){
+		db.all(query_str, [], (err, rows) => {
+			if(!err){
+				return resolve( rows );
+			}else{
+				return reject( err );
+			}
+		});
+	});
 };
-exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey();
-
-
+exports.deleteActivityLogWhereDeviceKey = deleteActivityLogWhereDeviceKey;
 

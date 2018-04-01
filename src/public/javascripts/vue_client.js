@@ -2,8 +2,23 @@
  * [vue_client.js]
     encoding=utf-8
  */
+var _local_toDateString = function( dateObj ){ // 自前実装したくないけど、、、しゃーない。
+    var yyyy = ("0000" + dateObj.getFullYear() ).slice(-4);
+    var mm = ("00" + (dateObj.getMonth() + 1).toString() ).slice(-2);
+    var dd = ("00" + dateObj.getDate() ).slice(-2);
+    var hh = ("00" + dateObj.getHours() ).slice(-2);
+    var mi = ("00" + dateObj.getMinutes() ).slice(-2);
+    var ss = ("00" + dateObj.getSeconds() ).slice(-2);
+
+    return yyyy + "-" + mm + "-" + dd + " " + hh + ":" + mi + ":" + ss + ".000";
+};
 
 
+var _setVueModalDialog = function( staticVue ){
+    staticVue.component('modal', {
+        template: '#modal-template'
+    });
+};
 
 var _setVueComponentGrid = function( staticVue ){
     // register the grid component
@@ -85,20 +100,24 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "chartIconColorBar" : ICON_COLOR.active,
             "chartIconColorLine" : ICON_COLOR.inactive,
             "lodingSpinnerDivStyle" : {"display" : "block"},
+            "normalShownDivStyle"   : {"display" : "none"},
             "lastLoadedActivityData" : null, // 最初は「無し」
-            "isRefreshDataIcon" : true,
-            "isShowUploadingIcon" : false
+            "actionButtonDivStyle" : {"display" : "none"},
+            "processingDivStyle" : {"display" : "none"},
+            "isConfirmModalDialogForDeletingLastData": false
         },
         methods : {
             "getGridData" : function() {
                 var promise = client_lib.getActivityDataInAccordanceWithAccountVue();
                 return promise.then((resultArray)=>{
-                    var localtimedArray = client_lib.modifyTimezoneInActivityList( resultArray );
+                    var localtimedArray = (client_lib.isServerTimeZoneGMT()) 
+                        ? client_lib.convertTimezoneInActivityList( resultArray, +9 ) // JST = +9.
+                        : resultArray;
                     var grid_activity_data = client_lib.convertActivityList2GridData( localtimedArray );
                     this.gridData = grid_activity_data.slice(0, 6);
                     // ↑カットオフ入れてる。最大６つまで、で。
 
-                    // ↓寺家列に対して grid_activity_data は逆順（最初が最新）なので、注意。
+                    // ↓時系列に対して grid_activity_data は逆順（最初が最新）なので、注意。
                     return Promise.resolve( localtimedArray );
                 }).then(( activitiyData )=>{
                     // チャートのテスト
@@ -108,6 +127,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                 }).then(()=>{ // thisの指す先に注意。ここではアロー演算子なので、Vueインスタンス自身。
                     // 読み込み中、の表示を消す。
                     this.lodingSpinnerDivStyle.display = "none";
+                    this.normalShownDivStyle.display = "block";
+                    this.actionButtonDivStyle.display = "block";
 
                     // 続く時間差のテスト（なければ消す）。
                     return new Promise((resolve,reject)=>{
@@ -120,8 +141,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "noticeGotUp" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GET_UP.type );
 
-                this.isRefreshDataIcon = false;
-                this.isShowUploadingIcon = true;
+                this.actionButtonDivStyle.display = "none";
+                this.processingDivStyle.display = "block";
                 promise.then((responsedata)=>{ // 引数は読み捨て。
                     return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
@@ -131,27 +152,55 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
                         alert(err.request);
                     }
                 }).then(()=>{
-                    this.isRefreshDataIcon = true;
-                    this.isShowUploadingIcon = false;
+                    this.processingDivStyle.display = "none";
+                    this.actionButtonDivStyle.display = "block";
                 });
             },
             "noticeGotoBed" : function(){
                 var promise = client_lib.addActivityDataInAccordanceWithAccountVue( ACTIVITY.GOTO_BED.type );
 
-                this.isRefreshDataIcon = false;
-                this.isShowUploadingIcon = true;
+                this.actionButtonDivStyle.display = "none";
+                this.processingDivStyle.display = "block";
                 promise.then((responsedata)=>{ // 引数は読み捨て。
                     return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
                 }).catch((err)=>{
                     alert(err); //暫定
                 }).then(()=>{
-                    this.isRefreshDataIcon = true;
-                    this.isShowUploadingIcon = false;
+                    this.actionButtonDivStyle.display = "block";
+                    this.processingDivStyle.display = "none";
+                });
+            },
+            "showModalDialogForDeletingLastData" : function () {
+                this.isConfirmModalDialogForDeletingLastData = true;
+            },
+            "cancelModalDialogForDeletingLastData" : function () {
+                this.isConfirmModalDialogForDeletingLastData = false;
+            },
+            "deleteLastData" : function(){
+                var lastDate = this.lastLoadedActivityData[ this.lastLoadedActivityData.length -1 ].created_at;
+                var promise = client_lib.deleteLastActivityDataInAccordanceWithGrid( lastDate );
+
+                this.isConfirmModalDialogForDeletingLastData = false;
+
+                this.actionButtonDivStyle.display = "none";
+                this.processingDivStyle.display = "block";
+
+                promise.catch(()=>{
+                    return Promise.reject("失敗しました / 機能は未実装"); // 暫定
+                }).then(()=>{
+                    // 削除操作に成功したので、表示を更新。
+                    return this.getGridData(); // ↑アロー演算子なので、このthisはvueのインスタンスを刺す。
+                }).catch((err)=>{
+                    alert(err); //暫定
+                }).then(()=>{
+                    this.actionButtonDivStyle.display = "block";
+                    this.processingDivStyle.display = "none";
                 });
             },
             "refreshData" : function() {
                 // 読み込み中、の表示を出す。
-                this.lodingSpinnerDivStyle.display = "display";
+                this.lodingSpinnerDivStyle.display = "block";
+                this.normalShownDivStyle.display = "none";
 
                 // データを、サーバーから再読み込みして表示する。
                 this.getGridData();
@@ -185,7 +234,9 @@ var _vueAppSetup = function( createVueInstance ){
         el: "#app_setup",
         data: {
             "userName": "",
-            "passKeyWord" : ""
+            "passKeyWord" : "",
+            "isNoticeDialogForUpdateInfo" : false,
+            "isConfirmModalDialogForRemoveAccount" : false
         },
         computed : {
             "userNameIsValid" : function(){
@@ -200,6 +251,7 @@ var _vueAppSetup = function( createVueInstance ){
         },
         methods : {
             createAccount(){
+                // account_libは、manage_account.jsで定義されている。
                 var promise = account_lib.promiseCreateAccount( this.userName, this.passKeyWord );
                 promise.then(function(result){
                     // ToDo：この辺の作りこみ後で。
@@ -221,6 +273,16 @@ var _vueAppSetup = function( createVueInstance ){
                 }).catch(function(err){
                     alert( "登録できませんでした。\r\n\r\n※詳細なエラー表示は未実装。" );
                 });
+            },
+            showModalDialogForRemovingAccount(){
+                this.isConfirmModalDialogForRemoveAccount = true;
+            },
+            removeAccount(){
+                this.isConfirmModalDialogForRemoveAccount = false;
+                alert("この機能は未実装");
+            },
+            cancelModalDialogForRemovingAccount(){
+                this.isConfirmModalDialogForRemoveAccount = false;
             }
         },
         mounted : function(){
@@ -228,6 +290,8 @@ var _vueAppSetup = function( createVueInstance ){
             var savedPassKey = client_lib.tinyCookie( COOKIE_USER_PASSWORD );
             this.userName = savedUserName;
             this.passKeyWord = savedPassKey;
+
+            this.isNoticeDialogForUpdateInfo = !savedUserName || !savedPassKey;
         }
     });
     return app_setup;
@@ -258,12 +322,6 @@ var _tinyCookie = this.window ? window.Cookie : undefined; // ブラウザ環境
         
 
 
-// ToDo: axiosへのインスタンスをフックしておかないと、テストできない！
-var _promiseCreateAccount = function( mailAddress ){
-    // ToDo:これから実装
-    return Promise.resolve( client_lib.axios );
-};
-
 
 
 /**
@@ -287,20 +345,16 @@ if( !this.window ){
 /**
  * 動作ドメイン「azurewebsites.net/」で判別して、GMT→JST補正する。
  */
-var convertGMT2JST = function( dateStr ){
-    var dt;
-    var TIME_ZONE = 9; // JST
-    if( window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0) ){
-    dt = new Date( dateStr );
-        dt.setHours(dt.getHours() + TIME_ZONE);
-        dateStr = dt.toLocaleString();
-    }
-    return dateStr;
+var _isServerTimeZoneGMT = function(){
+    return window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0);
 };
-var _modifyTimezoneInActivityList = function( typeArray ){
+var _convertTimezoneInActivityList = function( typeArray, addTimeZoneValue ){
     var n = typeArray.length
+    var dt;
     while( 0<n-- ){
-        typeArray[n].created_at = convertGMT2JST( typeArray[n].created_at );
+        dt = new Date( typeArray[n].created_at );
+        dt.setHours(dt.getHours() + addTimeZoneValue );
+        typeArray[n].created_at = dt.toLocaleString();
     }
     return typeArray;
 };
@@ -312,10 +366,16 @@ var _convertActivityList2GridData = function( typeArray ){
     var array = typeArray; // [{ "create_at", "type" }]
     var n = array.length;
     var item, grid_activity_data = []; // [{"time", "type"}]
+    var create_at2time = function( created_at ){
+        var date = new Date( created_at );
+        var formatedStr = _local_toDateString(date);
+        return formatedStr.substr(0,16);
+    };
+        
     while( 0<n-- ){
         item = array[n];
         grid_activity_data.push({
-            "time" : item.created_at.substr(0, 16), // ToDo:「表示形式」での出力へ変更すること
+            "time" : create_at2time( item.created_at ), // ToDo:「表示形式」での出力へ変更すること
             "activity" : (function( obj, type ){
                 var keys = Object.keys(obj);
                 var i = keys.length;
@@ -329,7 +389,7 @@ var _convertActivityList2GridData = function( typeArray ){
         });
     }
     return grid_activity_data;
-}
+};
 
 
 var _fake_ajax1 = function(){
@@ -378,15 +438,16 @@ console.log( "fake_axios!" );
     }
     return promise.then(function(result){
         var responsedata = result.data;
-(function (array) { // デバッグ用。
-    var str, i , n = array.length;
-    for(i=0;i<n;i++){
-        str = "[" + array[i].created_at + " - ";
-        str += array[i].type + "]";
-        console.log( str );
-    }
-}(responsedata.table));
-        console.log( responsedata.table );
+        /*
+        (function (array) { // デバッグ用。
+            var str, i , n = array.length;
+            for(i=0;i<n;i++){
+                str = "[" + array[i].created_at + " - ";
+                str += array[i].type + "]";
+                console.log( str );
+            }
+        }(responsedata.table));
+        */
         return Promise.resolve( responsedata.table );     
         // 正常応答のフォーマットは、以下の公式さんを参照の事。
         // https://github.com/axios/axios#response-schema
@@ -402,6 +463,7 @@ var _addActivityDataInAccordanceWithAccountVue = function( typeValue ){
     var promise;
     var savedUserName = client_lib.vueAccountInstance.userName;
     var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
+
     if( (savedUserName != null) && (savedUserName.length > 10) ){
 console.log( "axios act!" ); // ←↑この辺は、テスト用。暫定。
         promise = axiosInstance.post(
@@ -432,7 +494,43 @@ console.log( responsedata );
         return Promise.resolve( responsedata );     
     })
 };
+var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
+    var url = "./api/v1/activitylog/delete";
+    var axiosInstance = client_lib.axios;
+    var promise;
+    var savedUserName = client_lib.vueAccountInstance.userName;
+    var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
 
+    // lastDateStrは、サーバーから取得した生の値の最終行（＝最新）のcreate_atプロパティが格納されている。
+    var effectiveTimeZone = client_lib.isServerTimeZoneGMT()
+        ? -9 
+        : 0;
+    var dateStart = new Date(lastDateStr);
+    var dateEnd = new Date(lastDateStr);
+    var secondsExpress;
+
+    secondsExpress = dateStart.getTime() + effectiveTimeZone*3600000;
+    dateStart.setTime( secondsExpress );
+    secondsExpress = dateEnd.getTime() + effectiveTimeZone*3600000;
+    dateEnd.setTime( secondsExpress );
+
+    secondsExpress = dateStart.getTime() - 60 *1000; // 60秒（ms表現）手前。
+    dateStart.setTime( secondsExpress );
+    secondsExpress = dateEnd.getTime() + 60 *1000; // 60秒（ms表現）後。
+    dateEnd.setTime( secondsExpress );
+
+    promise = axiosInstance.post(
+        url,
+        { // postData
+            "device_key" : savedUserName,
+            "pass_key" : savedPassKey,
+            "date_start" : _local_toDateString( dateStart ),
+            "date_end"   : _local_toDateString( dateEnd )
+        }
+    );
+
+    return promise;
+};
 
 
 
@@ -441,10 +539,12 @@ console.log( responsedata );
 // ----------------------------------------------------------------------
 var client_lib = {
     "tinyCookie" : _tinyCookie,
-    "modifyTimezoneInActivityList" : _modifyTimezoneInActivityList,
+    "convertTimezoneInActivityList" : _convertTimezoneInActivityList,
+    "isServerTimeZoneGMT" : _isServerTimeZoneGMT,
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
-    "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue
+    "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue,
+    "deleteLastActivityDataInAccordanceWithGrid" : _deleteLastActivityDataInAccordanceWithGrid
 };
 
 // typeof window !== 'undefined'
@@ -457,11 +557,19 @@ if( this.window ){
     window.onload = function(){
         client_lib["axios"] = (browserThis.window) ? browserThis.axios : {}; // ダミー
 
+        _setVueModalDialog( Vue );
+
         _setVueComponentGrid( Vue );
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
         account_lib.initialize( browserThis );
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );
+
         client_lib["vueAccountInstance"] = _vueAppSetup( CREATE_VUE_INSTANCE, client_lib, account_lib );
+        // 上記の _vueAppSetup()が返すVue.jsインスタンスは、以下を持つ（dataプロパティ名は省略してアクセス可能。
+        // data: {
+        //    "userName": "",
+        //    "passKeyWord" : ""
+        // },
     };
 
 
@@ -471,7 +579,7 @@ if( this.window ){
     exports.vueAppGrid = _vueAppGrid;
     exports.vueAppSetup = _vueAppSetup;
     
-    exports.promiseCreateAccount = _promiseCreateAccount;
+    client_lib["axios"] = null; // テスト環境では定義しない。テスト側で適切にfookすること。
     exports.client_lib = client_lib;
 }
 

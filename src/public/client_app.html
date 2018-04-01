@@ -36,7 +36,10 @@
     <script src="./javascripts/vue_client.js"></script>
 
     <link rel="stylesheet" type="text/css" href="./stylesheets/client_app.css">
-    <!-- component template -->
+    <link rel="stylesheet" type="text/css" href="./stylesheets/client_app_modal_dialog.css">
+    <!-- component template 
+      https://jp.vuejs.org/v2/examples/grid-component.html
+    -->
     <script type="text/x-template" id="grid-template">
       <table>
         <thead>
@@ -64,6 +67,39 @@
         </tbody>
       </table>
     </script>
+    <!-- template for the modal component 
+      https://jp.vuejs.org/v2/examples/modal.html
+    -->
+    <script type="text/x-template" id="modal-template">
+      <transition name="modal">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-container">
+
+              <div class="modal-header">
+                <slot name="header">
+                  default header
+                </slot>
+              </div>
+
+              <div class="modal-body">
+                <slot name="body">
+                  default body
+                </slot>
+              </div>
+
+              <div class="modal-footer">
+                <slot name="footer"><!-- default footer -->
+                  <button class="modal-default-button" @click="$emit('close')">
+                    OK
+                  </button>
+                </slot>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </script>    
   </head>
   <body>
     <div id="id_ctrl_panel">
@@ -89,30 +125,97 @@
         <i v-if="passKeyIsValid" class="fa fa-check" style="color:#4444ff"></i>
 				<span class="error_text" v-if="!passKeyIsValid">8文字以上のパスワードを入力してください</span><br>
         <input id="id_passkeyword" type="password" v-model="passKeyWord"><br>
-        <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
+        <div>
+          <div style="text-align: left; float: left">
+            <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
+          </div>
+          <div style="text-align: right;">
+            <input v-show="userNameIsValid && passKeyIsValid" value="削除" type="button" v-on:click="showModalDialogForRemovingAccount">
+          </div>
+          <div style="float:none; clear:both;"></div>
+        </div>
         <br><br>
+        <!-- dialog with using the modal component, pass in the prop -->
+        <!-- 以下のダイアログ用のタグは、先行するmodal-templateにて登録済み。 -->
+        <modal v-if="isNoticeDialogForUpdateInfo" @close="isNoticeDialogForUpdateInfo = false">
+          <!--
+            you can use custom content here to overwrite
+            default content.
+            ref. https://jp.vuejs.org/v2/examples/modal.html
+          -->
+          <h3 slot="header">利用開始ダイアログ</h3>
+          <span slot="body">
+            初めての利用、もしくはキャッシュ保持期限が切れています。
+            ユーザーIDとパスワードを（再）入力して「登録」ボタンを押してください。
+          </span>
+        </modal>
+        <modal v-if="isConfirmModalDialogForRemoveAccount">
+          <!-- close属性は、デフォルト向け。ここでは利用してない。 -->
+          <!--
+            you can use custom content here to overwrite
+            default content.
+            ref. https://jp.vuejs.org/v2/examples/modal.html
+          -->
+          <h3 slot="header">確認ダイアログ</h3>
+          <span slot="body">全ての記録データを削除して、ユーザーIDを削除しても良いですか？</span>
+          <div slot="footer">
+            <button class="modal-default-button" @click="removeAccount">
+              はい
+            </button>
+            <button @click="cancelModalDialogForRemovingAccount">
+              いいえ<!-- あれ？「modal-default-button」って「右寄せ」属性ある？？？ -->
+            </button>
+          </div>
+        </modal>
       </div>
     </div>
     <hr>
     <!-- grid-view element -->
     <div id="app_grid">
-      <div>
+      <!-- dialog with using the modal component, pass in the prop -->
+      <modal v-if="isConfirmModalDialogForDeletingLastData" @close="isConfirmModalDialogForDeletingLastData = false">
+        <!-- close属性は、デフォルト向け。ここでは利用してない。 -->
+        <!--
+          you can use custom content here to overwrite
+          default content.
+          ref. https://jp.vuejs.org/v2/examples/modal.html
+        -->
+        <h3 slot="header">確認ダイアログ</h3>
+        <span slot="body">直前の記録を削除しても良いですか？</span>
+        <div slot="footer">
+          <button class="modal-default-button" @click="deleteLastData">
+            はい
+          </button>
+          <button @click="cancelModalDialogForDeletingLastData">
+            いいえ<!-- あれ？「modal-default-button」って「右寄せ」属性ある？？？ -->
+          </button>
+        </div>
+      </modal>
+      <!-- ここから通常表示用のボタン -->
+      <div v-bind:style="actionButtonDivStyle">
         <a v-on:click="noticeGotUp" class="square_btn" href="javascript:void(0);">
           {{TEXT_GETUP}}
         </a>
         <a v-on:click="noticeGotoBed" class="square_btn" href="javascript:void(0);">
           {{TEST_GOTOBED}}
         </a>
-        <a v-show="isRefreshDataIcon" v-on:click="refreshData" href="javascript:void(0);">
-          <i class="fa fa-refresh fa-2x" style="color:#4444ff"></i>
+        &nbsp;
+        <a v-on:click="showModalDialogForDeletingLastData" href="javascript:void(0);">
+          <i class="fa fa-undo fa-2x" style="color: #ff4444"></i>
         </a>
+        &nbsp;
+        <a v-on:click="refreshData" href="javascript:void(0);">
+            <i class="fa fa-refresh fa-2x" style="color:#4444ff"></i>
+        </a>
+      </div>
+      <div v-bind:style="processingDivStyle">
         <!-- 
           ※faa-flashクラスは、font awesome本体ではなく、追加のawesom animateを利用している。
           https://saruwakakun.com/html-css/basic/font-awesome#section6
         -->
-        <i v-show="isShowUploadingIcon" class="fa fa-cloud-upload faa-flash animated fa-2x"></i>
+        <i class="fa fa-cloud-upload faa-flash animated fa-2x"></i>
       </div>
-      <div>
+      <div v-bind:style="normalShownDivStyle">
         <!-- 
         <form id="search">
           Search <input name="query" v-model="searchQuery">
@@ -135,7 +238,7 @@
       <div v-bind:style="lodingSpinnerDivStyle">
         <i class="fa fa-spinner fa-spin fa-3x"></i> loading....
       </div>
-      <div>
+      <div v-bind:style="normalShownDivStyle">
         <!-- 
           ここの一覧からチャートアイコンを拾った。
           https://nj-clucker.com/search-font-awesome-icon-by-japanese/

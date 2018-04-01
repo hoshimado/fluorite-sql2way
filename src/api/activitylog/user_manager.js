@@ -19,3 +19,13 @@ factoryImpl[ "MAX_LOGS" ] = new lib.Factory( _SQL_CONNECTION_CONFIG.MAX_LOGS );
 // UTデバッグ用のHookポイント。運用では外部公開しないメソッドはこっちにまとめる。
 exports.factoryImpl = factoryImpl;
 
+exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
+	return Promise.resolve({
+		"jsonData" : { "message" : "No impl." },
+		"status" : 200
+	});
+};
+
+exports.api_v1_activitylog_remove = function( queryFromGet, dataFromPost ){
+	return Promise.reject({"message": "No impl."});
+};

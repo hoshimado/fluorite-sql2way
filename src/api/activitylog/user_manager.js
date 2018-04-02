@@ -48,14 +48,30 @@ exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
 		);
 		return is_onwer_valid_promise.catch(function(err){
 			// 未登録ユーザーの場合はここに来る。
-            var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
-            var max_count = factoryImpl.MAX_LOGS.getInstance();
-            // ◆ToDo:↑ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
+			return new Promise((resolve,reject)=>{
+				var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
 
-            return addNewUser( 
-                config.database, inputData.device_key, 
-                max_count, inputData.pass_key 
-            );
+				var promise = getNumberOfUsers( config.database );
+				promise.then((nowNumberOfUsers)=>{
+					if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
+						resolve();
+					}else{
+						outJsonData["errorMessage"] = "the number of users is over.";
+						reject({
+							"status" : 429 // Too Many Requests(リクエストの回数制限に引っかかる場合など)
+						});
+					}
+				}).catch((err)=>{
+					outJsonData [ "failed" ] = err;
+					reject(err);
+				});
+			}).then(()=>{
+				var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
+				var max_count = factoryImpl.MAX_LOGS.getInstance();
+				// ◆ToDo:↑ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
+
+				return addNewUser( config.database, inputData.device_key, max_count, inputData.pass_key );
+			});
 		});
 	}).then((result)=>{
 		var insertedData = {

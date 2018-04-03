@@ -98,6 +98,9 @@ exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
 		}
 		outJsonData [ "signuped" ] = insertedData;
 		return Promise.resolve(200);
+	}).catch((err)=>{
+		var http_status = err.status ? err.status : 500;
+		return Promise.resolve(http_status);
 	}).then(( httpStatus )=>{
 		var closeConnection = factoryImpl.sql_parts.getInstance().closeConnection;
 		return new Promise((resolve,reject)=>{

@@ -47,31 +47,44 @@ exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
 			inputData.pass_key
 		);
 		return is_onwer_valid_promise.catch(function(err){
-			// 未登録ユーザーの場合はここに来る。
-			return new Promise((resolve,reject)=>{
-				var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
+			// 未登録ユーザーか、もしくは、登録ユーザーだが「パスワードが不正」の場合はここに来る。
+			// expect( err ).to.have.property( "isDevicePermission" ).to.equal( false );
+			// expect( err ).to.have.property( "isUserExist" ).to.equal( true );
 
-				var promise = getNumberOfUsers( config.database );
-				promise.then((nowNumberOfUsers)=>{
-					if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
-						resolve();
-					}else{
-						outJsonData["errorMessage"] = "the number of users is over.";
-						reject({
-							"status" : 429 // Too Many Requests(リクエストの回数制限に引っかかる場合など)
-						});
-					}
-				}).catch((err)=>{
-					outJsonData [ "failed" ] = err;
-					reject(err);
+			// isDevicePermission == false しか、ここには入らないはずだが、念のためチェックする。
+			if( !err.isDevicePermission && !err.isUserExist ){
+				// 未登録ユーザーの場合はここに来る。
+				return new Promise((resolve,reject)=>{
+					var getNumberOfUsers = factoryImpl.sql_parts.getInstance().getNumberOfUsers;
+	
+					var promise = getNumberOfUsers( config.database );
+					promise.then((nowNumberOfUsers)=>{
+						if( nowNumberOfUsers < factoryImpl.MAX_USERS.getInstance() ){
+							resolve();
+						}else{
+							outJsonData["errorMessage"] = "the number of users is over.";
+							reject({
+								"status" : 429 // Too Many Requests(リクエストの回数制限に引っかかる場合など)
+							});
+						}
+					}).catch((err)=>{
+						outJsonData [ "failed" ] = err;
+						reject(err);
+					});
+				}).then(()=>{
+					var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
+					var max_count = factoryImpl.MAX_LOGS.getInstance();
+					// ◆ToDo:↑ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
+	
+					return addNewUser( config.database, inputData.device_key, max_count, inputData.pass_key );
 				});
-			}).then(()=>{
-				var addNewUser = factoryImpl.sql_parts.getInstance().addNewUser;
-				var max_count = factoryImpl.MAX_LOGS.getInstance();
-				// ◆ToDo:↑ユーザーごとの上限データ数は環境変数側で持たせように変更する。◆
-
-				return addNewUser( config.database, inputData.device_key, max_count, inputData.pass_key );
-			});
+			}else{
+				// 登録済みユーザーだが、「パスワード」が不正。
+                // expect( result.jsonData.errorMessage ).to.equal();
+				outJsonData["errorMessage"] = "The username is already in use.";
+				err["status"] = 401;
+				return Promise.reject(err);
+			}
 		});
 	}).then((result)=>{
 		var insertedData = {

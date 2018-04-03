@@ -115,5 +115,55 @@ exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
 };
 
 exports.api_v1_activitylog_remove = function( queryFromGet, dataFromPost ){
-	return Promise.reject({"message": "No impl."});
+	var inputData = {
+		"device_key" : dataFromPost.device_key,
+		"pass_key"   : dataFromPost.pass_key
+	};
+	var API_SHOW = function(){
+		// サブクラスのコンスタラクタ
+		this._outJsonData = {};
+		API_V1_BASE.call( this, factoryImpl.CONFIG_SQL, factoryImpl.sql_parts, this._outJsonData ); // 継承元のコンスタラクタを明示的に呼び出す。
+	};
+	API_SHOW.prototype = Object.create( API_V1_BASE.prototype );
+	API_SHOW.prototype.requestSql = function( paramClass ){
+		// 関連するログデータをすべて削除。
+		var deleteActivityLogWhereDeviceKey = factoryImpl.sql_parts.getInstance().deleteActivityLogWhereDeviceKey;
+		var config = factoryImpl.CONFIG_SQL.getInstance();
+		var outJsonData = this._outJsonData;
+		
+		// 対象ユーザーのログをすべて削除する。
+		return deleteActivityLogWhereDeviceKey(
+			config.database,
+			paramClass.getDeviceKey(),
+			null
+		).then(()=>{
+			// 対象ユーザーのログが残ってないことを確認する。
+			var getNumberOfLogs = factoryImpl.sql_parts.getInstance().getNumberOfLogs;
+			return getNumberOfLogs(
+				config.database,
+				paramClass.getDeviceKey()
+			);
+		}).then((numberOfLeft)=>{
+			var deleteExistUser = factoryImpl.sql_parts.getInstance().deleteExistUser;
+			if( numberOfLeft == 0 ){
+				return deleteExistUser(
+					config.database,
+					paramClass.getDeviceKey()
+				);
+			}else{
+				return Promise.reject(); // 【Todo】異常系の処理は未実装。
+			}
+		}).then(()=>{
+			outJsonData["removed"] = {
+				"device_key" : paramClass.getDeviceKey()
+			};
+		});
+	};
+	var subInstance = new API_SHOW();
+	
+	if( !inputData.device_key || !inputData.pass_key ){
+		inputData[ "invalid" ] = "parameter is INVAILD.";
+	}
+
+	return subInstance.run( inputData );
 };

@@ -509,9 +509,9 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
     var dateEnd = new Date(lastDateStr);
     var secondsExpress;
 
-    secondsExpress = dateStart.getTime() + effectiveTimeZone*36000000;
+    secondsExpress = dateStart.getTime() + effectiveTimeZone*3600000;
     dateStart.setTime( secondsExpress );
-    secondsExpress = dateEnd.getTime() + effectiveTimeZone*36000000;
+    secondsExpress = dateEnd.getTime() + effectiveTimeZone*3600000;
     dateEnd.setTime( secondsExpress );
 
     secondsExpress = dateStart.getTime() - 60 *1000; // 60秒（ms表現）手前。

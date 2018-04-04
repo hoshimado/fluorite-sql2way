@@ -495,7 +495,41 @@ console.log( responsedata );
     })
 };
 var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
-    return Promise.resolve();
+    var url = "./api/v1/activitylog/delete";
+    var axiosInstance = client_lib.axios;
+    var promise;
+    var savedUserName = client_lib.vueAccountInstance.userName;
+    var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
+
+    // lastDateStrは、サーバーから取得した生の値の最終行（＝最新）のcreate_atプロパティが格納されている。
+    var effectiveTimeZone = client_lib.isServerTimeZoneGMT()
+        ? -9 
+        : 0;
+    var dateStart = new Date(lastDateStr);
+    var dateEnd = new Date(lastDateStr);
+    var secondsExpress;
+
+    secondsExpress = dateStart.getTime() + effectiveTimeZone*36000000;
+    dateStart.setTime( secondsExpress );
+    secondsExpress = dateEnd.getTime() + effectiveTimeZone*36000000;
+    dateEnd.setTime( secondsExpress );
+
+    secondsExpress = dateStart.getTime() - 60 *1000; // 60秒（ms表現）手前。
+    dateStart.setTime( secondsExpress );
+    secondsExpress = dateEnd.getTime() + 60 *1000; // 60秒（ms表現）後。
+    dateEnd.setTime( secondsExpress );
+
+    promise = axiosInstance.post(
+        url,
+        { // postData
+            "device_key" : savedUserName,
+            "pass_key" : savedPassKey,
+            "date_start" : _local_toDateString( dateStart ),
+            "date_end"   : _local_toDateString( dateEnd )
+        }
+    );
+
+    return promise;
 };
 
 

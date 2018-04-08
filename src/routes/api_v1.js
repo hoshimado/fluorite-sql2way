@@ -80,10 +80,10 @@ var responseAnomaly = function( res, err ){
 
 
 router.post("/setup1st", function(req, res, next){
-	var api_vi_activitylog_setup = factoryImpl.sql_activitylog.getInstance().api_vi_activitylog_setup;
+	var api_v1_activitylog_setup = factoryImpl.sql_activitylog.getInstance().api_v1_activitylog_setup;
 	var dataPost = req.body; // app.jsで「app.use(bodyParser.json());」してるので、bodyプロパティが使える。
 
-	return api_vi_activitylog_setup( null, dataPost ).then((result)=>{
+	return api_v1_activitylog_setup( null, dataPost ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
@@ -91,9 +91,9 @@ router.post("/setup1st", function(req, res, next){
 });
 
 router.post("/signup", function(req, res, next){
-	var api_vi_activitylog_signup = factoryImpl.sql_activitylog.getInstance().api_vi_activitylog_signup;
+	var api_v1_activitylog_signup = factoryImpl.sql_activitylog.getInstance().api_v1_activitylog_signup;
 	var dataPost = req.body;
-	return api_vi_activitylog_signup( null, dataPost ).then((result)=>{
+	return api_v1_activitylog_signup( null, dataPost ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );
@@ -101,9 +101,9 @@ router.post("/signup", function(req, res, next){
 });
 
 router.post("/remove", function(req, res, next){
-	var api_vi_activitylog_remove = factoryImpl.sql_activitylog.getInstance().api_vi_activitylog_remove;
+	var api_v1_activitylog_remove = factoryImpl.sql_activitylog.getInstance().api_v1_activitylog_remove;
 	var dataPost = req.body;
-	return api_vi_activitylog_remove( null, dataPost ).then((result)=>{
+	return api_v1_activitylog_remove( null, dataPost ).then((result)=>{
 		responseNormal( res, result );
 	}).catch((err)=>{
 		responseAnomaly( res, err );

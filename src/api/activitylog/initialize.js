@@ -17,7 +17,7 @@ factoryImpl[ "SETUP_KEY" ]  = new lib.Factory( _SQL_CONNECTION_CONFIG.SETUP_KEY 
 exports.factoryImpl = factoryImpl;
 
 
-exports.api_vi_activitylog_setup = function( queryFromGet, dataFromPost ){
+exports.api_v1_activitylog_setup = function( queryFromGet, dataFromPost ){
     var createPromiseForSqlConnection = factoryImpl.sql_parts.getInstance().createPromiseForSqlConnection;
 	var outJsonData = {};
 	var config = factoryImpl.CONFIG_SQL.getInstance();

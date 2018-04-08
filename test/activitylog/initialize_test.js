@@ -46,7 +46,7 @@ describe( "api_v1_base.js", function(){
     });
     
 
-    describe("::api_vi_activitylog_setup()",function(){
+    describe("::api_v1_activitylog_setup()",function(){
         var stubs, original = {};
         beforeEach(function(){ // 内部関数をフックする。
             original["SETUP_KEY"] = api_v1_base.factoryImpl.SETUP_KEY.getInstance(); 
@@ -63,7 +63,7 @@ describe( "api_v1_base.js", function(){
             var queryFromGet = null;
             var dataFromPost = { "create_key" : "せっとあっぷきー" };
             var EXPECTED_NEW_TABLE = { "hoge" : "fuga" };
-            var api_vi_activitylog_setup = api_v1_base.api_vi_activitylog_setup;
+            var api_v1_activitylog_setup = api_v1_base.api_v1_activitylog_setup;
 
             api_v1_base.factoryImpl.SETUP_KEY.setStub( dataFromPost.create_key );
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
@@ -77,7 +77,7 @@ describe( "api_v1_base.js", function(){
             );
 
             return shouldFulfilled(
-                api_vi_activitylog_setup( queryFromGet, dataFromPost )
+                api_v1_activitylog_setup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.setupTable1st.calledOnce );
@@ -92,7 +92,7 @@ describe( "api_v1_base.js", function(){
             var queryFromGet = null;
             var dataFromPost = { "create_key" : "せっとあっぷきー" };
             var EXPECTED_FAILED_OBJ = { "table" : "cant create." };
-            var api_vi_activitylog_setup = api_v1_base.api_vi_activitylog_setup;
+            var api_v1_activitylog_setup = api_v1_base.api_v1_activitylog_setup;
     
             api_v1_base.factoryImpl.SETUP_KEY.setStub( dataFromPost.create_key );
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
@@ -106,7 +106,7 @@ describe( "api_v1_base.js", function(){
             );
     
             return shouldFulfilled(
-                api_vi_activitylog_setup( queryFromGet, dataFromPost )
+                api_v1_activitylog_setup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.setupTable1st.calledOnce );
@@ -121,12 +121,12 @@ describe( "api_v1_base.js", function(){
             var queryFromGet = null;
             var dataFromPost = { "create_key" : "不正なキー" };
             var EXPECTED_FAILED_OBJ = { "table" : "cant create." };
-            var api_vi_activitylog_setup = api_v1_base.api_vi_activitylog_setup;
+            var api_v1_activitylog_setup = api_v1_base.api_v1_activitylog_setup;
     
             api_v1_base.factoryImpl.SETUP_KEY.setStub( "期待キー" );
 
             return shouldFulfilled(
-                api_vi_activitylog_setup( queryFromGet, dataFromPost )
+                api_v1_activitylog_setup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.notCalled );
                 assert( stubs.sql_parts.setupTable1st.notCalled );

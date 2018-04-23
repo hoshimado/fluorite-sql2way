@@ -92,7 +92,7 @@ describe( "user_manager.js", function(){
             return shouldFulfilled(
                 api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
-                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce, "createPromiseForSqlConnection()が呼ばれること"  );
+                assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
                 assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
                 assert( stubs.sql_parts.addNewUser.calledOnce );

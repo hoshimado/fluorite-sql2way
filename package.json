@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xingyanhuan/fluorite-sql2way.git"
+    "url": "git+https://github.com/hoshimado/fluorite-sql2way.git"
   },
-  "author": "xingyanhuan",
+  "author": "hoshimado",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xingyanhuan/fluorite-sql2way/issues"
+    "url": "https://github.com/hoshimado/fluorite-sql2way/issues"
   },
-  "homepage": "https://github.com/xingyanhuan/fluorite-sql2way#readme",
+  "homepage": "https://github.com/hoshimado/fluorite-sql2way#readme",
   "dependencies": {
     "body-parser": "~1.17.1",
     "cookie-parser": "~1.4.3",

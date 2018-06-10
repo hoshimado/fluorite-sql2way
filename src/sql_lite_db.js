@@ -134,16 +134,6 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 
 	var query_str = "SELECT created_at, type FROM activitylogs";
 	query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'";
-	if( period && period.start ){
-		query_str += " AND [created_at] > '";
-		query_str += period.start;
-		query_str += "'";
-	}
-	if( period && period.end ){
-		query_str += " AND [created_at] <= '";
-		query_str += period.end;
-		query_str += " 23:59'";
-	}
 
 	return new Promise(function(resolve,reject){
 		db.all(query_str, [], (err, rows) => {

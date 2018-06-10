@@ -17,9 +17,11 @@ exports.factoryImpl = factoryImpl;
 
 
 // 後でのハッシュ化に備えたラッパー
-var _wrapDeviceKey = function( deviceKey ){
+var _wrapStringValue = function( deviceKey ){
 	return deviceKey;
 };
+factoryImpl[ "_wrapStringValue" ] = new lib.Factory( _wrapStringValue );
+
 
 
 /**
@@ -82,6 +84,7 @@ exports.closeConnection = closeConnection;
  * @returns{Promise} 実行結果を返すPromiseオブジェクト。成功時は、記録されたデバイス名とアクション値が返却される。
  */
 var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
 	var dbs = factoryImpl.db.getInstance();
 	var db = dbs[ databaseName ];
 	if( !db ){
@@ -94,7 +97,7 @@ var addActivityLog2Database = function( databaseName, deviceKey, typeOfAction ){
 		var now_date = new Date();
 		var date_str = now_date.toFormat("YYYY-MM-DD HH24:MI:SS.000"); // data-utilsモジュールでの拡張を利用。
 		var query_str = "INSERT INTO activitylogs(created_at, type, owners_hash ) ";
-		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + _wrapDeviceKey(deviceKey) + "')";
+		query_str += "VALUES('" + date_str + "', " + typeOfAction + ", '" + wrapString(deviceKey) + "')";
 
 		db.all(query_str, [], (err, rows) => {
 			if(!err){
@@ -124,6 +127,7 @@ exports.addActivityLog2Database = addActivityLog2Database;
  * @returns{Promise} SQLからの取得結果を返すPromiseオブジェクト。成功時resolve( recordset ) 、失敗時reject( err )。
  */
 var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
+	var wrapString = factoryImpl._wrapStringValue.getInstance(); 
 	var dbs = factoryImpl.db.getInstance();
 	var db = dbs[ databaseName ];
 	if( !db ){
@@ -133,7 +137,7 @@ var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, peri
 	}
 
 	var query_str = "SELECT created_at, type FROM activitylogs";
-	query_str += " WHERE [owners_hash]='" + _wrapDeviceKey(deviceKey) + "'";
+	query_str += " WHERE [owners_hash]='" + wrapString(deviceKey) + "'";
 
 	return new Promise(function(resolve,reject){
 		db.all(query_str, [], (err, rows) => {

@@ -96,6 +96,43 @@ describe( "sql_lite_db_test.js", function(){
             });
         });
     });
+    describe( "::addActivityLog2Database()", function () {
+        var addActivityLog2Database = sql_parts.addActivityLog2Database;
+        it("正常系：時刻指定はさせない仕様（内部時間を利用する）", function () {
+            var deviceKey = "にゃーん。";
+            var typeOfAction = "111";
+            var dbs = sql_parts.factoryImpl.db.getInstance();
+            var stub_instance = sinon.stub();
+            var stub_wrapperStr = sinon.stub().callsFake( function(str){ return str; } );
+            var clock = sinon.useFakeTimers(); // これで時間が止まる。「1970-01-01 09:00:00.000」に固定される。
+            
+            dbs[ sqlConfig.database ] = {
+                "all" : stub_instance
+            };
+            stub_instance.callsArgWith(2, /* err= */null, /* rows= */null);
+            sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
+
+            return shouldFulfilled(
+                sql_parts.addActivityLog2Database( sqlConfig.database, deviceKey, typeOfAction )
+            ).then(function(result){
+                clock.restore(); // 時間停止解除。
+
+                assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
+                assert( stub_instance.calledOnce );
+
+                var called_args = stub_instance.getCall(0).args;
+                expect( called_args[0] ).to.equal(
+                    "INSERT INTO activitylogs(created_at, type, owners_hash ) " 
+                    + "VALUES('1970-01-01 09:00:00.000', " + typeOfAction + ", '" + deviceKey + "')"
+                );
+                expect( called_args[1].length ).to.equal( 0 );
+                expect( result ).to.deep.equal({
+                    "type_value" : typeOfAction,
+                    "device_key" : deviceKey
+                });
+            });
+        });
+    });
     describe( "::closeConnection()",function(){
         it("正常系。期間指定なし。",function(){
             var period = null; //無しの場合

@@ -1,5 +1,5 @@
 /*
-    [vue_promise_test.js]
+    [vue_simple_test.js]
     encoding=utf-8
 */
 

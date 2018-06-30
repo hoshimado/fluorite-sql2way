@@ -3,17 +3,21 @@
 	encoding=utf-8
 */
 
-
 require('date-utils'); // Data() クラスのtoString()を拡張してくれる。
+var createHookPoint = require("../../../hook-test-helper").createHookPoint;
+var hook = createHookPoint( exports, "hook" );
+var sql_parts = createHookPoint( exports, "sql_parts", require("../sql_db_io/index.js") );
 
-var lib = require("../factory4require.js");
 
-//
-var grantPathFromSerialNumber = function(){ return Promise.reject(); };
+
+var grantPathFromSerialNumber = function(){ 
+	return Promise.reject(); 
+};
+hook[ "grantPathFromSerialNumber" ] = grantPathFromSerialNumber;
 var updateCalledWithTargetSerial = function(){ return Promise.reject(); };
-exports.factoryImpl = {};
-exports.factoryImpl["grantPath"] = new lib.Factory( grantPathFromSerialNumber );
-exports.factoryImpl["updateCalled"] = new lib.Factory( updateCalledWithTargetSerial );
+hook[ "updateCalledWithTargetSerial"] = updateCalledWithTargetSerial;
+
+
 
 
 /* 元の実装をいったんコメントアウト

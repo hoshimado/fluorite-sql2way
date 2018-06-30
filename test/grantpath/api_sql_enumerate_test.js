@@ -10,8 +10,8 @@ var expect = chai.expect;
 var sinon = require("sinon");
 var shouldFulfilled = require("promise-test-helper").shouldFulfilled;
 var shouldRejected  = require("promise-test-helper").shouldRejected;
+var hookProperty = require("../../hook-test-helper").hookProperty;
 require('date-utils');
-var ApiCommon_StubAndHooker = require("../support_stubhooker.js").ApiCommon_StubAndHooker;
 
 
 const api_enumerate = require("../../src/api/grantpath/api_sql_enumerate.js");
@@ -31,8 +31,51 @@ var TEST_CONFIG_SQL = { // テスト用
 
 
 
-
 describe( "api_sql_enumerate.js", function(){
+    var createStubs = function () {
+        var stubs = {
+            "CONFIG_SQL" : TEST_CONFIG_SQL
+        };
+        return stubs;
+    };
+
+    describe("::api_v1_serialpath_grant()", function(){
+        var stubs, hooked = {};
+        var api_v1_serialpath_grant = api_enumerate.api_v1_serialpath_grant;
+        var orignal = {};
+        var createSqlPartStub = function () {
+          return {
+              // var queryDirectly = function ( databaseName, queryStr ) {
+              "queryDirectly" : sinon.stub(), 
+              "createPromiseForSqlConnection" : sinon.stub(),
+              "closeConnection" : sinon.stub()
+          };
+        };
+        beforeEach(function(){ // 内部関数をフックする。
+            stubs = {};
+            stubs["sql_parts"] = createSqlPartStub();
+            hooked["sql_parts"] = hookProperty( api_enumerate.sql_parts, stubs["sql_parts"] );
+        });
+        afterEach(function(){
+            hooked["sql_parts"].restore();
+        });
+
+        it("正常系", function(){
+            var grantPathFromSerialNumber = api_enumerate.hook.grantPathFromSerialNumber;
+            var sql_parts = api_enumerate.hook.sql_parts;
+        });
+    });
+});
+
+
+/*
+describe( "api_sql_enumerate.js", function(){
+    var createStubs = function () {
+        var stubs = {
+            "CONFIG_SQL" : TEST_CONFIG_SQL
+        };
+        return stubs;
+    };
     var COMMON_STUB_MANAGER = new ApiCommon_StubAndHooker(function(){
         return {
             "simple_sql" : {
@@ -147,9 +190,6 @@ describe( "api_sql_enumerate.js", function(){
         var stubs;
         var grantPathFromSerialNumber = api_enumerate.factoryImpl.grantPath.getInstance();
 
-        /**
-         * @type beforeEachで初期化される。
-         */
         beforeEach(function(){ // 内部関数をフックする。
             stubs = COMMON_STUB_MANAGER.createStubs();
 
@@ -206,9 +246,6 @@ describe( "api_sql_enumerate.js", function(){
         var stubs;
         var updateCalledWithTargetSerial = api_enumerate.factoryImpl.updateCalled.getInstance();
 
-        /**
-         * @type beforeEachで初期化される。
-         */
         beforeEach(function(){ // 内部関数をフックする。
             stubs = COMMON_STUB_MANAGER.createStubs();
 
@@ -263,7 +300,7 @@ describe( "api_sql_enumerate.js", function(){
         });
     });
 });
-
+// */
 
 
 

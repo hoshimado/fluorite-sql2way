@@ -18,6 +18,11 @@ var updateCalledWithTargetSerial = function(){ return Promise.reject(); };
 hook[ "updateCalledWithTargetSerial"] = updateCalledWithTargetSerial;
 
 
+exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
+	return Promise.reject();
+};
+
+
 
 
 /* 元の実装をいったんコメントアウト

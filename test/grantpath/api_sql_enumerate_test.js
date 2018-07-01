@@ -44,12 +44,94 @@ describe( "api_sql_enumerate.js", function(){
         var api_v1_serialpath_grant = api_enumerate.api_v1_serialpath_grant;
         var orignal = {};
         var createSqlPartStub = function () {
-          return {
-              // var queryDirectly = function ( databaseName, queryStr ) {
-              "queryDirectly" : sinon.stub(), 
+            return {
               "createPromiseForSqlConnection" : sinon.stub(),
               "closeConnection" : sinon.stub()
-          };
+            };
+        };
+        var createLocalMethodStub = function(){
+            return {
+                "grantPathFromSerialNumber" : sinon.stub(),
+                "updateCalledWithTargetSerial" : sinon.stub()
+            }
+        };
+        beforeEach(function(){ // 内部関数をフックする。
+            stubs = {};
+
+            stubs["sql_parts"] = createSqlPartStub();
+            hooked["sql_parts"] = hookProperty( api_enumerate.sql_parts, stubs["sql_parts"] );
+
+            stubs["hook"] = createLocalMethodStub();
+            hooked["hook"] = hookProperty( api_enumerate, stubs["hook"] );
+        });
+        afterEach(function(){
+            hooked["sql_parts"].restore();
+            hooked["hook"].restore();
+        });
+
+        it("正常系", function(){
+            var DUMMY_SERIAL = "123456"
+            var DUMMY_CALLED_COUNT = 16, DUMMY_MAX_COUNT = 32;
+            var DUMMY_PATH = "hogehoge", LEFT_COUNT = 15;
+            var queryFromGet = null, dataFromPost = { "serial" : DUMMY_SERIAL };
+
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.sql_parts.closeConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.hook.grantPathFromSerialNumber.onCall(0).returns(
+                Promise.resolve({
+                    "called" : DUMMY_CALLED_COUNT,
+                    "max_entrys" : DUMMY_MAX_COUNT
+                })
+            );
+            stubs.hook.updateCalledWithTargetSerial.onCall(0).returns(
+                Promise.resolve({
+                    "path" : DUMMY_PATH,
+                    "left" : LEFT_COUNT
+                })
+            );
+
+            shouldFulfilled(
+                api_v1_serialpath_grant( queryFromGet, dataFromPost )
+            ).then(function (result) {
+                var open = stubs.sql_parts.createPromiseForSqlConnection;
+                var grant = stubs.hook.grantPathFromSerialNumber;
+                var update = stubs.hook.updateCalledWithTargetSerial;
+                var close = stubs.sql_parts.closeConnection;
+
+                expect(open.callCount).to.equal(1);
+                expect(open.getCall(0).argv[0]).to.deep.equal(TEST_CONFIG_SQL);
+
+                // calledWith()だと true/falseでしかエラーを取れないので。
+                expect(grant.callCount).to.equal(1);
+                expect(grant.getCall(0).argv[0]).to.equal(TEST_CONFIG_SQL.database);
+                expect(grant.getCall(0).argv[1]).to.equal(DUMMY_SERIAL);
+
+                expect(update.callCount).to.equal(1);
+                expect(update.getCall(0).argv[0]).to.equal(TEST_CONFIG_SQL.database);
+                expect(update.getCall(0).argv[1]).to.equal(DUMMY_SERIAL);
+                expect(update.getCall(0).argv[2]).to.equal(DUMMY_PATH);
+                expect(update.getCall(0).argv[3]).to.equal(DUMMY_CALLED_COUNT + 1);
+                expect(update.getCall(0).argv[4]).to.equal(DUMMY_MAX_COUNT);
+
+                expect(close.callCount).to.equal(1);
+            });
+        });
+    });
+    describe("::local::grantPath()", function(){
+        var stubs, hooked = {};
+        var api_v1_serialpath_grant = api_enumerate.api_v1_serialpath_grant;
+        var orignal = {};
+        var createSqlPartStub = function () {
+          return {
+              // "createPromiseForSqlConnection" : sinon.stub(),
+              // "closeConnection" : sinon.stub(),
+              "queryDirectly" : sinon.stub()
+              // var queryDirectly = function ( databaseName, queryStr ) {
+            };
         };
         beforeEach(function(){ // 内部関数をフックする。
             stubs = {};
@@ -59,10 +141,8 @@ describe( "api_sql_enumerate.js", function(){
         afterEach(function(){
             hooked["sql_parts"].restore();
         });
-
-        it("正常系", function(){
-            var grantPathFromSerialNumber = api_enumerate.hook.grantPathFromSerialNumber;
-            var sql_parts = api_enumerate.hook.sql_parts;
+        it("正常系",function () {
+            
         });
     });
 });

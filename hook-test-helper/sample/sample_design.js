@@ -1,5 +1,5 @@
 /**
- * [sample design]
+ * [sample_design.js]
  * encoding=utf-8
  */
 

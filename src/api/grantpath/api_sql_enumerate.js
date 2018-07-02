@@ -6,7 +6,8 @@
 require('date-utils'); // Data() クラスのtoString()を拡張してくれる。
 var createHookPoint = require("../../../hook-test-helper").createHookPoint;
 var hook = createHookPoint( exports, "hook" );
-var sql_parts = createHookPoint( exports, "sql_parts", require("../sql_db_io/index.js") );
+var sql_parts =  createHookPoint( exports, "sql_parts", require("../sql_db_io/index.js") );
+var SQL_CONFIG = createHookPoint( exports, "SQL_CONFIG", require("./sql_config_grant.js").CONFIG_SQL );
 
 
 
@@ -18,8 +19,75 @@ var updateCalledWithTargetSerial = function(){ return Promise.reject(); };
 hook[ "updateCalledWithTargetSerial"] = updateCalledWithTargetSerial;
 
 
+
 exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
-	return Promise.reject();
+	var serialKey = dataFromPost.serial ? dataFromPost.serial : "";
+
+	return sql_parts.createPromiseForSqlConnection(
+		SQL_CONFIG
+	).catch(function(err) {
+		return Promise.reject({
+			"err"    : err,
+			"status" : 503
+		});
+	}).then(function() {
+		return hook.grantPathFromSerialNumber(
+			SQL_CONFIG.database, serialKey
+		).catch(function(err) {
+			return Promise.reject({
+				"err" : err,
+				"status" : 403
+			});
+		});
+	}).then(function (result) {
+		var currentCalledCount = result.called;
+		var max_entrys = result.max_entrys;
+		var path = result.path;
+		return hook.updateCalledWithTargetSerial(
+			SQL_CONFIG.database,
+			serialKey,
+			path,
+			currentCalledCount + 1,
+			max_entrys
+		).catch(function(err) {
+			return Promise.reject({
+				"err" : err,
+				"status" : 503
+			});
+		});
+	}).then(function (result) {
+		var granted_path = result.path;
+		var left_count = result.left;
+		return sql_parts.closeConnection(
+			SQL_CONFIG.database
+		).then(function() {
+			return Promise.resolve({
+				"jsonData" : {
+					"path" : granted_path,
+					"left" : left_count
+				},
+				"status" : 200
+			});
+		}).catch(function(err) {
+			return Promise.resolve({
+				"err" : err,
+				"status" : 503
+			});
+		});
+	}).catch(function(err) {
+		return sql_parts.closeConnection(
+			SQL_CONFIG.database
+		).then(function() {
+			Promise.resolve({
+				"status" : err.status
+			});
+		}).catch(function(err) {
+			return Promise.resolve({
+				"err" : err,
+				"status" : 503
+			});
+		});
+	});
 };
 
 

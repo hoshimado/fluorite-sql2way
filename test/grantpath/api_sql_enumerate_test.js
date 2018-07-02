@@ -61,11 +61,14 @@ describe( "api_sql_enumerate.js", function(){
             hooked["sql_parts"] = hookProperty( api_enumerate.sql_parts, stubs["sql_parts"] );
 
             stubs["hook"] = createLocalMethodStub();
-            hooked["hook"] = hookProperty( api_enumerate, stubs["hook"] );
+            hooked["hook"] = hookProperty( api_enumerate.hook, stubs["hook"] );
+
+            hooked["SQL_CONFIG"] = hookProperty( api_enumerate.SQL_CONFIG, TEST_CONFIG_SQL );
         });
         afterEach(function(){
             hooked["sql_parts"].restore();
             hooked["hook"].restore();
+            hooked["SQL_CONFIG"].restore();
         });
 
         it("grants the given serial-key based on database.", function(){
@@ -83,7 +86,8 @@ describe( "api_sql_enumerate.js", function(){
             stubs.hook.grantPathFromSerialNumber.onCall(0).returns(
                 Promise.resolve({
                     "called" : DUMMY_CURRENT_COUNT,
-                    "max_entrys" : DUMMY_MAX_COUNT
+                    "max_entrys" : DUMMY_MAX_COUNT,
+                    "path" : DUMMY_PATH
                 })
             );
             stubs.hook.updateCalledWithTargetSerial.onCall(0).returns(
@@ -102,19 +106,19 @@ describe( "api_sql_enumerate.js", function(){
                 var close = stubs.sql_parts.closeConnection;
 
                 expect(open.callCount).to.equal(1);
-                expect(open.getCall(0).argv[0]).to.deep.equal(TEST_CONFIG_SQL);
+                expect(open.getCall(0).args[0]).to.deep.equal(TEST_CONFIG_SQL);
 
                 // calledWith()だと true/falseでしかエラーを取れないので。
                 expect(grant.callCount).to.equal(1);
-                expect(grant.getCall(0).argv[0]).to.equal(TEST_CONFIG_SQL.database);
-                expect(grant.getCall(0).argv[1]).to.equal(DUMMY_SERIAL);
+                expect(grant.getCall(0).args[0]).to.equal(TEST_CONFIG_SQL.database);
+                expect(grant.getCall(0).args[1]).to.equal(DUMMY_SERIAL);
 
                 expect(update.callCount).to.equal(1);
-                expect(update.getCall(0).argv[0]).to.equal(TEST_CONFIG_SQL.database);
-                expect(update.getCall(0).argv[1]).to.equal(DUMMY_SERIAL);
-                expect(update.getCall(0).argv[2]).to.equal(DUMMY_PATH);
-                expect(update.getCall(0).argv[3]).to.equal(DUMMY_CURRENT_COUNT + 1);
-                expect(update.getCall(0).argv[4]).to.equal(DUMMY_MAX_COUNT);
+                expect(update.getCall(0).args[0]).to.equal(TEST_CONFIG_SQL.database);
+                expect(update.getCall(0).args[1]).to.equal(DUMMY_SERIAL);
+                expect(update.getCall(0).args[2]).to.equal(DUMMY_PATH);
+                expect(update.getCall(0).args[3]).to.equal(DUMMY_CURRENT_COUNT + 1);
+                expect(update.getCall(0).args[4]).to.equal(DUMMY_MAX_COUNT);
 
                 expect(close.callCount).to.equal(1);
 
@@ -124,13 +128,17 @@ describe( "api_sql_enumerate.js", function(){
                 expect(result).to.have.property("status").to.equal(200);
             });
         });
+        it("fail to open Database.");
+        it("can't grant the serialK-key.");
+        it("can't update the called count.");
+        it("fails to close.");
     });
-    describe("::local::grantPath()", function(){
+    describe("::local::grantPathFromSerialNumber()", function(){
         var stubs, hooked = {};
-        var api_v1_serialpath_grant = api_enumerate.api_v1_serialpath_grant;
+        var grantPathFromSerialNumber = api_enumerate.grantPathFromSerialNumber;
         var orignal = {};
         var createSqlPartStub = function () {
-          return {
+            return {
               // "createPromiseForSqlConnection" : sinon.stub(),
               // "closeConnection" : sinon.stub(),
               "queryDirectly" : sinon.stub()
@@ -145,9 +153,29 @@ describe( "api_sql_enumerate.js", function(){
         afterEach(function(){
             hooked["sql_parts"].restore();
         });
-        it("正常系",function () {
-            
+        it("get called-count, max-count, and path.");
+    });
+    describe("::local::updateCalledWithTargetSerial()", function(){
+        var stubs, hooked = {};
+        var updateCalledWithTargetSerial = api_enumerate.updateCalledWithTargetSerial;
+        var orignal = {};
+        var createSqlPartStub = function () {
+            return {
+              // "createPromiseForSqlConnection" : sinon.stub(),
+              // "closeConnection" : sinon.stub(),
+              "queryDirectly" : sinon.stub()
+              // var queryDirectly = function ( databaseName, queryStr ) {
+            };
+        };
+        beforeEach(function(){ // 内部関数をフックする。
+            stubs = {};
+            stubs["sql_parts"] = createSqlPartStub();
+            hooked["sql_parts"] = hookProperty( api_enumerate.sql_parts, stubs["sql_parts"] );
         });
+        afterEach(function(){
+            hooked["sql_parts"].restore();
+        });
+        it("update called-count with serial-key and path.");
     });
 });
 

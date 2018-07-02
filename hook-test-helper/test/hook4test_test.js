@@ -44,11 +44,11 @@ describe("TEST for hook4test.js", function(){
             var stubs1 = {
                 "api1" : sinon.stub(),
                 "api2" : sinon.stub()
-            }
+            };
             var stubs2 = {
                 "api3" : sinon.stub(),
                 "api4" : sinon.stub()
-            }
+            };
 
             var hookedInstance = hookProperty( base_module.hook1, stubs1 );
 
@@ -127,6 +127,7 @@ describe("TEST for hook4test.js", function(){
             expect( api22.callCount ).to.equal( 1 );
 
         });
+        it("tries to hook null.");
        
     });
 });

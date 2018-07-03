@@ -1,3 +1,4 @@
+/* eslint-env mocha */
 /*
 	[api_sql_enumerate_test.js]
 
@@ -136,7 +137,6 @@ describe( "api_sql_enumerate.js", function(){
     describe("::local::grantPathFromSerialNumber()", function(){
         var stubs, hooked = {};
         var grantPathFromSerialNumber = api_enumerate.grantPathFromSerialNumber;
-        var orignal = {};
         var createSqlPartStub = function () {
             return {
               // "createPromiseForSqlConnection" : sinon.stub(),

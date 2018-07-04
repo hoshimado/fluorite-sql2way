@@ -4,6 +4,6 @@
 
 
 exports.getAssociatedKey = function ( baseKey ) {
-    return Promise.reject();
+    return Promise.resolve();
 };
 

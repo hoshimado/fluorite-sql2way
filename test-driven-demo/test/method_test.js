@@ -21,6 +21,7 @@ describe("method.js", function(){
             return shouldFulfilled(
                 authenticateKey( INPUT_KEY )
             ).then(function (result) {
+                expect(result).to.have.property("associated_key");
             });
         });
     })

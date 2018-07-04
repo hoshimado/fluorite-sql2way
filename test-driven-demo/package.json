@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "start" : "node index.js",
-    "test"  : "cross-env NODE_ENV=development node_modules/.bin/mocha"
+    "start": "node index.js",
+    "test": "cross-env NODE_ENV=development node_modules/.bin/mocha"
   },
   "author": "hoshimado",
   "license": "MIT",
@@ -18,5 +18,8 @@
     "mocha": "^5.2.0",
     "promise-test-helper": "^0.2.1",
     "sinon": "^6.1.0"
+  },
+  "dependencies": {
+    "sqlite3": "^4.0.1"
   }
 }

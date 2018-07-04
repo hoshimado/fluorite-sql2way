@@ -136,19 +136,59 @@ describe( "api_sql_enumerate.js", function(){
     });
     describe("::local::grantPathFromSerialNumber()", function(){
         var grantPathFromSerialNumber = api_enumerate.hook.grantPathFromSerialNumber;
+        var stubs, hooked = {};
+        var createSqlPartStub = function () {
+            return {
+              // "createPromiseForSqlConnection" : sinon.stub(),
+              // "closeConnection" : sinon.stub(),
+              "queryDirectly" : sinon.stub()
+              // var queryDirectly = function ( databaseName, queryStr ) {
+            };
+        };
+        beforeEach(function(){ // 内部関数をフックする。
+            stubs = {};
+            stubs["sql_parts"] = createSqlPartStub();
+            hooked["sql_parts"] = hookProperty( api_enumerate.sql_parts, stubs["sql_parts"] );
+        });
+        afterEach(function(){
+            hooked["sql_parts"].restore();
+        });
         it("get called-count, max-count, and path.",function () {
-            var opend_database_name = TEST_CONFIG_SQL.database;
-            var serial_key = "key from posted";
+            var OPENED_DATABASE_NAME = TEST_CONFIG_SQL.database;
+            var SERIAL_NUMBER = "key from posted";
+            var EXPECTED_URL = "http://hogehoge.piyo";
+            var EXPECTED_CALLED_COUNT = "12";
+            var EXPECTED_MAX_ENTRYS = "32";
+            var EXPECTED_QUERY_RESULT = [{
+                "url" : EXPECTED_URL + "    ", // 不要な空白があるもの、とする。
+                "called" : EXPECTED_CALLED_COUNT,
+                "max_entrys" : EXPECTED_MAX_ENTRYS
+            }];
+            var EXPECTED_QUERY_STR = "SELECT [id], [serial], [called], [max_entrys], [url]";
+            EXPECTED_QUERY_STR += " FROM [" + OPENED_DATABASE_NAME + "].dbo.[redirect_serial]";
+            EXPECTED_QUERY_STR += " WHERE [serial]='" + SERIAL_NUMBER + "'";
+
+            // calledWith()でスタブ定義しないのは、検証時に calledOnce()でしか検証できないから。
+            // 意図しない引数での呼び出しも、すぐわかる方が望ましい。
+            stubs.sql_parts.queryDirectly.onCall(0).returns(
+                Promise.resolve( EXPECTED_QUERY_RESULT )
+            );        
+
             return shouldFulfilled(
                 grantPathFromSerialNumber(
-                    opend_database_name, serial_key
+                    OPENED_DATABASE_NAME, SERIAL_NUMBER
                 )
             ).then(function (result) {
+                expect(stubs.sql_parts.queryDirectly.getCall(0).args[0]).to.equal(OPENED_DATABASE_NAME);
+                expect(stubs.sql_parts.queryDirectly.getCall(0).args[1]).to.equal(EXPECTED_QUERY_STR);
+
                 expect(result).to.have.property("called");
                 expect(result).to.have.property("max_entrys");
                 expect(result).to.have.property("path");
             });
          });
+         it("failed because of Invalid Serial Key.");
+         it("failed because query failed.");
     });
     describe("::local::updateCalledWithTargetSerial()", function(){
         var stubs, hooked = {};

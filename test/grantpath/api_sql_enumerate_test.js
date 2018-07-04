@@ -135,25 +135,20 @@ describe( "api_sql_enumerate.js", function(){
         it("fails to close.");
     });
     describe("::local::grantPathFromSerialNumber()", function(){
-        var stubs, hooked = {};
-        var grantPathFromSerialNumber = api_enumerate.grantPathFromSerialNumber;
-        var createSqlPartStub = function () {
-            return {
-              // "createPromiseForSqlConnection" : sinon.stub(),
-              // "closeConnection" : sinon.stub(),
-              "queryDirectly" : sinon.stub()
-              // var queryDirectly = function ( databaseName, queryStr ) {
-            };
-        };
-        beforeEach(function(){ // 内部関数をフックする。
-            stubs = {};
-            stubs["sql_parts"] = createSqlPartStub();
-            hooked["sql_parts"] = hookProperty( api_enumerate.sql_parts, stubs["sql_parts"] );
-        });
-        afterEach(function(){
-            hooked["sql_parts"].restore();
-        });
-        it("get called-count, max-count, and path.");
+        var grantPathFromSerialNumber = api_enumerate.hook.grantPathFromSerialNumber;
+        it("get called-count, max-count, and path.",function () {
+            var opend_database_name = TEST_CONFIG_SQL.database;
+            var serial_key = "key from posted";
+            return shouldFulfilled(
+                grantPathFromSerialNumber(
+                    opend_database_name, serial_key
+                )
+            ).then(function (result) {
+                expect(result).to.have.property("called");
+                expect(result).to.have.property("max_entrys");
+                expect(result).to.have.property("path");
+            });
+         });
     });
     describe("::local::updateCalledWithTargetSerial()", function(){
         var stubs, hooked = {};

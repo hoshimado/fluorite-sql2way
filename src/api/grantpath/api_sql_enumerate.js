@@ -11,12 +11,13 @@ var SQL_CONFIG = createHookPoint( exports, "SQL_CONFIG", require("./sql_config_g
 
 
 
-var grantPathFromSerialNumber = function(){ 
+hook[ "grantPathFromSerialNumber" ] = function(){ 
 	return Promise.reject(); 
 };
-hook[ "grantPathFromSerialNumber" ] = grantPathFromSerialNumber;
-var updateCalledWithTargetSerial = function(){ return Promise.reject(); };
-hook[ "updateCalledWithTargetSerial"] = updateCalledWithTargetSerial;
+hook[ "updateCalledWithTargetSerial"] = function(){ 
+	return Promise.reject(); 
+};
+
 
 
 

@@ -7,6 +7,8 @@ var sqlite3 = createHookPoint(exports,"sqlite3",require("sqlite3"));
 
 
 exports.getAssociatedKey = function ( baseKey ) {
-    return Promise.resolve();
+    return Promise.resolve({
+        "associated_key" : "仮実装"
+    });
 };
 

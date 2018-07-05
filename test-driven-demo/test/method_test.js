@@ -54,12 +54,16 @@ describe("method.js", function(){
 
         it("success to get the associated key with the base key.",function () {
             var INPUT_KEY = "元に成るキー";
-            var EXPECTED_ROWS = [{"hoge":"piyo"}];
+            var EXPECTED_RETURNED_KEY = "取得されるキー";
+            var STUB_ROWS = [{
+                "serial" : INPUT_KEY,
+                "associated" : EXPECTED_RETURNED_KEY
+            }];
             var spied_sqlite3_databese_factory = sinon.spy(dummy_database_instance,"Database");
             stub_sqlite3connection._constructor.onCall(0).returns(null); // ★エラー無しはnullを返却。
 
             // 引数の2(0,1,2)番目をcallback(err,rows)で呼び出して応答する。
-            stub_sqlite3connection.all.callsArgWith(2, /* err= */null, /* rows= */EXPECTED_ROWS);
+            stub_sqlite3connection.all.callsArgWith(2, /* err= */null, /* rows= */STUB_ROWS);
 
             // 引数の0番目をcallback(null)で呼び出して応答する。
             stub_sqlite3connection.close.callsArgWith(0, null);
@@ -67,15 +71,19 @@ describe("method.js", function(){
             return shouldFulfilled(
                 authenticateKey( INPUT_KEY )
             ).then(function (result) {
+                var EXPECTED_QUERY_STR = "SELECT [serial], [associated]";
+                EXPECTED_QUERY_STR += " FROM [tablename]";
+                EXPECTED_QUERY_STR += " WHERE [serial]='" + INPUT_KEY + "'"
+
                 assert(spied_sqlite3_databese_factory.calledWithNew(), "sqlite3.verbose.Database()をnewしてインスタンスを生成する。");
 
                 assert(stub_sqlite3connection.all.calledOnce, "sqlite3#[new Database()が返すインスタンス].all()を呼ぶ。");
-                expect(stub_sqlite3connection.all.getCall(0).args[0]).to.equal("◆Query文字列【これから決める】");
+                expect(stub_sqlite3connection.all.getCall(0).args[0]).to.equal(EXPECTED_QUERY_STR);
                 expect(stub_sqlite3connection.all.getCall(0).args[1].length).to.equal(0); // 渡されるarreyは要素不要。
 
                 assert(stub_sqlite3connection.close.calledOnce, "sqlite3#close()を呼ぶこと。");
 
-                expect(result).to.have.property("associated_key");
+                expect(result).to.have.property("associated_key").to.equal(EXPECTED_RETURNED_KEY);
             });
         });
     });

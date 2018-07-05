@@ -18,14 +18,54 @@ describe("method.js", function(){
     describe("getAssociatedKey()",function () {
         var authenticateKey = target.getAssociatedKey;
 
+        // connection.all(), close(),,
+        var stub_sqlite3connection; 
+
+        // connection = new sqlite3.verbose().Database(); で、且つcallback渡して接続する。
+        var FAKE_SQLITE3_DATABASE_FACTORY = function(){};
+        FAKE_SQLITE3_DATABASE_FACTORY.prototype.Database = function (DatabaseName,callback) {
+            setTimeout(() => {
+                callback(
+                    // ★戻り値。成功時はnull。失敗ならerr={}を返すのがAPI仕様。
+                    stub_sqlite3connection._constructor( DatabaseName )
+                );
+            }, 100);
+            return stub_sqlite3connection; // newで呼ばれた場合のデフォルト this に代えて、これを返却する。
+        };
+        var dummy_database_instance = new FAKE_SQLITE3_DATABASE_FACTORY();
+
+        // sqlite3のAPIをフックする。
+        var hooked = {};
+        beforeEach(function () {
+            stub_sqlite3connection = {
+                "_constructor" : sinon.stub(),
+                "all" : sinon.stub(),
+                "close" : sinon.stub()
+            };
+            hooked["sqlite3"] = hookProperty(target.sqlite3,{
+                "verbose" : function(){
+                    return dummy_database_instance;
+                }
+            });
+        });
+        afterEach(function () {
+            hooked["sqlite3"].restore();
+        });
+
         it("success to get the associated key with the base key.",function () {
             var INPUT_KEY = "元に成るキー";
+            var spied_sqlite3_databese_factory = sinon.spy(dummy_database_instance,"Database");
+            stub_sqlite3connection._constructor.onCall(0).returns(null); // ★エラー無しはnullを返却。
 
             return shouldFulfilled(
                 authenticateKey( INPUT_KEY )
             ).then(function (result) {
+                assert(spied_sqlite3_databese_factory.calledWithNew(), "sqlite3.verbose.Database()をnewしてインスタンスを生成する。");
+
+                assert(stub_sqlite3connection.all.calledOnce, "sqlite3#[new Database()が返すインスタンス].all()を呼ぶ。");
+
                 expect(result).to.have.property("associated_key");
             });
         });
-    })
+    });
 });

@@ -73,7 +73,7 @@ describe("method.js", function(){
             ).then(function (result) {
                 var EXPECTED_QUERY_STR = "SELECT [serial], [associated]";
                 EXPECTED_QUERY_STR += " FROM [tablename]";
-                EXPECTED_QUERY_STR += " WHERE [serial]='" + INPUT_KEY + "'"
+                EXPECTED_QUERY_STR += " WHERE [serial]='" + INPUT_KEY + "'";
 
                 assert(spied_sqlite3_databese_factory.calledWithNew(), "sqlite3.verbose.Database()をnewしてインスタンスを生成する。");
 

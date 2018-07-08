@@ -11,7 +11,7 @@ var expect = chai.expect;
 var sinon = require("sinon");
 var shouldFulfilled = require("promise-test-helper").shouldFulfilled;
 var shouldRejected  = require("promise-test-helper").shouldRejected;
-var hookProperty = require("../../hook-test-helper").hookProperty;
+var hookProperty = require("hook-test-helper").hookProperty;
 require('date-utils');
 
 

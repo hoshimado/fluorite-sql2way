@@ -26,6 +26,7 @@
     "date-utils": "^1.2.21",
     "debug": "^2.6.9",
     "express": "^4.15.5",
+    "hook-test-helper": "0.0.1",
     "jade": "^1.11.0",
     "morgan": "^1.8.2",
     "mssql": "^4.1.0",

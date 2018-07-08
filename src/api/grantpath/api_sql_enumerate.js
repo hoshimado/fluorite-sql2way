@@ -4,7 +4,7 @@
 */
 
 require('date-utils'); // Data() クラスのtoString()を拡張してくれる。
-var createHookPoint = require("../../../hook-test-helper").createHookPoint;
+var createHookPoint = require("hook-test-helper").createHookPoint;
 var hook = createHookPoint( exports, "hook" );
 var sql_parts =  createHookPoint( exports, "sql_parts", require("../sql_db_io/index.js") );
 var SQL_CONFIG = createHookPoint( exports, "SQL_CONFIG", require("./sql_config_grant.js").CONFIG_SQL );

@@ -120,11 +120,11 @@ exports.addActivityLog2Database = addActivityLog2Database;
 
 
 /**
- * デバイス識別キーに紐づいたバッテリーログを、指定されたデータベースから取得する。
+ * デバイス識別キーに紐づいたログを、指定されたデータベースから取得する。
  * @param{String} Database データベース名
  * @param{String} deviceKey デバイスの識別キー
  * @param{Object} period 取得する日付の期間 { start : null, end : null }を許容する。ただし、使う場合はyyyy-mm-dd整形済みを前提。
- * @returns{Promise} SQLからの取得結果を返すPromiseオブジェクト。成功時resolve( recordset ) 、失敗時reject( err )。
+ * @returns{Promise} SQLからの取得結果を返すPromiseオブジェクト。成功時resolve( rows ) 、失敗時reject( err )。
  */
 var getListOfActivityLogWhereDeviceKey = function( databaseName, deviceKey, period ){
 	var wrapString = factoryImpl._wrapStringValue.getInstance(); 

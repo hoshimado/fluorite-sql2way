@@ -17,25 +17,30 @@ describe( "sql_lite_db_actual_test.js", function(){
     var addActivityLog2Database = sql_parts.addActivityLog2Database;
     var getListOfActivityLogWhereDeviceKey = sql_parts.getListOfActivityLogWhereDeviceKey;
 
-    describe("::SQLiteトライアル", function(){
-		it("シークエンス調査", function(){
+    describe( "【実際にアクセス】::getListOfActivityLogWhereDeviceKey()",function(){
+        this.timeout(5000);
+
+        it("正常系。期間指定なし。",function(){
+            var period = null; //無しの場合
+            var deviceKey = "にゃーん。";
+
+            // アクセス前処理
             var sqlConfig = { "database" : "./db/mydb.sqlite3" }; // npm test 実行フォルダ、からの相対パス
-            var promise;
+            var promise = createPromiseForSqlConnection( sqlConfig );
 
-            this.timeout(5000);
-
-            promise = createPromiseForSqlConnection( sqlConfig );
-            promise = promise.then( function(result){
-                return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
-            });
-
+            // 被テスト関数の実行
             return shouldFulfilled(
-                promise
+                promise.then( function(){
+                    return getListOfActivityLogWhereDeviceKey( sqlConfig.database, "nyan1nyan2nyan3nayn4nayn5nyan6ny", null );
+                })
 			).then(function( result ){
-                console.log( result );
+                // アクセス後処理
                 closeConnection( sqlConfig.database );
-			});
-		});
-	});
+
+                // 実行結果の確認
+                console.log( result );
+            });
+        });
+    });
 });
 

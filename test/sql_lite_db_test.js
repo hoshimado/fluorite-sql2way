@@ -72,19 +72,25 @@ describe( "sql_lite_db_test.js", function(){
         it("正常系。期間指定なし。",function(){
             var period = null; //無しの場合
             var deviceKey = "にゃーん。";
+
+            // アクセス前処理
             var dbs = sql_parts.factoryImpl.db.getInstance();
             var stub_instance = sinon.stub();
             var expected_rows = [
                 { "created_at": '2017-10-22 23:59:00.000', "type": 900 }
             ];
-
             dbs[ sqlConfig.database ] = {
                 "all" : stub_instance
             };
             stub_instance.callsArgWith(2, null, expected_rows);
+
+            // 被テスト関数の実行
             return shouldFulfilled(
                 sql_parts.getListOfActivityLogWhereDeviceKey( sqlConfig.database, deviceKey, period )
             ).then(function(result){
+                // アクセス後処理：不要
+
+                // 実行結果の検証
                 assert( stub_instance.calledOnce );
                 var called_args = stub_instance.getCall(0).args;
                 expect( called_args[0] ).to.equal(

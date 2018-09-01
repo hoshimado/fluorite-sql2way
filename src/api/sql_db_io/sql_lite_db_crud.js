@@ -174,21 +174,19 @@ var addNewUser = function(databaseName, deviceKey, maxEntrys, passwordStr ){
 		var wrappedDeviceKey = wrapString( deviceKey );
 		var wrappedPassWord = wrapString( passwordStr )
 		var query_str = "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])";
-		query_str += " VALUES('" + wrappedDeviceKey + "', " + maxEntrys + ", '" + wrappedPassWord + "')";
+		query_str += " VALUES( ?, ?, ? )";
 
-		db.all(query_str, [], (err, rows) => {
+		db.run(query_str, [wrappedDeviceKey, maxEntrys, wrappedPassWord], (err) => {
 			if(!err){
 				return resolve();
 			}else{
-				// ToDo.
-				// 重複キーだと、以下のerrが返る。
-				// このまま返す、、、のは将来的に修正したいね。
-				// { [Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: owners_permission.owners_hash] errno: 19, code: 'SQLITE_CONSTRAINT' }
+				// なお、重複キーの時のerr内容は以下。
+				// "Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: owners_permission.owners_hash"
 				reject({
 					"cant_to_insert" : err
 				});
 			}
-		});
+		});		
 	});
 };
 exports.addNewUser = addNewUser;

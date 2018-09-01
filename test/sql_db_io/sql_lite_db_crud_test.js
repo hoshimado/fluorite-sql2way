@@ -125,13 +125,13 @@ describe( "sql_lite_db_crud.js", function(){
             sql_parts.factoryImpl._wrapStringValue.setStub( stub_wrapperStr );
 
             dbs[ sqlConfig.database ] = {
-                "all" : stub_sql_instance
+                "run" : stub_sql_instance
             };
             stub_sql_instance.callsArgWith(2, /* err= */null, /* rows= */null);
 
             return shouldFulfilled(
                 sql_parts.addNewUser( databaseName, deviceKey, maxEntrys, passwordStr )
-            ).then(function(){
+            ).then(function(result){
                 assert( stub_wrapperStr.withArgs( deviceKey ).calledOnce );
                 assert( stub_wrapperStr.withArgs( passwordStr ).calledOnce );
                 assert( stub_sql_instance.calledOnce );
@@ -139,9 +139,15 @@ describe( "sql_lite_db_crud.js", function(){
                 var called_args = stub_sql_instance.getCall(0).args;
                 expect( called_args[0] ).to.equal(
                     "INSERT INTO owners_permission([owners_hash], [max_entrys], [password])" 
-                    + " VALUES('" + deviceKey + "', " + maxEntrys + ", '" + passwordStr + "')"
+                    + " VALUES( ?, ?, ? )"
                 );
-                expect( called_args[1].length ).to.equal( 0 );
+                expect( called_args[1] ).to.deep.equal([
+                    deviceKey, 
+                    maxEntrys, 
+                    passwordStr
+                ]);
+
+                expect(result).to.be.undefined;
             });
         });
     });

@@ -58,7 +58,7 @@ exports.api_v1_activitylog_signup = function( queryFromGet, dataFromPost ){
 					}else{
 						outJsonData["errorMessage"] = "the number of users is over.";
 						reject({
-							"status" : 429 // Too Many Requests(リクエストの回数制限に引っかかる場合など)
+							"status" : 403
 						});
 					}
 				}).catch((err)=>{

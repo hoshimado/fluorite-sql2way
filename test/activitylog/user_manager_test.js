@@ -145,7 +145,7 @@ describe( "user_manager.js", function(){
                 expect( result ).to.have.property( "status" ).to.equal( 200 );
             });
         });
-        it("正常系：既存ユーザーだが、パスワードが異なる。", function(){
+        it("異常系：ユーザー名が重複なので登録は出来ない", function(){
             var queryFromGet = null;
             var dataFromPost = { 
                 "username" : "nyan1nyan2nyan3nayn4nayn5nyan6ny",
@@ -173,7 +173,7 @@ describe( "user_manager.js", function(){
 
                 expect( result.jsonData ).to.have.property( "errorMessage" );
                 expect( result.jsonData.errorMessage ).to.equal("The username is already in use.");
-                expect( result ).to.have.property( "status" ).to.equal( 401 );
+                expect( result ).to.have.property( "status" ).to.equal( 409 );
             });
         });
 
@@ -208,7 +208,7 @@ describe( "user_manager.js", function(){
                 expect( result ).to.have.property( "jsonData" );
                 expect( result.jsonData ).to.have.property( "errorMessage" );
                 expect( result.jsonData.errorMessage ).to.equal("the number of users is over.");
-                expect( result ).to.have.property( "status" ).to.equal( 429 ); // Too Many Requests(リクエストの回数制限に引っかかる場合など)
+                expect( result ).to.have.property( "status" ).to.equal( 403 );
             });
         });
     });

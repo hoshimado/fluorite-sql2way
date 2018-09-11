@@ -21,7 +21,7 @@ describe("TEST for vue_client.js", function(){
 		original = {
             "vueAccountInstance" : target.client_lib.vueAccountInstance,
             "axios" : target.client_lib.axios,
-            "isServerTimeZoneGMT" : target.client_lib.isServerTimeZoneGMT,
+            "getTimeDifferenceHourForShow" : target.client_lib.getTimeDifferenceHourForShow,
             "convertTimezoneInActivityList" : target.client_lib.convertTimezoneInActivityList
         };
 
@@ -41,7 +41,7 @@ describe("TEST for vue_client.js", function(){
 
         target.client_lib.vueAccountInstance = original.vueAccountInstance;
         target.client_lib.axios = original.axios;
-        target.client_lib.isServerTimeZoneGMT = original.isServerTimeZoneGMT;
+        target.client_lib.getTimeDifferenceHourForShow = original.getTimeDifferenceHourForShow;
         target.client_lib.convertTimezoneInActivityList = original.convertTimezoneInActivityList;
 	});
 
@@ -200,19 +200,23 @@ describe("TEST for vue_client.js", function(){
         });
     });
     describe("::deleteLastActivityDataInAccordanceWithGrid()", function(){
+        var hook = target.client_lib;
         it("正常系：サーバー側のタイムゾーンはGMT", function(){
             var deleteLastActivityDataInAccordanceWithGrid = target.client_lib.deleteLastActivityDataInAccordanceWithGrid;
             var fakeLastActivitiyDate = "2018-01-06 08:42:16.000";
             var EXPECTED_USER = {
-                "userName" :    target.client_lib.vueAccountInstance.userName,
-                "passKeyWord" : target.client_lib.vueAccountInstance.passKeyWord
+                "userName" :    hook.vueAccountInstance.userName,
+                "passKeyWord" : hook.vueAccountInstance.passKeyWord
             };
             var EXPECTED_RESPONSE = {
                 "number_of_logs" : "ログデータの残数（数値）",
                 "device_key" : EXPECTED_USER.userName
             };
-            var stub_isServerTimeZoneGMT = sinon.stub().onCall(0).returns(true); // サーバー側は「GMT」判定を返すとする。
-            target.client_lib.isServerTimeZoneGMT = stub_isServerTimeZoneGMT;
+            var stub_getTimeDifferenceHourForShow 
+            = sinon.stub().onCall(0).returns(+9); 
+            // ここでは「表示用には、-9hする（時差は＋９ｈを返す）」ケースを考える。
+            // ※サーバー側がGMTで、表示をJSTにしたい場合を想定。
+            hook.getTimeDifferenceHourForShow = stub_getTimeDifferenceHourForShow;
 
             // ※「stub_fooked_axios」はbeforeEach(), afterEach() の外で定義済み＆clinet_libに接続済み。
             stub_fooked_axios["get"] = sinon.stub();
@@ -236,7 +240,7 @@ describe("TEST for vue_client.js", function(){
             return shouldFulfilled(
                 deleteLastActivityDataInAccordanceWithGrid( fakeLastActivitiyDate )
             ).then(function(){
-                expect( stub_isServerTimeZoneGMT.callCount ).to.equal( 1, "isServerTimeZoneGMT()を1度呼ぶこと" );
+                expect( stub_getTimeDifferenceHourForShow.callCount ).to.equal( 1, "getTimeDifferenceHourForShow()を1度呼ぶこと" );
 
                 var stub_post_args = stub_fooked_axios.post.getCall(0).args;
                 expect( stub_fooked_axios.get.callCount ).to.equal( 0, "axios.get()は呼ばれないこと。" )

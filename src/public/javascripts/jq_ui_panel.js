@@ -1,6 +1,10 @@
 /*
     [jq_ui_panel.js]
     encoding=UTF-8
+
+    スライドアップとダウンは、Vue.jsで実装しようかなぁ？
+    ↓この辺のライブラリを利用すると簡単に出来そうだし。パラメータの有無でOn/Off考えると、jQueryと混在させるよりも楽に思えてきた。
+    https://github.com/danieldiekmeier/vue-slide-up-down
 */
 
 

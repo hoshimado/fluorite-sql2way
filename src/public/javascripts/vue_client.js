@@ -492,7 +492,7 @@ console.log( "fake_axios!" );
         var responsedata = result.data;
 console.log( responsedata );
         return Promise.resolve( responsedata );     
-    })
+    });
 };
 var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
     var url = "./api/v1/activitylog/delete";
@@ -557,9 +557,10 @@ if( this.window ){
     window.onload = function(){
         client_lib["axios"] = (browserThis.window) ? browserThis.axios : {}; // ダミー
 
+        // Viewはブラウザ側では、グローバルに定義される。
         _setVueModalDialog( Vue );
-
         _setVueComponentGrid( Vue );
+
         chartsleeping_lib.initialize( browserThis ); // このとき、this.document / window などが存在する。
         account_lib.initialize( browserThis );
         _vueAppGrid( CREATE_VUE_INSTANCE, client_lib, chartsleeping_lib );

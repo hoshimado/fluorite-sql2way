@@ -90,7 +90,7 @@ describe( "sql_lite_db_crud.js", function(){
             stub_instance.callsArgWith(0, null);
             return shouldFulfilled(
                 sql_parts.closeConnection( sqlConfig.database )
-            ).then(function(result){
+            ).then(function(){
                 assert( stub_instance.calledOnce );
                 expect( dbs[ sqlConfig.database ] ).to.not.be.exist;
             });

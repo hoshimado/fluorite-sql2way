@@ -71,6 +71,36 @@ var closeConnection = function( databaseName ){
 exports.closeConnection = closeConnection;
 
 
+// ToDo: このソース内の all()の前後を、この queryDirectly() 利用にリファクタリングしよう。
+/**
+ * SQLite3 / mssql の差分を吸収することを目的に query() を wrapする。
+ * Bookshelf.jsを使うのが王道なんだろうけど、SQL練習を兼ねたかったので、Wrapperを自作する。
+ * 
+ * @param {String} databaseName createPermissionTable()で指定したデータベース名を文字列で指定する。
+ * @param {String} queryStr     SQLクエリーの文字列を指定。
+ */
+var queryDirectly = function ( databaseName, queryStr ) {
+	var dbs = factoryImpl.db.getInstance();
+	var db = dbs[ databaseName ];
+	if( !db ){
+		return Promise.reject({
+			"isReady" : false
+		});
+	}
+
+	return new Promise(function (resolve,reject) {
+		db.all(queryStr, [], (err, rows) => {
+			if(!err){
+				resolve(rows);
+			}else{
+				reject(err);
+			}
+		});
+	});
+};
+exports.queryDirectly = queryDirectly;
+
+
 
 var setupTable1st = function( databaseName ){
 	var dbs = factoryImpl.db.getInstance();

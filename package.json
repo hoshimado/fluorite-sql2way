@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node_modules\\.bin\\mocha --recursive",
+    "test": "cross-env NODE_ENV=development node_modules/.bin/mocha --recursive",
     "start": "node server.js"
   },
   "repository": {
@@ -21,22 +21,23 @@
   },
   "homepage": "https://github.com/hoshimado/fluorite-sql2way#readme",
   "dependencies": {
-    "body-parser": "~1.17.1",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.3",
-    "express": "~4.15.2",
-    "jade": "~1.11.0",
-    "morgan": "~1.8.1",
-    "serve-favicon": "~2.4.2",
-
+    "body-parser": "^1.17.2",
+    "cookie-parser": "^1.4.3",
     "date-utils": "^1.2.21",
-    "mssql": "^4.0.4",
-    "sqlite3": "3.1.9"
+    "debug": "^2.6.9",
+    "express": "^4.15.5",
+    "hook-test-helper": "0.0.1",
+    "jade": "^1.11.0",
+    "morgan": "^1.8.2",
+    "mssql": "^4.1.0",
+    "serve-favicon": "^2.4.5",
+    "sqlite3": "^3.1.9"
   },
   "devDependencies": {
     "chai": "^4.1.2",
-    "mocha": "^3.5.0",
+    "cross-env": "^5.2.0",
+    "mocha": "^3.5.3",
     "promise-test-helper": "^0.2.1",
-    "sinon": "^3.2.1"
+    "sinon": "^3.3.0"
   }
 }

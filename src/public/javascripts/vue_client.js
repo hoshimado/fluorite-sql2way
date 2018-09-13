@@ -110,9 +110,8 @@ var _vueAppGrid = function( createVueInstance, client_lib, chartsleeping_lib ){
             "getGridData" : function() {
                 var promise = client_lib.getActivityDataInAccordanceWithAccountVue();
                 return promise.then((resultArray)=>{
-                    var localtimedArray = (client_lib.isServerTimeZoneGMT()) 
-                        ? client_lib.convertTimezoneInActivityList( resultArray, +9 ) // JST = +9.
-                        : resultArray;
+                    var localtimedArray 
+                    = client_lib.convertTimezoneInActivityList( resultArray, client_lib.getTimeDifferenceHourForShow() ); // JSTなら「＋９」が渡される
                     var grid_activity_data = client_lib.convertActivityList2GridData( localtimedArray );
                     this.gridData = grid_activity_data.slice(0, 6);
                     // ↑カットオフ入れてる。最大６つまで、で。
@@ -345,11 +344,15 @@ if( !this.window ){
 /**
  * 動作ドメイン「azurewebsites.net/」で判別して、GMT→JST補正する。
  */
-var _isServerTimeZoneGMT = function(){
-    return window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0);
+var _getTimeDifferenceHourForShow = function(){
+    var hours = 0;
+    if(window && window.location && (window.location.href.indexOf("azurewebsites.net/")>0)){
+        hours = +9; // この実装は暫定
+    }
+    return hours;
 };
 var _convertTimezoneInActivityList = function( typeArray, addTimeZoneValue ){
-    var n = typeArray.length
+    var n = typeArray.length;
     var dt;
     while( 0<n-- ){
         dt = new Date( typeArray[n].created_at );
@@ -502,16 +505,14 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
     var savedPassKey  = client_lib.vueAccountInstance.passKeyWord;
 
     // lastDateStrは、サーバーから取得した生の値の最終行（＝最新）のcreate_atプロパティが格納されている。
-    var effectiveTimeZone = client_lib.isServerTimeZoneGMT()
-        ? -9 
-        : 0;
+    var effectiveTimeZoneAsHours = client_lib.getTimeDifferenceHourForShow();
     var dateStart = new Date(lastDateStr);
     var dateEnd = new Date(lastDateStr);
     var secondsExpress;
 
-    secondsExpress = dateStart.getTime() + effectiveTimeZone*3600000;
+    secondsExpress = dateStart.getTime() - effectiveTimeZoneAsHours*3600000;
     dateStart.setTime( secondsExpress );
-    secondsExpress = dateEnd.getTime() + effectiveTimeZone*3600000;
+    secondsExpress = dateEnd.getTime() - effectiveTimeZoneAsHours*3600000;
     dateEnd.setTime( secondsExpress );
 
     secondsExpress = dateStart.getTime() - 60 *1000; // 60秒（ms表現）手前。
@@ -540,7 +541,7 @@ var _deleteLastActivityDataInAccordanceWithGrid = function( lastDateStr ){
 var client_lib = {
     "tinyCookie" : _tinyCookie,
     "convertTimezoneInActivityList" : _convertTimezoneInActivityList,
-    "isServerTimeZoneGMT" : _isServerTimeZoneGMT,
+    "getTimeDifferenceHourForShow" : _getTimeDifferenceHourForShow,
     "convertActivityList2GridData" : _convertActivityList2GridData,
     "getActivityDataInAccordanceWithAccountVue" : _getActivityDataInAccordanceWithAccountVue,
     "addActivityDataInAccordanceWithAccountVue" : _addActivityDataInAccordanceWithAccountVue,

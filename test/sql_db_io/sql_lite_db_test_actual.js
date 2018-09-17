@@ -49,6 +49,7 @@ describe( "sql_lite_db_test_actual.js", function(){
 
     describe("::SQLiteトライアル　in メモリーデーターベース。", function(){
         var sqlConfig = { "database" : ":memory:" }; // テスト用なので、インメモリーで動作させる（永続化しない）
+        // http://www.sqlitetutorial.net/sqlite-nodejs/connect/
 
         it.skip("実際の入出力を伴うシークエンスの調査用。createからadd～Deleteまで実施。", function(){
             var promise;

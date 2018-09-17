@@ -78,8 +78,9 @@ exports.closeConnection = closeConnection;
  * 
  * @param {String} databaseName createPermissionTable()で指定したデータベース名を文字列で指定する。
  * @param {String} queryStr     SQLクエリーの文字列を指定。
+ * @param {Object} param        SQLのプレースホルダ―変数の配列（前提だが、MSSQLがわの実装次第では
  */
-var queryDirectly = function ( databaseName, queryStr ) {
+var queryDirectly = function ( databaseName, queryStr, param ) {
 	var dbs = factoryImpl.db.getInstance();
 	var db = dbs[ databaseName ];
 	if( !db ){
@@ -89,7 +90,7 @@ var queryDirectly = function ( databaseName, queryStr ) {
 	}
 
 	return new Promise(function (resolve,reject) {
-		db.all(queryStr, [], (err, rows) => {
+		db.all(queryStr, param, (err, rows) => {
 			if(!err){
 				resolve(rows);
 			}else{

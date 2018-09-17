@@ -166,7 +166,8 @@ describe( "api_sql_enumerate.js", function(){
             }];
             var EXPECTED_QUERY_STR = "SELECT [id], [serial], [called], [max_entrys], [url]";
             EXPECTED_QUERY_STR += " FROM [" + OPENED_DATABASE_NAME + "].dbo.[redirect_serial]";
-            EXPECTED_QUERY_STR += " WHERE [serial]='" + SERIAL_NUMBER + "'";
+            EXPECTED_QUERY_STR += " WHERE [serial] = ?";
+            var EXPECTED_PLACEHOLDER_PARAM = [ SERIAL_NUMBER ];
 
             // calledWith()でスタブ定義しないのは、検証時に calledOnce()でしか検証できないから。
             // 意図しない引数での呼び出しも、すぐわかる方が望ましい。
@@ -181,6 +182,7 @@ describe( "api_sql_enumerate.js", function(){
             ).then(function (result) {
                 expect(stubs.sql_parts.queryDirectly.getCall(0).args[0]).to.equal(OPENED_DATABASE_NAME);
                 expect(stubs.sql_parts.queryDirectly.getCall(0).args[1]).to.equal(EXPECTED_QUERY_STR);
+                expect(stubs.sql_parts.queryDirectly.getCall(0).args[2]).to.deep.equal(EXPECTED_PLACEHOLDER_PARAM)
 
                 expect(result).to.have.property("called");
                 expect(result).to.have.property("max_entrys");

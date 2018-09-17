@@ -505,7 +505,6 @@ var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period 
 			"isReady" : false
 		});
 	}
-
 	var query_str = "DELETE FROM activitylogs";
 	query_str += " WHERE [owners_hash] = ?"; // 固定長文字列でも、後ろの空白は無視してくれるようだ。
 	quaryPlaceHolderArray.push( wrappedDeviceKey );
@@ -520,7 +519,6 @@ var deleteActivityLogWhereDeviceKey = function( databaseName, deviceKey, period 
 		query_str += " AND [created_at] <= ?";
 		quaryPlaceHolderArray.push( period.end );
 	}
-
 	return new Promise(function(resolve,reject){
 		db.all(query_str, quaryPlaceHolderArray, (err, rows) => {
 			if(!err){

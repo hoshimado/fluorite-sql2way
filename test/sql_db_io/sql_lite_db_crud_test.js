@@ -74,11 +74,12 @@ describe( "sql_lite_db_crud.js", function(){
                 expect( dbs[ sqlConfig.database ] ).to.equal( stubInstance, "空だったdbsに、データベースインスタンスが追加されている事" );
             });
         });
+        it("正常系：2回目のOpenはカウントしておく？");
         it("異常系");
     });
     describe( "::closeConnection()",function(){
         var closeConnection = sql_parts.closeConnection;
-        it("正常系。期間指定なし。",function(){
+        it("正常系",function(){
             var period = null; //無しの場合
             var deviceKey = "にゃーん。";
             var dbs = sql_parts.factoryImpl.db.getInstance();
@@ -94,8 +95,8 @@ describe( "sql_lite_db_crud.js", function(){
                 assert( stub_instance.calledOnce );
                 expect( dbs[ sqlConfig.database ] ).to.not.be.exist;
             });
-            
         });
+        it("正常系：実際のCloseは、Open回数を全部Closeしたら、、、にする？");
     });
 
 

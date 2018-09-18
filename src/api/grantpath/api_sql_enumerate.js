@@ -11,11 +11,54 @@ var SQL_CONFIG = createHookPoint( exports, "SQL_CONFIG", require("./sql_config_g
 
 
 
-hook[ "grantPathFromSerialNumber" ] = function(){ 
-	return Promise.reject(); 
+hook[ "grantPathFromSerialNumber" ] = function( databaseName, serialKey ){ 
+	var queryDirectly = sql_parts.queryDirectly;
+	var quaryPlaceHolderArray = [ serialKey ];
+	var queryStr = "SELECT [id], [serial], [called], [max_entrys], [url]";
+	queryStr += " FROM [redirect_serial]";
+	queryStr += " WHERE [serial] = ?";
+
+	return queryDirectly( 
+		databaseName, queryStr, quaryPlaceHolderArray 
+	).then(function (rows) {
+		var item;
+		if( rows.length > 0 ){
+			item = rows[0];
+			return Promise.resolve({
+				"path" : item.url.trim(),
+				"called" : item.called,
+				"max_entrys" : item.max_entrys
+			});
+		}else{
+			return Promise.reject();
+		}
+	});
 };
-hook[ "updateCalledWithTargetSerial"] = function(){ 
-	return Promise.reject(); 
+
+// ↓この設計、あまり良くない。maxCountとかは関数の外に出せるのでは？ update～というネーミング不適切では？
+hook[ "updateCalledWithTargetSerial"] = function(
+	databaseName,
+	serialKey,
+	targetPath,
+	currentCalledCount,
+	maxCount
+){ 
+	var queryDirectly = sql_parts.queryDirectly;
+	var quaryPlaceHolderArray = [
+		currentCalledCount,
+		serialKey
+	];
+	var queryStr = "UPDATE [redirect_serial]";
+	queryStr += " SET [called] = ? WHERE [serial] = ? ";
+
+	return queryDirectly( 
+		databaseName, queryStr, quaryPlaceHolderArray 
+	).then(function () {
+		return Promise.resolve({
+			"path" : targetPath,
+			"left" : maxCount - currentCalledCount
+		});
+	}); 
 };
 
 

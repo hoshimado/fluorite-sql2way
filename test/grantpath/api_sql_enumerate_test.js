@@ -61,6 +61,14 @@ describe( "api_sql_enumerate.js", function(){
                 return sql_parts_actual.queryDirectly( TEMP_VIRTIAL_CONFIG.database, INSERT_QUERY, [] );
             }).then(function() {
                 return sql_parts_actual.queryDirectly( TEMP_VIRTIAL_CONFIG.database, "SELECT * from [redirect_serial]", [] );
+            }).then(function (rows) {
+                expect(rows).to.deep.equal([{
+                    "id": 1,
+                    "serial": SERIAL_NUMBER,
+                    "max_entrys": 32,
+                    "called": 0,
+                    "url": URL 
+                }]);
             }).then(function() {
                 return api_enumerate.api_v1_serialpath_grant( null, {"serial" : SERIAL_NUMBER} );
                 // ↑上記で、closeConnection()が呼ばれているので、ここでメモリーデータベースは揮発する。

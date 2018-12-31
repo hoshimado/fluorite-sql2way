@@ -47,7 +47,7 @@ describe( "api_sql_enumerate.js", function(){
             hooked["SQL_CONFIG"].restore();
         });
 
-        it("実際のデータベースに対してパス取得と回数アップデートができること",function () {
+        it("実際のデータベースに対してパス取得と回数アップデートができること(※DBはメモリーに一時作成して、テスト後に削除)",function () {
             var SERIAL_NUMBER = "nayn1nyan2nyan3";
             var URL = "granted-pash/hoge.pdf";
             var CREATE_TABLE = "CREATE TABLE [redirect_serial]([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [serial] [text] NOT NULL, [max_entrys] [int] NOT NULL, [called] [int] NOT NULL, [url] [text] NULL )";
@@ -298,71 +298,4 @@ describe( "api_sql_enumerate.js", function(){
         it("failed because query failed.");
     });
 });
-
-
-/*
-describe( "api_sql_enumerate.js", function(){
-    describe("::updateCalledWithTargetSerial()", function(){
-        var stubs;
-        var updateCalledWithTargetSerial = api_enumerate.factoryImpl.updateCalled.getInstance();
-
-        beforeEach(function(){ // 内部関数をフックする。
-            stubs = COMMON_STUB_MANAGER.createStubs();
-
-            COMMON_STUB_MANAGER.hookInstance( api_enumerate, stubs );
-        });
-        afterEach(function(){
-            COMMON_STUB_MANAGER.restoreOriginal( api_enumerate );
-        });
-
-        // ここからテスト。
-
-        it("正常系", function(){
-            var IN_SERIALKEY = "abc123456789noncase32number16MAX";
-            var EXPECTED_PATH = "期待されたパス";
-            var EXPECTED_MAX = 16;
-            var CURRENT_CALLED_COUNT = 9;
-            var stub_request_query = sinon.stub();
-            var sqlConnection = {
-                "query" : stub_request_query
-            };
-
-            // ↓たぶん不要なハズ。
-            // stubs.simple_sql.open.onCall(0).returns( stub_request );
-
-            stub_request_query.onCall(0).returns(
-                Promise.resolve()
-            );
-
-            return shouldFulfilled(
-                updateCalledWithTargetSerial(
-                    sqlConnection, 
-                    TEST_CONFIG_SQL.database, 
-                    IN_SERIALKEY, 
-                    EXPECTED_PATH,
-                    CURRENT_CALLED_COUNT, 
-                    EXPECTED_MAX)
-            ).then(function(result){
-                var buf;
-                // ここから続き。
-                var EXPECTED_QUERY_STR = "UPDATE [" + TEST_CONFIG_SQL.database + "].[dbo].[redirect_serial]";
-                EXPECTED_QUERY_STR += " SET [called]=" + CURRENT_CALLED_COUNT;
-                EXPECTED_QUERY_STR += " WHERE [serial]='" + IN_SERIALKEY + "'";
-
-                // クエリー生成済みなので、呼び出し文字列チェックからスタートする。
-                assert(stub_request_query.calledOnce, "mssql::request::query()が1度呼ばれること");
-                buf = stub_request_query.getCall(0).args[0].replace(/ +/g,' ');
-                expect( buf ).to.equal( EXPECTED_QUERY_STR );
-
-                expect(result).to.have.property("path").and.equal(EXPECTED_PATH);
-                expect(result).to.have.property("left").and.equal( EXPECTED_MAX - CURRENT_CALLED_COUNT );
-            });
-        });
-    });
-});
-// */
-
-
-
-
 

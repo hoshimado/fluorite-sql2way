@@ -3,7 +3,7 @@
 	encoding=utf-8
 */
 
-require('date-utils'); // Data() クラスのtoString()を拡張してくれる。
+require("date-utils"); // Data() クラスのtoString()を拡張してくれる。
 var createHookPoint = require("hook-test-helper").createHookPoint;
 var hook = createHookPoint( exports, "hook" );
 var sql_parts =  createHookPoint( exports, "sql_parts", require("../sql_db_io/index.js") );
@@ -63,7 +63,9 @@ hook[ "updateCalledWithTargetSerial"] = function(
 
 
 
-
+// CREATE TABLE [redirect_serial]([id] [integer] PRIMARY KEY AUTOINCREMENT NOT NULL, [serial] [text] NOT NULL, [max_entrys] [int] NOT NULL, [called] [int] NOT NULL, [url] [text] NULL );
+// INSERT INTO [redirect_serial](serial, max_entrys, called, url) VALUES('tester20181231', 32, 0, 'http://url.test/hoge.txt');
+// curl "http://localhost:3000/api/v1/serial/grant" --data "serial=tester20181231" -X POST
 exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
 	var serialKey = dataFromPost.serial ? dataFromPost.serial : "";
 
@@ -114,7 +116,7 @@ exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
 			});
 		}).catch(function(err) {
 			return Promise.resolve({
-				"err" : err,
+				"jsonData" : err,
 				"status" : 503
 			});
 		});
@@ -122,12 +124,13 @@ exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
 		return sql_parts.closeConnection(
 			SQL_CONFIG.database
 		).then(function() {
-			Promise.resolve({
+			return Promise.resolve({
+				"jsonData" : err.err,
 				"status" : err.status
 			});
 		}).catch(function(err) {
 			return Promise.resolve({
-				"err" : err,
+				"jsonData" : err,
 				"status" : 503
 			});
 		});

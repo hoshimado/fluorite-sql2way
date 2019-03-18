@@ -72,12 +72,6 @@ describe( "user_manager.js", function(){
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
-            stubs.sql_parts.isOwnerValid.onCall(0).returns(
-                Promise.reject({
-                    "isDevicePermission" : false,
-                    "isUserExist" : false
-                })
-            );
             stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
                 Promise.resolve( 15 ) // 登録済みのユーザー数
             );
@@ -86,16 +80,15 @@ describe( "user_manager.js", function(){
                 Promise.resolve()
             );
             activitylog.factoryImpl.MAX_LOGS.setStub( EXPECTED_MAX_LOGS_FOR_THE_USER );
-
            
 
             return shouldFulfilled(
                 api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
-                assert( stubs.sql_parts.isOwnerValid.calledOnce );
                 assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
                 assert( stubs.sql_parts.addNewUser.calledOnce );
+                assert( stubs.sql_parts.isOwnerValid.notCalled );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
 
                 expect( stubs.sql_parts.addNewUser.getCall(0).args[0] ).to.equal( TEST_CONFIG_SQL.database );
@@ -122,6 +115,16 @@ describe( "user_manager.js", function(){
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
+            stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
+                Promise.resolve( 15 ) // 登録済みのユーザー数
+            );
+            activitylog.factoryImpl.MAX_USERS.setStub( 16 ); // 上限値として設定されているユーザー数
+
+            stubs.sql_parts.addNewUser.onCall(0).returns(
+                Promise.reject({
+                    "cant_to_insert" : "Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: owners_permission.owners_hash"
+                })
+            );
             stubs.sql_parts.isOwnerValid.onCall(0).returns(
                 Promise.resolve( EXPECTED_MAX_LOGS_FOR_THE_USER )
             );
@@ -130,9 +133,9 @@ describe( "user_manager.js", function(){
                 api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
+                assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
+                assert( stubs.sql_parts.addNewUser.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
-                assert( stubs.sql_parts.getNumberOfUsers.notCalled );
-                assert( stubs.sql_parts.addNewUser.notCalled );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
 
                 expect( result ).to.have.property( "jsonData" );
@@ -155,6 +158,16 @@ describe( "user_manager.js", function(){
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
+            stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
+                Promise.resolve( 15 ) // 登録済みのユーザー数
+            );
+            activitylog.factoryImpl.MAX_USERS.setStub( 16 ); // 上限値として設定されているユーザー数
+
+            stubs.sql_parts.addNewUser.onCall(0).returns(
+                Promise.reject({
+                    "cant_to_insert" : "Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: owners_permission.owners_hash"
+                })
+            );
             stubs.sql_parts.isOwnerValid.onCall(0).returns(
                 Promise.reject({
                     "isDevicePermission" : false,
@@ -167,8 +180,8 @@ describe( "user_manager.js", function(){
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
                 assert( stubs.sql_parts.isOwnerValid.calledOnce );
-                expect( stubs.sql_parts.getNumberOfUsers.callCount ).to.equal( 0, "getNumberOfUsers()が呼ばれてないこと" );
-                expect( stubs.sql_parts.addNewUser.callCount ).to.equal( 0, "addNewUser()が呼ばれてないこと" );
+                assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
+                assert( stubs.sql_parts.addNewUser.calledOnce );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
 
                 expect( result.jsonData ).to.have.property( "errorMessage" );
@@ -187,9 +200,6 @@ describe( "user_manager.js", function(){
 
             stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns( Promise.resolve() );
             stubs.sql_parts.closeConnection.withArgs( TEST_CONFIG_SQL.database ).returns( Promise.resolve() );
-            stubs.sql_parts.isOwnerValid.onCall(0).returns(
-                Promise.reject({"here" : "is new user"})
-            );
             stubs.sql_parts.getNumberOfUsers.withArgs( TEST_CONFIG_SQL.database ).returns(
                 Promise.resolve( 16 ) // 登録済みのユーザー数
             );
@@ -200,9 +210,9 @@ describe( "user_manager.js", function(){
                 api_v1_activitylog_signup( queryFromGet, dataFromPost )
             ).then(function( result ){
                 assert( stubs.sql_parts.createPromiseForSqlConnection.calledOnce );
-                assert( stubs.sql_parts.isOwnerValid.calledOnce );
                 assert( stubs.sql_parts.getNumberOfUsers.calledOnce );
                 expect( stubs.sql_parts.addNewUser.callCount ).to.equal( 0, "addNewUser()が呼ばれてないこと" );
+                expect( stubs.sql_parts.isOwnerValid.callCount ).to.equal( 0, "isOwnerValid()が呼ばれてないこと" );
                 assert( stubs.sql_parts.closeConnection.calledOnce );
 
                 expect( result ).to.have.property( "jsonData" );

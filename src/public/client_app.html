@@ -23,12 +23,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
 
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-    <script src="./javascripts/jq_ui_panel.js"></script>
-    <script>
-      $(document).ready(function(){
-        bindExpandCollapsePanel( "id_ctrl_panel" );
-      });
-    </script>
 
     <script src="./brw_lib/tiny-cookie.js"></script>
     <script src="./javascripts/manage_account.js"></script>
@@ -102,73 +96,81 @@
     </script>    
   </head>
   <body>
-    <div id="id_ctrl_panel">
-      <!-- このブロックは丸ごとjQueryで表示／非表示を管理する。 -->
-      <div id="app_setup">
-				<!-- 
-				◆Font Awesome◆
-				楽して便利！Webアイコンフォント『Font Awesome』の使い方と活用 Tips
-				https://h2ham.net/font-awasome
-				https://web-bruno.com/font-awesome-icon-font/
-				→loadingのヤツ解説されてる。
-				
-				アイコンをWebフォントで表示！ Font Awesomeの使い方
-				→Ie7でも使えるらしい。
-				https://allabout.co.jp/gm/gc/402551/2/
-				 -->
-        ユーザーID：
-        <i v-if="userNameIsValid" class="fa fa-check" style="color:#4444ff"></i>
-				<span class="error_text" v-if="!userNameIsValid">有効なメールアドレスを入力してください</span><br>
-        <input id="id_username" v-model="userName"><br>
-
-        パスワード：
-        <i v-if="passKeyIsValid" class="fa fa-check" style="color:#4444ff"></i>
-				<span class="error_text" v-if="!passKeyIsValid">8文字以上のパスワードを入力してください</span><br>
-        <input id="id_passkeyword" type="password" v-model="passKeyWord"><br>
-        <div>
-          <div style="text-align: left; float: left">
-            <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
-          </div>
-          <div style="text-align: right;">
-            <input v-show="userNameIsValid && passKeyIsValid" value="削除" type="button" v-on:click="showModalDialogForRemovingAccount">
-          </div>
-          <div style="float:none; clear:both;"></div>
-        </div>
-        <br><br>
-        <!-- dialog with using the modal component, pass in the prop -->
-        <!-- 以下のダイアログ用のタグは、先行するmodal-templateにて登録済み。 -->
-        <modal v-if="isNoticeDialogForUpdateInfo" @close="isNoticeDialogForUpdateInfo = false">
-          <!--
-            you can use custom content here to overwrite
-            default content.
-            ref. https://jp.vuejs.org/v2/examples/modal.html
-          -->
-          <h3 slot="header">利用開始ダイアログ</h3>
-          <span slot="body">
-            初めての利用、もしくはキャッシュ保持期限が切れています。
-            ユーザーIDとパスワードを（再）入力して「登録」ボタンを押してください。
-          </span>
-        </modal>
-        <modal v-if="isConfirmModalDialogForRemoveAccount">
-          <!-- close属性は、デフォルト向け。ここでは利用してない。 -->
-          <!--
-            you can use custom content here to overwrite
-            default content.
-            ref. https://jp.vuejs.org/v2/examples/modal.html
-          -->
-          <h3 slot="header">確認ダイアログ</h3>
-          <span slot="body">全ての記録データを削除して、ユーザーIDを削除しても良いですか？</span>
-          <div slot="footer">
-            <button class="modal-default-button" @click="removeAccount">
-              はい
-            </button>
-            <button @click="cancelModalDialogForRemovingAccount">
-              いいえ<!-- あれ？「modal-default-button」って「右寄せ」属性ある？？？ -->
-            </button>
-          </div>
-        </modal>
+    <div id="app_setup">
+      <!-- vuejs-slide-menu-accordion -->
+      <div class="cls_toggle_expand_collapse" v-on:click="toggleCtrlPanel">
+        <!-- 
+        ◆Font Awesome◆
+        楽して便利！Webアイコンフォント『Font Awesome』の使い方と活用 Tips
+        https://h2ham.net/font-awasome
+        https://web-bruno.com/font-awesome-icon-font/
+        →loadingのヤツ解説されてる。
+        
+        アイコンをWebフォントで表示！ Font Awesomeの使い方
+        →Ie7でも使えるらしい。
+        https://allabout.co.jp/gm/gc/402551/2/
+        -->
+        <i class="fa fa-caret-down"  v-if="isPanelShow"></i>
+        <i class="fa fa-caret-right" v-if="!isPanelShow"></i>
+        {{textToggle}}
       </div>
-    </div>
+      <transition name="trans_slide">
+        <!-- slideDown() / slideUp() のように上下に開閉するアコーディオンメニューのエリア -->
+        <div class="menu_slide_accordion" v-if="isPanelShow">
+            ユーザーID：
+            <i v-if="userNameIsValid" class="fa fa-check" style="color:#4444ff"></i>
+            <span class="error_text" v-if="!userNameIsValid">有効なメールアドレスを入力してください</span><br>
+            <input id="id_username" v-model="userName"><br>
+    
+            パスワード：
+            <i v-if="passKeyIsValid" class="fa fa-check" style="color:#4444ff"></i>
+            <span class="error_text" v-if="!passKeyIsValid">8文字以上のパスワードを入力してください</span><br>
+            <input id="id_passkeyword" type="password" v-model="passKeyWord"><br>
+            <div>
+              <div style="text-align: left; float: left">
+                <input v-show="userNameIsValid && passKeyIsValid" value="登録" type="button" v-on:click="createAccount">
+              </div>
+              <div style="text-align: right;">
+                <input v-show="userNameIsValid && passKeyIsValid" value="削除" type="button" v-on:click="showModalDialogForRemovingAccount">
+              </div>
+              <div style="float:none; clear:both;"></div>
+            </div>
+            <br><br>
+            <!-- dialog with using the modal component, pass in the prop -->
+            <!-- 以下のダイアログ用のタグは、先行するmodal-templateにて登録済み。 -->
+            <modal v-if="isNoticeDialogForUpdateInfo" @close="isNoticeDialogForUpdateInfo = false">
+              <!--
+                you can use custom content here to overwrite
+                default content.
+                ref. https://jp.vuejs.org/v2/examples/modal.html
+              -->
+              <h3 slot="header">利用開始ダイアログ</h3>
+              <span slot="body">
+                初めての利用、もしくはキャッシュ保持期限が切れています。
+                ユーザーIDとパスワードを（再）入力して「登録」ボタンを押してください。
+              </span>
+            </modal>
+            <modal v-if="isConfirmModalDialogForRemoveAccount">
+              <!-- close属性は、デフォルト向け。ここでは利用してない。 -->
+              <!--
+                you can use custom content here to overwrite
+                default content.
+                ref. https://jp.vuejs.org/v2/examples/modal.html
+              -->
+              <h3 slot="header">確認ダイアログ</h3>
+              <span slot="body">全ての記録データを削除して、ユーザーIDを削除しても良いですか？</span>
+              <div slot="footer">
+                <button class="modal-default-button" @click="removeAccount">
+                  はい
+                </button>
+                <button @click="cancelModalDialogForRemovingAccount">
+                  いいえ<!-- あれ？「modal-default-button」って「右寄せ」属性ある？？？ -->
+                </button>
+              </div>
+            </modal>
+        </div>
+      </transition>
+    </div><!-- app_setup - vue.js - end -->
     <hr>
     <!-- grid-view element -->
     <div id="app_grid">

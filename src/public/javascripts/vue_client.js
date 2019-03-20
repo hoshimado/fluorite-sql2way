@@ -232,6 +232,9 @@ var _vueAppSetup = function( createVueInstance ){
     var app_setup = createVueInstance({
         el: "#app_setup",
         data: {
+            "textToggle"  : "設定パネル",
+            "isPanelShow" : false,
+            // ------------------------------
             "userName": "",
             "passKeyWord" : "",
             "isNoticeDialogForUpdateInfo" : false,
@@ -249,7 +252,10 @@ var _vueAppSetup = function( createVueInstance ){
             }
         },
         methods : {
-            createAccount(){
+            "toggleCtrlPanel" : function () {
+                this.isPanelShow = !this.isPanelShow;
+            },
+            "createAccount" : function(){
                 // account_libは、manage_account.jsで定義されている。
                 var promise = account_lib.promiseCreateAccount( this.userName, this.passKeyWord );
                 promise.then(function(result){
@@ -273,14 +279,14 @@ var _vueAppSetup = function( createVueInstance ){
                     alert( "登録できませんでした。\r\n\r\n※詳細なエラー表示は未実装。" );
                 });
             },
-            showModalDialogForRemovingAccount(){
+            "showModalDialogForRemovingAccount" : function(){
                 this.isConfirmModalDialogForRemoveAccount = true;
             },
-            removeAccount(){
+            "removeAccount" : function(){
                 this.isConfirmModalDialogForRemoveAccount = false;
                 alert("この機能は未実装");
             },
-            cancelModalDialogForRemovingAccount(){
+            "cancelModalDialogForRemovingAccount" : function(){
                 this.isConfirmModalDialogForRemoveAccount = false;
             }
         },
@@ -291,6 +297,7 @@ var _vueAppSetup = function( createVueInstance ){
             this.passKeyWord = savedPassKey;
 
             this.isNoticeDialogForUpdateInfo = !savedUserName || !savedPassKey;
+            this.isPanelShow = this.isNoticeDialogForUpdateInfo;
         }
     });
     return app_setup;

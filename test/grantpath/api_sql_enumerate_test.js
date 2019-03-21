@@ -170,10 +170,175 @@ describe( "api_sql_enumerate.js", function(){
                 expect(result).to.have.property("status").to.equal(200);
             });
         });
-        it("fail to open Database.");
-        it("can't grant the serialK-key.");
-        it("can't update the called count.");
-        it("fails to close.");
+        it("fail to open Database.",function () {
+            var DUMMY_SERIAL = "123456";
+            var queryFromGet = null, dataFromPost = { "serial" : DUMMY_SERIAL };
+
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
+                Promise.reject({
+                    "message" : "failed to connect to DB."
+                })
+            );
+
+            return shouldFulfilled(
+                api_v1_serialpath_grant( queryFromGet, dataFromPost )
+            ).then(function (result) {
+                var open = stubs.sql_parts.createPromiseForSqlConnection;
+                var grant = stubs.hook.grantPathFromSerialNumber;
+                var update = stubs.hook.updateCalledWithTargetSerial;
+                var close = stubs.sql_parts.closeConnection;
+
+                expect(open.callCount).to.equal(1);
+                expect(open.getCall(0).args[0]).to.deep.equal(TEST_CONFIG_SQL);
+
+                expect(grant.callCount).to.equal(0);
+                expect(update.callCount).to.equal(0);
+                expect(close.callCount).to.equal(0);
+
+                expect(result).to.have.property("status").to.equal(503);
+                expect(result).to.have.property("jsonData").to.have.property("message");
+            });            
+        });
+        it("can't grant the serialK-key.",function () {
+            var DUMMY_SERIAL = "123456";
+            var queryFromGet = null, dataFromPost = { "serial" : DUMMY_SERIAL };
+
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.sql_parts.closeConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.hook.grantPathFromSerialNumber.onCall(0).returns(
+                Promise.reject({
+                    "message" : "Invalid Serial Key."
+                })
+            );
+
+            return shouldFulfilled(
+                api_v1_serialpath_grant( queryFromGet, dataFromPost )
+            ).then(function (result) {
+                var open = stubs.sql_parts.createPromiseForSqlConnection;
+                var grant = stubs.hook.grantPathFromSerialNumber;
+                var update = stubs.hook.updateCalledWithTargetSerial;
+                var close = stubs.sql_parts.closeConnection;
+
+                expect(open.callCount).to.equal(1);
+                expect(open.getCall(0).args[0]).to.deep.equal(TEST_CONFIG_SQL);
+
+                expect(grant.callCount).to.equal(1);
+                expect(grant.getCall(0).args).to.deep.equal([
+                    TEST_CONFIG_SQL.database, 
+                    DUMMY_SERIAL
+                ]);
+
+                expect(update.callCount).to.equal(0);
+
+                expect(close.callCount).to.equal(1);
+
+                expect(result).to.have.property("status").to.equal(403);
+                expect(result).to.have.property("jsonData").to.have.property("message");
+            });            
+        });
+        it("can't update the called count.",function () {
+            var DUMMY_SERIAL = "123456";
+            var DUMMY_CURRENT_COUNT = 16, DUMMY_MAX_COUNT = 32;
+            var DUMMY_PATH = "hogehoge", LEFT_COUNT = DUMMY_MAX_COUNT - (DUMMY_CURRENT_COUNT + 1);
+            var queryFromGet = null, dataFromPost = { "serial" : DUMMY_SERIAL };
+            
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.sql_parts.closeConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.hook.grantPathFromSerialNumber.onCall(0).returns(
+                Promise.resolve({
+                    "called" : DUMMY_CURRENT_COUNT,
+                    "max_entrys" : DUMMY_MAX_COUNT,
+                    "path" : DUMMY_PATH
+                })
+            );
+            stubs.hook.updateCalledWithTargetSerial.onCall(0).returns(
+                Promise.reject({
+                    "message" : "failed to update the value in DB."
+                })
+            );
+            
+            return shouldFulfilled(
+                api_v1_serialpath_grant( queryFromGet, dataFromPost )
+            ).then(function (result) {
+                var open = stubs.sql_parts.createPromiseForSqlConnection;
+                var grant = stubs.hook.grantPathFromSerialNumber;
+                var update = stubs.hook.updateCalledWithTargetSerial;
+                var close = stubs.sql_parts.closeConnection;
+
+                expect(open.callCount).to.equal(1);
+                expect(open.getCall(0).args[0]).to.deep.equal(TEST_CONFIG_SQL);
+
+                expect(grant.callCount).to.equal(1);
+                expect(grant.getCall(0).args[0]).to.equal(TEST_CONFIG_SQL.database);
+                expect(grant.getCall(0).args[1]).to.equal(DUMMY_SERIAL);
+
+                expect(update.callCount).to.equal(1);
+                expect(update.getCall(0).args[0]).to.equal(TEST_CONFIG_SQL.database);
+                expect(update.getCall(0).args[1]).to.equal(DUMMY_SERIAL);
+                expect(update.getCall(0).args[2]).to.equal(DUMMY_PATH);
+                expect(update.getCall(0).args[3]).to.equal(DUMMY_CURRENT_COUNT + 1);
+                expect(update.getCall(0).args[4]).to.equal(DUMMY_MAX_COUNT);
+
+                expect(close.callCount).to.equal(1);
+
+                expect(result).to.have.property("jsonData").to.have.property("message");
+                expect(result).to.have.property("status").to.equal(503);
+            });            
+                        
+        });
+        it("fails to close.",function () {
+            var DUMMY_SERIAL = "123456";
+            var DUMMY_CURRENT_COUNT = 16, DUMMY_MAX_COUNT = 32;
+            var DUMMY_PATH = "hogehoge", LEFT_COUNT = DUMMY_MAX_COUNT - (DUMMY_CURRENT_COUNT + 1);
+            var queryFromGet = null, dataFromPost = { "serial" : DUMMY_SERIAL };
+            
+            stubs.sql_parts.createPromiseForSqlConnection.onCall(0).returns(
+                Promise.resolve()
+            );
+            stubs.sql_parts.closeConnection.onCall(0).returns(
+                Promise.reject({
+                    "message" : "failed to close"
+                })
+            );
+            stubs.hook.grantPathFromSerialNumber.onCall(0).returns(
+                Promise.resolve({
+                    "called" : DUMMY_CURRENT_COUNT,
+                    "max_entrys" : DUMMY_MAX_COUNT,
+                    "path" : DUMMY_PATH
+                })
+            );
+            stubs.hook.updateCalledWithTargetSerial.onCall(0).returns(
+                Promise.resolve({
+                    "path" : DUMMY_PATH,
+                    "left" : LEFT_COUNT
+                })
+            );
+            
+            return shouldFulfilled(
+                api_v1_serialpath_grant( queryFromGet, dataFromPost )
+            ).then(function (result) {
+                var open = stubs.sql_parts.createPromiseForSqlConnection;
+                var grant = stubs.hook.grantPathFromSerialNumber;
+                var update = stubs.hook.updateCalledWithTargetSerial;
+                var close = stubs.sql_parts.closeConnection;
+
+                expect(open.callCount).to.equal(1);
+                expect(grant.callCount).to.equal(1);
+                expect(update.callCount).to.equal(1);
+                expect(close.callCount).to.equal(1);
+
+                expect(result).to.have.property("jsonData").to.have.property("message");
+                expect(result).to.have.property("status").to.equal(503);
+            });            
+        });
     });
     describe("::local::grantPathFromSerialNumber()", function(){
         var grantPathFromSerialNumber = api_enumerate.hook.grantPathFromSerialNumber;
@@ -207,7 +372,8 @@ describe( "api_sql_enumerate.js", function(){
                     "called" : EXPECTED_CALLED_COUNT,
                     "max_entrys" : EXPECTED_MAX_ENTRYS
                 }, 
-                { "id" : "不要な2つめの要素→無いとは思うが、入れて置く" 
+                { 
+                    "id" : "不要な2つめの要素→無いとは思うが、入れて置く" 
                 }
             ];
             var EXPECTED_QUERY_STR = "SELECT [id], [serial], [called], [max_entrys], [url]";
@@ -236,8 +402,27 @@ describe( "api_sql_enumerate.js", function(){
                 expect(result).to.have.property("path").to.equal(EXPECTED_URL); // 空白は除去されるものとする。
             });
          });
-         it("failed because of Invalid Serial Key.");
-         it("failed because query failed.");
+         it("failed because of Invalid Serial Key. (RecordNotFound)",function () {
+            var OPENED_DATABASE_NAME = TEST_CONFIG_SQL.database;
+            var SERIAL_NUMBER = "key from posted";
+            var EXPECTED_QUERY_RESULT = [ /* 空配列。ヒットするもの無し。 */ ];
+
+            // calledWith()でスタブ定義しないのは、検証時に calledOnce()でしか検証できないから。
+            // 意図しない引数での呼び出しも、すぐわかる方が望ましい。
+            stubs.sql_parts.queryDirectly.onCall(0).returns(
+                Promise.resolve( EXPECTED_QUERY_RESULT )
+            );        
+
+            return shouldRejected(
+                grantPathFromSerialNumber(
+                    OPENED_DATABASE_NAME, SERIAL_NUMBER
+                )
+            ).catch(function (result) {
+                expect(stubs.sql_parts.queryDirectly.callCount).to.equal(1, "queryDirectly()が1度だけ呼ばれること");
+                expect(result).to.have.property("message"); // エラーメッセージの中身までは検証しない。
+            });
+         });
+         it("failed because query failed."); // queryDirectly()がreject(err)を返した場合。
     });
     describe("::local::updateCalledWithTargetSerial()", function(){
         var stubs, hooked = {};

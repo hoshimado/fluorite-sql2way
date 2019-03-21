@@ -63,7 +63,7 @@ var closeConnection = function( databaseName ){
 				dbs[ databaseName ] = null;
 				resolve();
 			}else{
-				reject(err)
+				reject(err);
 			}
 		});
     });

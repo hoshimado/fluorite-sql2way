@@ -16,6 +16,28 @@ body {
   font-weight: bold;
 }
 
+/*
+ * Slide / accordion 設定パネルメニューの装飾
+ */ 
+.cls_toggle_expand_collapse {
+  margin  : 4px;
+  padding : 8px;
+  cursor  : pointer;
+  background-color: aquamarine
+}
+.menu_slide_accordion {
+  background-color: white;
+  height: 120px;
+  overflow: hidden;
+}
+/* Vueの方で自動的に付与されるクラス::-enter-xx */
+.trans_slide-enter-active, .trans_slide-leave-active {
+  transition: all .5s;
+}
+.trans_slide-enter, .trans_slide-leave-to {
+  height: 0;
+}
+
 
 
 /*

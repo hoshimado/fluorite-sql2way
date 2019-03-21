@@ -422,7 +422,25 @@ describe( "api_sql_enumerate.js", function(){
                 expect(result).to.have.property("message"); // エラーメッセージの中身までは検証しない。
             });
          });
-         it("failed because query failed."); // queryDirectly()がreject(err)を返した場合。
+         it("failed because query failed.",function () {
+            var OPENED_DATABASE_NAME = TEST_CONFIG_SQL.database;
+            var SERIAL_NUMBER = "key from posted";
+            var QUERY_ERROR = { "dummy" : "hoge" };
+
+            // calledWith()でスタブ定義しないのは、検証時に calledOnce()でしか検証できないから。
+            // 意図しない引数での呼び出しも、すぐわかる方が望ましい。
+            stubs.sql_parts.queryDirectly.onCall(0).returns(
+                Promise.reject( QUERY_ERROR )
+            );        
+
+            return shouldRejected(
+                grantPathFromSerialNumber(
+                    OPENED_DATABASE_NAME, SERIAL_NUMBER
+                )
+            ).catch(function (result) {
+                expect(result).to.equal( QUERY_ERROR ); // エラーメッセージの中身までは検証しない。
+            });
+         }); // queryDirectly()がreject(err)を返した場合。
     });
     describe("::local::updateCalledWithTargetSerial()", function(){
         var stubs, hooked = {};

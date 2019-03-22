@@ -30,7 +30,9 @@ hook[ "grantPathFromSerialNumber" ] = function( databaseName, serialKey ){
 				"max_entrys" : item.max_entrys
 			});
 		}else{
-			return Promise.reject();
+			return Promise.reject({
+				"message" : "Serial number is invalid."
+			});
 		}
 	});
 };
@@ -73,6 +75,7 @@ exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
 		SQL_CONFIG
 	).catch(function(err) {
 		return Promise.reject({
+			"isCreatingConnectionFailed" : true,
 			"err"    : err,
 			"status" : 503
 		});
@@ -120,20 +123,27 @@ exports.api_v1_serialpath_grant = function( queryFromGet, dataFromPost ){
 				"status" : 503
 			});
 		});
-	}).catch(function(err) {
-		return sql_parts.closeConnection(
-			SQL_CONFIG.database
-		).then(function() {
+	}).catch(function(lastError) {
+		if(lastError.isCreatingConnectionFailed){
 			return Promise.resolve({
-				"jsonData" : err.err,
-				"status" : err.status
+				"jsonData" : lastError.err,
+				"status" : lastError.status
 			});
-		}).catch(function(err) {
-			return Promise.resolve({
-				"jsonData" : err,
-				"status" : 503
+		}else{
+			return sql_parts.closeConnection(
+				SQL_CONFIG.database
+			).then(function() {
+				return Promise.resolve({
+					"jsonData" : lastError.err,
+					"status" : lastError.status
+				});
+			}).catch(function(err) {
+				return Promise.resolve({
+					"jsonData" : err,
+					"status" : 503
+				});
 			});
-		});
+		}
 	});
 };
 

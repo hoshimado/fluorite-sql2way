@@ -1,0 +1,8 @@
+install express.
+
+and install the following.
+
+```
+npm install   date-utils hook-test-helper sqlite3 --save
+npm install   cross-env chai mocha promise-test-helper sinon --save-dev
+```

@@ -1,0 +1,20 @@
+# 設定すべき環境変数
+
+* CREATE_KEY
+* MAX_LOGS
+* MAX_USERS
+* SQL_DATABASE
+* SQL_DATABASE_GRANT
+
+
+# USAGE
+
+```
+SET CREATE_KEY=hogehogehgoe
+SET MAX_LOGS=128
+SET MAX_USERS=32
+SET SQL_DATABASE=databese-path
+SET SQL_DATABASE_GRANT=database-path
+```
+
+
